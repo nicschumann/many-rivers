@@ -27,12 +27,14 @@ void main() {
 
     SH = SH_max - SH * (SH_max - SH_min);
 
+    float ubw_w = u_bank_width;
+
     float WH = 
-        smoothstep(u_upper_bank - u_bank_width, u_upper_bank + u_bank_width, y) *
-        (1.0 - smoothstep(u_lower_bank - u_bank_width, u_lower_bank + u_bank_width, y)) *
+        smoothstep(u_upper_bank - ubw_w, u_upper_bank + ubw_w, y) *
+        (1.0 - smoothstep(u_lower_bank - ubw_w, u_lower_bank + ubw_w, y)) *
         (SH_max - SH_min);
 
-    if (x >= 1.0 / u_resolution.x ) { WH = 0.; }
+    if (x >= 4.0 / u_resolution.x ) { WH = 0.; }
 
     gl_FragColor = vec4(
         BH, SH, WH, 1.0

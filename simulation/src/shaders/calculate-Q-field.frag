@@ -2,24 +2,39 @@ precision highp float;
 
 varying vec2 v_uv;
 
-uniform sampler2D u_B;
-uniform sampler2D u_S;
-uniform sampler2D u_W;
+uniform sampler2D u_H;
+uniform vec2 u_resolution;
 
-uniform float upper_bank = 0.4;
-uniform float lower_bank = 0.6;
-uniform float bank_width = 0.015;
+float H(vec2 xy) {
+    vec3 h = texture2D(u_H, xy).rgb;
+    return h.r + h.g + h.b;
+}
 
+float BS(vec2 xy) {
+    vec3 h = texture2D(u_H, xy).rgb;
+    return h.r + h.g;
+}
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
-    float y = v_uv.y;
+    float k_vel = 1.0;
+    vec2 d = 1.0 / u_resolution;
+    
+    vec2 uv = v_uv;
+    vec3 e = vec3(1.0 / u_resolution / 2.0, 0.0);
 
-    float SH =
-        smoothstep(upper_bank - bank_width, upper_bank + bank_width, y) *
-        (1.0 - smoothstep(lower_bank - bank_width, lower_bank + bank_width, y));
+    // calculate slope
+    vec2 slope = vec2(
+        H(uv + e.xz) - H(uv),
+        H(uv + e.zy) - H(uv)
+    ) / d.x;
 
-    SH = SH_max - SH * (SH_max - SH_min);
+    vec2 flow_depth = vec2(
+        max(H(uv), H(uv + e.xz)) - max(BS(uv), BS(uv + e.xz)),
+        max(H(uv), H(uv + e.zy)) - max(BS(uv), BS(uv + e.zy))
+    );
 
-    gl_FragColor = vec4(SH, 0., 0., 1.0);
+    vec2 flux = -k_vel * slope * flow_depth;
+
+    gl_FragColor = vec4(slope, flux);
 }

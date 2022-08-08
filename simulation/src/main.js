@@ -19,7 +19,7 @@ const parameters = {
 
     upper_bank: 0.4,
     lower_bank: 0.6,
-    bank_width: 0.01
+    bank_width: 0.03
 }
 
 // GPU calls: calculation
@@ -45,18 +45,21 @@ const calculate_initial_conditions = regl({
 
 // GPU calls: update steps
 
-// const calculate_flow_field = regl({
-//     framebuffer: regl.prop('target'),
-//     vert: require('./shaders/pass-through.vert'),
-//     frag: require('./shaders/calculate-Q-field.frag'),
-//     attributes: {
-//         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-//         a_uv: regl.prop('a_uv')
-//     },
-//     uniforms: {},
-//     primitive: "triangle strip",
-//     count: 4
-// });
+const calculate_flow_field = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-Q-field.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
 
 
 // GPU calls: rendering
@@ -76,23 +79,6 @@ const render_tile_as_color = regl({
     count: 4
 });
 
-const render_field = regl({
-    vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/render-texture.frag'),
-    attributes: {
-        a_position: regl.prop('a_position'),
-        a_uv: regl.prop('a_uv')
-    },
-    uniforms: {
-        u_transform: regl.prop('u_transform'),
-        u_data: regl.prop('u_data'),
-        u_scalefactor: regl.prop('u_scalefactor'),
-        u_resolution: TILE_SIZE
-    },
-    primitive: "triangle strip",
-    count: 4  
-})
-
 const render_terrain_height = regl({
     vert: require('./shaders/place-tile.vert'),
     frag: require('./shaders/render-terrain-height.frag'),
@@ -110,23 +96,22 @@ const render_terrain_height = regl({
     count: 4  
 })
 
-// const calculate_flux_field = regl({
-//     target: regl.prop('target'),
-//     vert: require('./shaders/pass-through.vert'),
-//     frag: require('./shaders/render-color.frag'),
-//     attributes: {
-//         a_position: regl.prop('a_position'),
-//         a_uv: regl.prop('a_uv')
-//     },
-//     uniforms: {
-//         u_transform: regl.prop('u_transform'),
-//         u_color: regl.prop('u_color'),
-//         u_k_vel: regl.prop('u_k_vel')
-//     },
-//     primitive: "triangle strip",
-//     count: 4
-// })
-
+const render_flow = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-slope.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_Q: regl.prop('u_Q'),
+        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
 
 // CPU Datastructures
 
@@ -160,8 +145,9 @@ class Tile {
         this.Q = new DoubleFramebuffer(regl, TILE_SIZE);
 
         calculate_initial_conditions({
-            target: this.H.front,
+            target: this.H.back,
             a_uv: this.uvs,
+
             u_upper_bank: parameters.upper_bank,
             u_lower_bank: parameters.lower_bank,
             u_bank_width: parameters.bank_width,
@@ -175,14 +161,29 @@ class Tile {
     render (transform, resources) {
         if (this.loaded) {
 
-            render_terrain_height({
-                u_H: this.H.front,
+            calculate_flow_field({
+                target: this.Q.back,
+                u_H: this.H.back,
+                a_uv: this.uvs
+            })
+
+            render_flow({
+                u_Q: this.Q.back,
                 u_scalefactor: 0.5,
 
                 a_position: this.positions,
                 a_uv: this.uvs,
                 u_transform: transform,
             })
+
+            // render_terrain_height({
+            //     u_H: this.H.back,
+            //     u_scalefactor: 0.5,
+
+            //     a_position: this.positions,
+            //     a_uv: this.uvs,
+            //     u_transform: transform,
+            // })
 
         } else {
             console.log('still loading!');
