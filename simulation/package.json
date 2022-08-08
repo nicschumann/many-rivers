@@ -1,0 +1,18 @@
+{
+  "name": "many-rivers-simulation",
+  "version": "1.0.0",
+  "description": "An interactive, web-based playground for prototyping the ",
+  "main": "src/main.js",
+  "scripts": {
+    "build": "node ./bld/serve.js",
+    "serve": "node ./bld/serve.js -w",
+    "deploy-gh-pages": "./bld/deploy-gh-pages.sh"
+  },
+  "type": "module",
+  "author": "Nic Schumann <nic@nicschumann.co>",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.14.53",
+    "esbuild-serve": "^1.0.1"
+  }
+}

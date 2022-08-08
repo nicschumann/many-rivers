@@ -1,0 +1,27 @@
+.extra-light {
+  font-weight: 280;
+}
+
+.light {
+  font-weight: 300;
+}
+
+.regular {
+  font-weight: 400;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+.black {
+  font-weight: 800;
+}
+
+.ultra {
+  font-weight: 900;
+}
+
+.italic {
+  font-style: italic;
+}
