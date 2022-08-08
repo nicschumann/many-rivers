@@ -1,6 +1,6 @@
 import "./style/main.css";
 import { vec3, mat3 } from "gl-matrix";
-import { DoubleFramebuffer } from "./buffer";
+import { DoubleFramebuffer, SingleFramebuffer } from "./buffer";
 
 const regl = require('regl')({
     extensions: [
@@ -13,7 +13,24 @@ const TILE_SIZE = [512, 512];
 // const TERRAIN_SIZE = [TILE_SIZE[0] * 2.0, TILE_SIZE[1] * 2.0];
 
 
-// render calls
+
+
+// GPU calls: calculation
+const calculate_bedrock_field = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-B-initial-condition.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {},
+    primitive: "triangle strip",
+    count: 4
+})
+
+
+// GPU calls: rendering
 const render_tile_as_color = regl({
     vert: require('./shaders/place-tile.vert'),
     frag: require('./shaders/render-color.frag'),
@@ -29,6 +46,41 @@ const render_tile_as_color = regl({
     count: 4
 });
 
+const render_field = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-texture.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_data: regl.prop('u_data'),
+        u_scalefactor: regl.prop('u_scalefactor')
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
+
+// const calculate_flux_field = regl({
+//     target: regl.prop('target'),
+//     vert: require('./shaders/pass-through.vert'),
+//     frag: require('./shaders/render-color.frag'),
+//     attributes: {
+//         a_position: regl.prop('a_position'),
+//         a_uv: regl.prop('a_uv')
+//     },
+//     uniforms: {
+//         u_transform: regl.prop('u_transform'),
+//         u_color: regl.prop('u_color'),
+//         u_k_vel: regl.prop('u_k_vel')
+//     },
+//     primitive: "triangle strip",
+//     count: 4
+// })
+
+
+// CPU Datastructures
 
 class Tile {
     constructor(x, y) {
@@ -51,13 +103,34 @@ class Tile {
     }
 
     async get_resources() {
-        this.B = new DoubleFramebuffer(regl, TILE_SIZE);
-        // this.loaded = true
+        // later, this will need to be a function of the grid location...
+        
+        // these buffers are aligned to the H grid
+        this.B = new SingleFramebuffer(regl, TILE_SIZE);
+        this.S = new DoubleFramebuffer(regl, TILE_SIZE);
+        this.W = new DoubleFramebuffer(regl, TILE_SIZE);
+
+        // these buffers are aligned to the Q grid
+        this.Q = new DoubleFramebuffer(regl, TILE_SIZE);
+
+        calculate_bedrock_field({
+            target: this.B.buffer,
+            a_uv: this.uvs,
+        })
+
+        this.loaded = true
     }
 
     render (transform, resources) {
         if (this.loaded) {
 
+            render_field({
+                u_data: this.B.buffer,
+                a_position: this.positions,
+                a_uv: this.uvs,
+                u_transform: transform,
+                u_scalefactor: 1.0
+            })
 
         } else {
             console.log('still loading!');
