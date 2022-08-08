@@ -40,8 +40,6 @@ void main() {
     vec2 d = vec2(5.0, 5.0);
     float dt = 0.1;
 
-
-
     vec2 flow_depth_lt = vec2(
         flow_depth(uv - e.xz).x,
         flow_depth(uv - e.zy).y
@@ -53,9 +51,6 @@ void main() {
         flux(uv - e.zy).y
     );
     vec2 flux_rb = flux(uv);
-
-
-
 
     vec2 lt = flow_depth_lt * flux_lt;
     vec2 rb = flow_depth_rb * flux_rb;

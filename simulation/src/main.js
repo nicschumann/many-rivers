@@ -17,9 +17,9 @@ const parameters = {
     sediment_height_max: 1.0,
     sediment_height_min: 0.75,
 
-    upper_bank: 0.4,
-    lower_bank: 0.6,
-    bank_width: 0.03
+    upper_bank: 0.47,
+    lower_bank: 0.53,
+    bank_width: 0.01
 }
 
 // GPU calls: calculation
@@ -44,6 +44,48 @@ const calculate_initial_conditions = regl({
 })
 
 // GPU calls: update steps
+
+const calculate_H_boundary_conditions = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-H-boundary-conditions.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_upper_bank: regl.prop('u_upper_bank'),
+        u_lower_bank: regl.prop('u_lower_bank'),
+        u_bank_width: regl.prop('u_bank_width'),
+        u_sediment_height_max: regl.prop('u_sediment_height_max'),
+        u_sediment_height_min: regl.prop('u_sediment_height_min'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+const calculate_Q_boundary_conditions = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-Q-boundary-conditions.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_Q: regl.prop('u_Q'),
+        u_upper_bank: regl.prop('u_upper_bank'),
+        u_lower_bank: regl.prop('u_lower_bank'),
+        u_bank_width: regl.prop('u_bank_width'),
+        u_sediment_height_max: regl.prop('u_sediment_height_max'),
+        u_sediment_height_min: regl.prop('u_sediment_height_min'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
 
 const calculate_flow_field = regl({
     framebuffer: regl.prop('target'),
@@ -180,26 +222,63 @@ class Tile {
 
 
             // CALCULATION STEPS:
-
-            // update Q
-            calculate_flow_field({
-                target: this.Q.back,
-                u_H: this.H.front,
-                
-                a_uv: this.uvs
-            })
-            this.Q.swap();
+            let UPDATES_PER_RENDER = 1;
+            if (resources.t < 2100) {
+                UPDATES_PER_RENDER = 200;
+            }
             
-            // update H
-            advance_water_depth({
-                target: this.H.back,
-                u_Q: this.Q.front,
-                u_H: this.H.front,
-                a_uv: this.uvs,
-            });
+            
+            let s = performance.now()
+            for (let i = 0; i < UPDATES_PER_RENDER; i++) {
+                // update Q
+                calculate_flow_field({
+                    target: this.Q.back,
+                    u_H: this.H.front,
+                    
+                    a_uv: this.uvs
+                })
+                this.Q.swap();
+                
+                // update H
+                advance_water_depth({
+                    target: this.H.back,
+                    u_Q: this.Q.front,
+                    u_H: this.H.front,
+                    a_uv: this.uvs,
+                });
 
-            this.H.swap();
+                this.H.swap();
 
+
+                // enforce boundary conditions
+                calculate_H_boundary_conditions({
+                    target: this.H.back,
+                    u_H: this.H.front,
+                    u_upper_bank: parameters.upper_bank,
+                    u_lower_bank: parameters.lower_bank,
+                    u_bank_width: parameters.bank_width,
+                    u_sediment_height_max: parameters.sediment_height_max,
+                    u_sediment_height_min: parameters.sediment_height_min,
+                    a_uv: this.uvs,
+                })
+                this.H.swap();
+
+                calculate_Q_boundary_conditions({
+                    target: this.Q.back,
+                    u_Q: this.Q.front,
+                    u_upper_bank: parameters.upper_bank,
+                    u_lower_bank: parameters.lower_bank,
+                    u_bank_width: parameters.bank_width,
+                    u_sediment_height_max: parameters.sediment_height_max,
+                    u_sediment_height_min: parameters.sediment_height_min,
+                    a_uv: this.uvs,
+                })
+                this.Q.swap();
+            }
+            let e = performance.now();
+            console.log(`${resources.t} ${UPDATES_PER_RENDER} updates: ${e - s}ms`);
+
+            
 
 
             // RENDERING STEPS:
@@ -220,7 +299,11 @@ class Tile {
                 a_position: this.positions,
                 a_uv: this.uvs,
                 u_transform: transform,
-            })
+            });
+
+            
+
+
 
         } else {
             console.log('still loading!');
@@ -280,7 +363,7 @@ class TileProvider {
         let s = performance.now();
 
         this.tiles.forEach((tile, i) => { tile.render(this.transform, this.resources); });
-        this.resources.t += 0.001;
+        this.resources.t += 1;
 
         let e = performance.now();
         // console.log(`total render: ${e - s}ms`);
@@ -455,7 +538,7 @@ async function main () {
     setInterval(() => {
         provider.setup_transform();
         provider.render_tiles();
-    }, 1000 / 60);
+    }, 1000 / 120);
 
     // handle drag events.
     // internal state for the drag events...

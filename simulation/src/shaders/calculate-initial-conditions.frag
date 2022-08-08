@@ -16,7 +16,7 @@ void main() {
     float y = v_uv.y;
     float x = v_uv.x;
 
-    float BH = (1.0 - x); // 1.0m over 2.5km
+    float BH = 2.0 * (1.0 - x); // 1.0m over 2.5km
 
     float SH_max = u_sediment_height_max;
     float SH_min = u_sediment_height_min;
