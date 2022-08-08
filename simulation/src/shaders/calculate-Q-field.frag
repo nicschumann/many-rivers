@@ -21,7 +21,7 @@ void main() {
     vec2 d = 1.0 / u_resolution;
     
     vec2 uv = v_uv;
-    vec3 e = vec3(1.0 / u_resolution / 2.0, 0.0);
+    vec3 e = vec3(1.0 / u_resolution, 0.0);
 
     // calculate slope
     vec2 slope = vec2(
@@ -36,5 +36,5 @@ void main() {
 
     vec2 flux = -k_vel * slope * flow_depth;
 
-    gl_FragColor = vec4(slope, flux);
+    gl_FragColor = vec4(flow_depth, flux);
 }

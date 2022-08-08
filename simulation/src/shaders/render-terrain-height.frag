@@ -15,7 +15,7 @@ void main() {
     float w = H.b;
 
     if (w > 0.0) { // if it's wet:
-        gl_FragColor = vec4(vec2(w), w * 10., 1.0);
+        gl_FragColor = vec4(0., 0., w, 1.0);
     } else {
         gl_FragColor = vec4(vec3(b + s) * u_scalefactor, 1.0);
     }

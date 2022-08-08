@@ -61,6 +61,23 @@ const calculate_flow_field = regl({
     count: 4
 });
 
+const advance_water_depth = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-water-depth-update.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_Q: regl.prop('u_Q'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
 
 // GPU calls: rendering
 const render_tile_as_color = regl({
@@ -145,7 +162,7 @@ class Tile {
         this.Q = new DoubleFramebuffer(regl, TILE_SIZE);
 
         calculate_initial_conditions({
-            target: this.H.back,
+            target: this.H.front,
             a_uv: this.uvs,
 
             u_upper_bank: parameters.upper_bank,
@@ -161,29 +178,49 @@ class Tile {
     render (transform, resources) {
         if (this.loaded) {
 
+
+            // CALCULATION STEPS:
+
+            // update Q
             calculate_flow_field({
                 target: this.Q.back,
-                u_H: this.H.back,
+                u_H: this.H.front,
+                
                 a_uv: this.uvs
             })
-
-            render_flow({
-                u_Q: this.Q.back,
-                u_scalefactor: 0.5,
-
-                a_position: this.positions,
+            this.Q.swap();
+            
+            // update H
+            advance_water_depth({
+                target: this.H.back,
+                u_Q: this.Q.front,
+                u_H: this.H.front,
                 a_uv: this.uvs,
-                u_transform: transform,
-            })
+            });
 
-            // render_terrain_height({
-            //     u_H: this.H.back,
+            this.H.swap();
+
+
+
+            // RENDERING STEPS:
+
+            // render_flow({
+            //     u_Q: this.Q.front,
             //     u_scalefactor: 0.5,
 
             //     a_position: this.positions,
             //     a_uv: this.uvs,
             //     u_transform: transform,
             // })
+
+            render_terrain_height({
+                u_H: this.H.front,
+                u_scalefactor: 0.5,
+
+                a_position: this.positions,
+                a_uv: this.uvs,
+                u_transform: transform,
+            })
 
         } else {
             console.log('still loading!');

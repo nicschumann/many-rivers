@@ -16,7 +16,7 @@ void main() {
     float y = v_uv.y;
     float x = v_uv.x;
 
-    float BH = 1.0 - x; // 1.0m over 2.5km
+    float BH = (1.0 - x); // 1.0m over 2.5km
 
     float SH_max = u_sediment_height_max;
     float SH_min = u_sediment_height_min;
@@ -34,7 +34,7 @@ void main() {
         (1.0 - smoothstep(u_lower_bank - ubw_w, u_lower_bank + ubw_w, y)) *
         (SH_max - SH_min);
 
-    if (x >= 4.0 / u_resolution.x ) { WH = 0.; }
+    if (x >= 1.0 / u_resolution.x ) { WH = 0.; }
 
     gl_FragColor = vec4(
         BH, SH, WH, 1.0
