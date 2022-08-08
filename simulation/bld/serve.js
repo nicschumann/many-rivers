@@ -11,6 +11,8 @@ export const OPTIONS = {
   loader: {
     '.vs': 'text',
     '.fs': 'text',
+    '.vert': 'text',
+    '.frag': 'text',
     '.eot': 'file',
     '.woff': 'file',
     '.ttf': 'file'

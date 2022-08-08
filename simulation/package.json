@@ -14,5 +14,9 @@
   "devDependencies": {
     "esbuild": "^0.14.53",
     "esbuild-serve": "^1.0.1"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.3",
+    "regl": "^2.1.0"
   }
 }
