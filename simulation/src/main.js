@@ -12,22 +12,51 @@ const regl = require('regl')({
 const TILE_SIZE = [512, 512];
 // const TERRAIN_SIZE = [TILE_SIZE[0] * 2.0, TILE_SIZE[1] * 2.0];
 
+// overall parameters to this model:
+const parameters = {
+    sediment_height_max: 1.0,
+    sediment_height_min: 0.75,
 
-
+    upper_bank: 0.4,
+    lower_bank: 0.6,
+    bank_width: 0.01
+}
 
 // GPU calls: calculation
-const calculate_bedrock_field = regl({
+const calculate_initial_conditions = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-B-initial-condition.frag'),
+    frag: require('./shaders/calculate-initial-conditions.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
     },
-    uniforms: {},
+    uniforms: {
+        u_upper_bank: regl.prop('u_upper_bank'),
+        u_lower_bank: regl.prop('u_lower_bank'),
+        u_bank_width: regl.prop('u_bank_width'),
+        u_sediment_height_max: regl.prop('u_sediment_height_max'),
+        u_sediment_height_min: regl.prop('u_sediment_height_min'),
+        u_resolution: TILE_SIZE
+    },
     primitive: "triangle strip",
     count: 4
 })
+
+// GPU calls: update steps
+
+// const calculate_flow_field = regl({
+//     framebuffer: regl.prop('target'),
+//     vert: require('./shaders/pass-through.vert'),
+//     frag: require('./shaders/calculate-Q-field.frag'),
+//     attributes: {
+//         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+//         a_uv: regl.prop('a_uv')
+//     },
+//     uniforms: {},
+//     primitive: "triangle strip",
+//     count: 4
+// });
 
 
 // GPU calls: rendering
@@ -40,7 +69,8 @@ const render_tile_as_color = regl({
     },
     uniforms: {
         u_transform: regl.prop('u_transform'),
-        u_color: regl.prop('u_color')
+        u_color: regl.prop('u_color'),
+        u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
     count: 4
@@ -56,7 +86,25 @@ const render_field = regl({
     uniforms: {
         u_transform: regl.prop('u_transform'),
         u_data: regl.prop('u_data'),
-        u_scalefactor: regl.prop('u_scalefactor')
+        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
+
+const render_terrain_height = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-terrain-height.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_H: regl.prop('u_H'),
+        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
     count: 4  
@@ -106,16 +154,19 @@ class Tile {
         // later, this will need to be a function of the grid location...
         
         // these buffers are aligned to the H grid
-        this.B = new SingleFramebuffer(regl, TILE_SIZE);
-        this.S = new DoubleFramebuffer(regl, TILE_SIZE);
-        this.W = new DoubleFramebuffer(regl, TILE_SIZE);
+        this.H = new DoubleFramebuffer(regl, TILE_SIZE);
 
         // these buffers are aligned to the Q grid
         this.Q = new DoubleFramebuffer(regl, TILE_SIZE);
 
-        calculate_bedrock_field({
-            target: this.B.buffer,
+        calculate_initial_conditions({
+            target: this.H.front,
             a_uv: this.uvs,
+            u_upper_bank: parameters.upper_bank,
+            u_lower_bank: parameters.lower_bank,
+            u_bank_width: parameters.bank_width,
+            u_sediment_height_max: parameters.sediment_height_max,
+            u_sediment_height_min: parameters.sediment_height_min,
         })
 
         this.loaded = true
@@ -124,12 +175,13 @@ class Tile {
     render (transform, resources) {
         if (this.loaded) {
 
-            render_field({
-                u_data: this.B.buffer,
+            render_terrain_height({
+                u_H: this.H.front,
+                u_scalefactor: 0.5,
+
                 a_position: this.positions,
                 a_uv: this.uvs,
                 u_transform: transform,
-                u_scalefactor: 1.0
             })
 
         } else {
