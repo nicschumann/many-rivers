@@ -1,6 +1,6 @@
 precision highp float;
 
-// #define ALPHA_BLEND
+#define RENDER_E
 
 varying vec2 v_uv;
 
@@ -10,7 +10,7 @@ uniform float u_scalefactor;
 void main() {
     vec2 uv = v_uv;
 
-    vec3 H = texture2D(u_H, uv).rgb;
+    vec4 H = texture2D(u_H, uv);
     
     float b = H.r;
     float s = H.g;
@@ -21,11 +21,17 @@ void main() {
     vec4 terrain = vec4(0.38, 0.31, 0.25, 1.0 - w);
     vec3 height = vec3( pow((b + s) * u_scalefactor, 0.78) );
 
-    #ifdef ALPHA_BLEND // define ALPHA_BLEND at the top to blend water in to simulate depth
+    #ifdef RENDER_E 
 
-    gl_FragColor = vec4(water.rgb * water.a + (terrain.rgb * height) * terrain.a, 1.0);
+    const float sf = 5.0;
+    if (H.a >= 0.) {
+        gl_FragColor = vec4(H.a * sf, 0., 0., 1.0);
+    } else {
+        gl_FragColor = vec4(0., -H.a * sf, 0., 1.0);
+    }
+    
 
-    #else // otherwise use a bright, hard edge (easier to debug?)
+    #else 
 
     if (w > 0.0) { // if it's wet:
         gl_FragColor = vec4(water.rgb - w, 1.0);

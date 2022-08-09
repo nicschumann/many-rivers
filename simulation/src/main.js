@@ -10,7 +10,7 @@ const regl = require('regl')({
 });
 
 const TILE_SIZE = [512, 512];
-const TERRAIN_SIZE = [TILE_SIZE[0] * 1.5, TILE_SIZE[1] * 1.5];
+const TERRAIN_SIZE = [TILE_SIZE[0] * 2.0, TILE_SIZE[1] * 2.0];
 
 // overall parameters to this model:
 const parameters = {
@@ -19,7 +19,7 @@ const parameters = {
     render_curvature: true,
 
     sediment_height_max: 1.0,
-    sediment_height_min: 0.75,
+    sediment_height_min: 0.9,
 
     upper_bank: 0.47,
     lower_bank: 0.53,
@@ -327,7 +327,8 @@ class Tile {
 
 
             // CALCULATION STEPS:
-            let UPDATES_PER_RENDER = 50;
+            // let UPDATES_PER_RENDER = 50;
+            let UPDATES_PER_RENDER = 1;
             // if (resources.t < 2100) {
             //     UPDATES_PER_RENDER = 50;
             // }

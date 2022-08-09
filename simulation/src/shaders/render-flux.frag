@@ -1,7 +1,8 @@
 precision highp float;
 
 #define M_PI 3.14159265359
-#define NORMALIZE_FLUX 1.0
+#define NORMALIZE_FLUX
+// #define RENDER_FLUX_MAGNITUDE
 
 varying vec2 v_uv;
 
@@ -16,7 +17,9 @@ vec3 hsl2rgb( in vec3 c ){
 void main() {
     vec2 uv = v_uv;
     
-    vec2 flux = texture2D(u_Q, uv).ba;
+    vec4 Q = texture2D(u_Q, uv);
+    vec2 flow_depth = Q.rg;
+    vec2 flux = Q.ba;
     vec2 flux_norm = normalize(flux);
     
     // magnitude
@@ -40,7 +43,12 @@ void main() {
     angle += M_PI * 1.5;
     float hue = (angle / M_PI) / 2.0;
 
+    #ifdef RENDER_FLUX_MAGNITUDE
+
+    gl_FragColor = vec4(vec3(length(flow_depth)), 1.0);
+    #else
     gl_FragColor = vec4(hsl2rgb(vec3(hue, mag, mag * 0.5)), 1.0);
+    #endif
 
 
 

@@ -15,7 +15,7 @@ float H(vec2 xy) {
 }
 
 float BS(vec2 xy) {
-    vec3 h = texture2D(u_H, xy).rgb;
+    vec3 h = texture2D(u_H, xy).rgb; 
     return h.r + h.g;
 }
 
@@ -37,7 +37,24 @@ vec2 flux(vec2 xy) {
 void main() {
     vec2 uv = v_uv;
     vec3 e = vec3(1.0 / u_resolution, 0.);
+    vec4 H = texture2D(u_H, uv);
     
-    vec4 new_H = texture2D(u_H, uv);
-    gl_FragColor = new_H;
+    const float k_bed = 1.0;
+
+    const float Q_threshold = 0.1;
+
+    float Q_local = length( texture2D(u_Q, uv).ba );
+    float E = 0.;
+
+    if (H.b > 0.0) {
+        E = k_bed * (Q_threshold - Q_local);
+    }
+
+
+    gl_FragColor = vec4(
+        H.r,
+        H.g,
+        H.b,
+        E
+    );
 }
