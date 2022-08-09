@@ -15,14 +15,15 @@ const TERRAIN_SIZE = [TILE_SIZE[0] * 1.5, TILE_SIZE[1] * 1.5];
 // overall parameters to this model:
 const parameters = {
     render_flux: false,
-    render_height: true,
+    render_height: false,
+    render_edges: true,
 
     sediment_height_max: 1.0,
     sediment_height_min: 0.75,
 
     upper_bank: 0.47,
     lower_bank: 0.53,
-    bank_width: 0.01
+    bank_width: 0.01,
 }
 
 // GPU calls: initial conditions calculation
@@ -176,6 +177,24 @@ const render_flux = regl({
     count: 4  
 })
 
+const render_edges = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-edges.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_H: regl.prop('u_H'),
+        u_Q: regl.prop('u_Q'),
+        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
+
 // CPU Datastructures
 
 class Tile {
@@ -311,7 +330,20 @@ class Tile {
                     a_uv: this.uvs,
                     u_transform: transform,
                 })
-            }            
+            }
+            
+            if (parameters.render_edges)
+            {
+                regl.clear({depth: 1.0});
+                render_edges({
+                    u_H: this.H.front,
+                    u_scalefactor: 0.5,
+    
+                    a_position: this.positions,
+                    a_uv: this.uvs,
+                    u_transform: transform,
+                })
+            } 
 
         } else {
             console.log('still loading!');
