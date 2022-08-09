@@ -1,4 +1,4 @@
-const create_linear_buffer = (regl, resolution, filter='nearest') => {
+const create_linear_buffer = (regl, resolution, filter='linear') => {
     let color = regl.texture({
         shape: [resolution[0], resolution[1], 4],
         min: filter,

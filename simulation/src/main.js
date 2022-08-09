@@ -10,16 +10,16 @@ const regl = require('regl')({
 });
 
 const TILE_SIZE = [512, 512];
-const TERRAIN_SIZE = [TILE_SIZE[0] * 2.0, TILE_SIZE[1] * 2.0];
+const TERRAIN_SIZE = [TILE_SIZE[0] * 1.0, TILE_SIZE[1] * 1.0];
 
 // overall parameters to this model:
 const parameters = {
     render_flux: false,
     render_height: true,
-    render_curvature: true,
+    render_curvature: false,
 
     sediment_height_max: 1.0,
-    sediment_height_min: 0.9,
+    sediment_height_min: 0.8,
 
     upper_bank: 0.47,
     lower_bank: 0.53,
@@ -113,6 +113,7 @@ const calculate_averaging = regl({
     uniforms: {
         u_K: regl.prop('u_K'),
         u_E: regl.prop('u_E'),
+        u_H: regl.prop('u_H'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -328,7 +329,7 @@ class Tile {
 
             // CALCULATION STEPS:
             // let UPDATES_PER_RENDER = 50;
-            let UPDATES_PER_RENDER = 1;
+            let UPDATES_PER_RENDER = 50;
             // if (resources.t < 2100) {
             //     UPDATES_PER_RENDER = 50;
             // }
@@ -367,19 +368,20 @@ class Tile {
                         target: this.K.back,
                         u_K: this.K.front,
                         u_E: this.E.buffer,
+                        u_H: this.H.front,
                         a_uv: this.uvs
                     })
                     this.K.swap();
                 }
 
-                calculate_erosion_accretion({
-                    target: this.H.back,
-                    u_Q: this.Q.front,
-                    u_H: this.H.front,
-                    u_K: this.K.front,
-                    a_uv: this.uvs,
-                })
-                this.H.swap();
+                // calculate_erosion_accretion({
+                //     target: this.H.back,
+                //     u_Q: this.Q.front,
+                //     u_H: this.H.front,
+                //     u_K: this.K.front,
+                //     a_uv: this.uvs,
+                // })
+                // this.H.swap();
 
                 
                 // update H
@@ -458,7 +460,7 @@ class Tile {
                 render_curvature({
                     u_H: this.H.front,
                     u_K: this.K.front,
-                    u_scalefactor: 16.0,
+                    u_scalefactor: 4.0,
     
                     a_position: this.positions,
                     a_uv: this.uvs,

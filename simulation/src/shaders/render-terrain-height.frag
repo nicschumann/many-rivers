@@ -1,6 +1,6 @@
 precision highp float;
 
-#define RENDER_E
+// #define RENDER_E
 
 varying vec2 v_uv;
 
@@ -23,12 +23,14 @@ void main() {
 
     #ifdef RENDER_E 
 
-    const float sf = 5.0;
+    const float sf = 5000.0;
     if (H.a >= 0.) {
         gl_FragColor = vec4(H.a * sf, 0., 0., 1.0);
     } else {
         gl_FragColor = vec4(0., -H.a * sf, 0., 1.0);
     }
+
+    // gl_FragColor = vec4(H.g, H.g, 0., 1.0);
     
 
     #else 

@@ -6,6 +6,7 @@ varying vec2 v_uv;
 
 uniform sampler2D u_E;
 uniform sampler2D u_K;
+uniform sampler2D u_H;
 uniform vec2 u_resolution;
 
 
@@ -13,9 +14,11 @@ void main() {
     vec2 uv = v_uv;
     vec3 e = vec3(1.0 / u_resolution, 0.0);
 
-    float cell = texture2D(u_K, uv).a;
+    float edge = texture2D(u_K, uv).a;
+    float w = texture2D(u_H, uv).b;
 
-    if (cell > 0.) { // it's an edge cell
+
+    if (edge > 0.) { // it's an edge cell
 
         float k = 0.;
         float count = 0.;
@@ -36,6 +39,9 @@ void main() {
 
         gl_FragColor = vec4(vec3(k / count), 1.0);
         
+    } else if (w > 0.0) { // it's a wet cell
+        gl_FragColor = vec4(0.); 
+
     } else {
         gl_FragColor = vec4(0.); 
     }  

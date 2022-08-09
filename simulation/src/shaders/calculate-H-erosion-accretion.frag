@@ -39,21 +39,30 @@ void main() {
     vec3 e = vec3(1.0 / u_resolution, 0.);
     vec4 H = texture2D(u_H, uv);
     
-    const float k_bed = 1.0;
+    const float k_bed = 0.005;
 
-    const float Q_threshold = 0.1;
+    const float Q_threshold_high = 0.8;
+    const float Q_threshold_low = 0.03;
 
     float Q_local = length( texture2D(u_Q, uv).ba );
     float E = 0.;
 
     if (H.b > 0.0) {
-        E = k_bed * (Q_threshold - Q_local);
+        if (Q_local > Q_threshold_high) {
+            
+            E = k_bed * (Q_threshold_high - Q_local);
+            
+        } else if (Q_local < Q_threshold_low) {
+            
+            E = k_bed * (Q_threshold_low - Q_local);
+        
+        }
     }
-
 
     gl_FragColor = vec4(
         H.r,
-        H.g,
+        min(max(0., H.g + E), 1.1),
+        // H.g,
         H.b,
         E
     );
