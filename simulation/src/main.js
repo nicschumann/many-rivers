@@ -223,10 +223,10 @@ class Tile {
 
 
             // CALCULATION STEPS:
-            let UPDATES_PER_RENDER = 1;
-            if (resources.t < 2100) {
-                UPDATES_PER_RENDER = 200;
-            }
+            let UPDATES_PER_RENDER = 100;
+            // if (resources.t < 2100) {
+            //     UPDATES_PER_RENDER = 50;
+            // }
             
             
             let s = performance.now()
@@ -537,11 +537,12 @@ async function main () {
     // game loop
     // TODO(Nic): replace with requestAnimationFrame
     // TODO(Nic): replace with manual canvas and resize canvas appropriately.
-    regl.clear({color: [0, 0, 0, 1]});
+    
     setInterval(() => {
+        regl.clear({color: [0, 0, 0, 1]});
         provider.setup_transform();
         provider.render_tiles();
-    }, 1000 / 120);
+    }, 1000 / 30);
 
     // handle drag events.
     // internal state for the drag events...

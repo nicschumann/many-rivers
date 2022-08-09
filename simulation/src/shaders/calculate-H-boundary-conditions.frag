@@ -13,6 +13,22 @@ uniform float u_sediment_height_min;
 
 uniform vec2 u_resolution;
 
+float sediment_height(vec2 uv)
+{
+    float cw = 0.05; // channel width
+
+    float cc = (0.25 * pow(uv.x, 3.)) + 0.5; // channel center: polynomial bank placement.
+
+    float ub = cc - cw * 0.5; // upper bank
+    float lb = cc + cw * 0.5; // lower bank
+
+    float SH =
+        smoothstep(ub - u_bank_width, ub + u_bank_width, uv.y) *
+        (1.0 - smoothstep(lb - u_bank_width, lb + u_bank_width, uv.y));
+    
+    return SH;
+}
+
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
     vec2 uv = v_uv;
@@ -24,10 +40,11 @@ void main() {
     float SH_min = u_sediment_height_min;
     float ubw_w = u_bank_width;
 
+    float flood_scale_factor = 1.0; 
+
     float incoming_water = 
-        smoothstep(u_upper_bank - ubw_w, u_upper_bank + ubw_w, uv.y) *
-        (1.0 - smoothstep(u_lower_bank - ubw_w, u_lower_bank + ubw_w, uv.y)) *
-        (SH_max - SH_min);
+        sediment_height( uv ) *
+        (SH_max - SH_min) * flood_scale_factor;
 
     if (uv.x <= d.x ) {
         gl_FragColor = vec4(
