@@ -17,7 +17,7 @@ float BS(vec2 xy) {
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
-    float k_vel = 1.0;
+    float k_vel = 1.1; // max 1. on this regime.
     vec2 d = 1.0 / u_resolution;
     
     vec2 uv = v_uv;

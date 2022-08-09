@@ -1,22 +1,23 @@
 #!/bin/bash
+cd ..
 
-git checkout -D pre-gh-pages
-git checkout -D gh-pages
+git branch -D pre-gh-pages
+git branch -D gh-pages
 
 git checkout -b pre-gh-pages
-echo "!pub/bundle*" >> .gitignore
-echo "!pub/*.woff" >> .gitignore
-echo "!pub/*.eot" >> .gitignore
-echo "!pub/*.ttf" >> .gitignore
+echo "!simulation/pub/bundle*" >> .gitignore
+echo "!simulation/pub/*.woff" >> .gitignore
+echo "!simulation/pub/*.eot" >> .gitignore
+echo "!simulation/pub/*.ttf" >> .gitignore
 
-git add pub .gitignore
+git add simulation/pub .gitignore
 git commit -m "[pre-deploy] adds compiled assets to subtree."
 
 # split and deploy
-git subtree split --prefix pub -b gh-pages
+git subtree split --prefix simulation/pub -b gh-pages
 git push -f origin gh-pages:gh-pages
 
-git checkout master
+git checkout main
 git branch -D pre-gh-pages
 git branch -D gh-pages
 # git branch -D gh-pages

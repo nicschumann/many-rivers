@@ -10,10 +10,13 @@ const regl = require('regl')({
 });
 
 const TILE_SIZE = [512, 512];
-// const TERRAIN_SIZE = [TILE_SIZE[0] * 2.0, TILE_SIZE[1] * 2.0];
+const TERRAIN_SIZE = [TILE_SIZE[0] * 1.5, TILE_SIZE[1] * 1.5];
 
 // overall parameters to this model:
 const parameters = {
+    render_flux: false,
+    render_height: true,
+
     sediment_height_max: 1.0,
     sediment_height_min: 0.75,
 
@@ -156,9 +159,9 @@ const render_terrain_height = regl({
     count: 4  
 })
 
-const render_flow = regl({
+const render_flux = regl({
     vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/render-slope.frag'),
+    frag: require('./shaders/render-flux.frag'),
     attributes: {
         a_position: regl.prop('a_position'),
         a_uv: regl.prop('a_uv')
@@ -277,34 +280,38 @@ class Tile {
                 this.Q.swap();
             }
             let e = performance.now();
-            console.log(`${resources.t} ${UPDATES_PER_RENDER} updates: ${e - s}ms`);
+            // console.log(`${resources.t} ${UPDATES_PER_RENDER} updates: ${e - s}ms`);
 
             
 
 
             // RENDERING STEPS:
 
-            // render_flow({
-            //     u_Q: this.Q.front,
-            //     u_scalefactor: 0.5,
+            if (parameters.render_height)
+            {
+                regl.clear({depth: 1.0});
+                render_terrain_height({
+                    u_H: this.H.front,
+                    u_scalefactor: 0.5,
 
-            //     a_position: this.positions,
-            //     a_uv: this.uvs,
-            //     u_transform: transform,
-            // })
+                    a_position: this.positions,
+                    a_uv: this.uvs,
+                    u_transform: transform,
+                });
+            }
 
-            render_terrain_height({
-                u_H: this.H.front,
-                u_scalefactor: 0.5,
-
-                a_position: this.positions,
-                a_uv: this.uvs,
-                u_transform: transform,
-            });
-
-            
-
-
+            if (parameters.render_flux)
+            {
+                regl.clear({depth: 1.0});
+                render_flux({
+                    u_Q: this.Q.front,
+                    u_scalefactor: 0.5,
+    
+                    a_position: this.positions,
+                    a_uv: this.uvs,
+                    u_transform: transform,
+                })
+            }            
 
         } else {
             console.log('still loading!');
@@ -336,7 +343,7 @@ class TileProvider {
         this.tile_map = {};
         this.resources = { t: 0.0 };
 
-        this.tile_center = [ 0.5, 0.5 ]
+        this.tile_center = [ 0.25, 0.75 ]
 
         this.setup_transform();
         this.tiles.forEach(t => t.get_resources() );
@@ -346,8 +353,8 @@ class TileProvider {
         let viewport = [window.innerWidth, window.innerHeight];
 
         let scalefactors = [
-            2 * TILE_SIZE[0] / viewport[0],
-            -2 * TILE_SIZE[1] / viewport[1],
+            2 * TERRAIN_SIZE[0] / viewport[0],
+            -2 * TERRAIN_SIZE[1] / viewport[1],
         ]
 
         let T_trans = mat3.fromTranslation([], [
@@ -529,7 +536,55 @@ class TileProvider {
 
 
 
+function setup_controls() 
+{
+    let toggle = document.getElementById('control-toggle');
+    let container = document.getElementById('control-container');
 
+    Object.keys(parameters).forEach(key => {
+        let input_container = document.createElement('div');
+        input_container.classList.add('parameter-container');
+        
+        title_span = document.createElement('span');
+        title_span.classList.add('parameter-title');
+        title_span.innerText = key;
+
+        input_element = document.createElement('input');
+        input_element.classList.add('parameter-input');
+
+        if (typeof parameters[key] == 'boolean') {
+            input_element.type = 'checkbox';
+            input_element.checked = parameters[key];
+            input_element.addEventListener('change', e => {
+                console.log(e.target.checked);
+                parameters[key] = e.target.checked;
+            })
+
+        } else if (typeof parameters[key] == 'number') {
+            input_element.type = 'number';
+            input_element.value = parameters[key];
+            input_element.min = 0.01;
+            input_element.step = 0.01;
+            input_element.addEventListener('change', e => {
+                parameters[key] = Number(e.target.value);
+            })
+
+        } else {
+            input_element.type = 'text';
+            input_element.value = parameters[key];
+            input_element.addEventListener('change', e => {
+                parameters[key] = e.target.value;
+            })
+
+        }
+
+        
+        
+        input_container.appendChild(title_span);
+        input_container.appendChild(input_element);
+        container.appendChild(input_container);
+    })
+}
 
 async function main () {
     let provider = new TileProvider();
@@ -537,6 +592,7 @@ async function main () {
     // game loop
     // TODO(Nic): replace with requestAnimationFrame
     // TODO(Nic): replace with manual canvas and resize canvas appropriately.
+    
     
     setInterval(() => {
         regl.clear({color: [0, 0, 0, 1]});
@@ -575,4 +631,5 @@ async function main () {
     })
 }
 
+setup_controls()
 main();
