@@ -64,10 +64,13 @@ const calculate_flow_field = regl({
     count: 4
 });
 
-const calculate_curvature = regl({
+
+// curvature stuff:
+
+const calculate_edges = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-K-field.frag'),
+    frag: require('./shaders/calculate-K-edge-field.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -79,6 +82,25 @@ const calculate_curvature = regl({
     primitive: "triangle strip",
     count: 4
 });
+
+const calculate_curvature = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-K-curvature-field.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_K: regl.prop('u_K'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+// end of curvature stuff
 
 const advance_water_depth = regl({
     framebuffer: regl.prop('target'),
@@ -280,10 +302,19 @@ class Tile {
                 })
                 this.Q.swap();
 
+                // update edges
+                calculate_edges({
+                    target: this.K.back,
+                    u_H: this.H.front,
+                    a_uv: this.uvs
+                })
+                this.K.swap();
+
                 // update Kappa
                 calculate_curvature({
                     target: this.K.back,
                     u_H: this.H.front,
+                    u_K: this.K.front,
                     a_uv: this.uvs
                 })
                 this.K.swap();

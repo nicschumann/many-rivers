@@ -3,18 +3,7 @@ precision highp float;
 varying vec2 v_uv;
 
 uniform sampler2D u_H;
-uniform sampler2D u_Q;
 uniform vec2 u_resolution;
-
-float H(vec2 xy) {
-    vec3 h = texture2D(u_H, xy).rgb;
-    return h.r + h.g + h.b;
-}
-
-float BS(vec2 xy) {
-    vec3 h = texture2D(u_H, xy).rgb;
-    return h.r + h.g;
-}
 
 void main() {
     vec2 uv = v_uv;
@@ -33,8 +22,8 @@ void main() {
     float b = texture2D(u_H, uv + e.zy).b;
     float r = texture2D(u_H, uv + e.xz).b;
 
-    if (t + l + b + r > 0.0) {
-        gl_FragColor = vec4(0., 1., 0., 1.);
+    if (c <= 0.0 && t + l + b + r > 0.0) {
+        gl_FragColor = vec4(1., 1., 1., 1.);
     } else {
         gl_FragColor = vec4(0.); 
     }

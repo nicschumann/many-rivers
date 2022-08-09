@@ -16,7 +16,7 @@ float sediment_height(vec2 uv)
     float cw = 0.05; // channel width
 
     // float cc = (0.25 * pow(uv.x, 3.)) + 0.5; // channel center: polynomial bank placement.
-    float cc = 0.25 * cos(uv.x * 2.5) + 0.5;
+    float cc = 0.25 * cos(uv.x * 10.) + 0.5;
 
     float ub = cc - cw * 0.5; // upper bank
     float lb = cc + cw * 0.5; // lower bank
