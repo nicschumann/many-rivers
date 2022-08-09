@@ -48,7 +48,7 @@ void main() {
         sediment_height( uv ) *
         (SH_max - SH_min) * flood_scale_factor;
 
-    if (uv.x <= d.x ) {
+    if (uv.x <= d.x ) { // add inflow where the channel is.
         gl_FragColor = vec4(
             H.r, H.g, incoming_water, H.a
         );
@@ -57,8 +57,12 @@ void main() {
             H.r, H.g, max(0., H.b - incoming_water), H.a
         );
     } else {
+        
+        float WH = H.b;
+        if (WH < 0.00001) { WH = 0.0; }
+
         gl_FragColor = vec4(
-            H.r, H.g, H.b, H.a
+            H.r, H.g, WH, H.a
         );
     } 
 }

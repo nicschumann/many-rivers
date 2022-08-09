@@ -15,7 +15,7 @@ const TERRAIN_SIZE = [TILE_SIZE[0] * 1.5, TILE_SIZE[1] * 1.5];
 // overall parameters to this model:
 const parameters = {
     render_flux: false,
-    render_height: false,
+    render_height: true,
     render_edges: true,
 
     sediment_height_max: 1.0,
@@ -52,6 +52,22 @@ const calculate_flow_field = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
     frag: require('./shaders/calculate-Q-field.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+const calculate_curvature = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-K-field.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -188,6 +204,7 @@ const render_edges = regl({
         u_transform: regl.prop('u_transform'),
         u_H: regl.prop('u_H'),
         u_Q: regl.prop('u_Q'),
+        u_K: regl.prop('u_K'),
         u_scalefactor: regl.prop('u_scalefactor'),
         u_resolution: TILE_SIZE
     },
@@ -221,10 +238,11 @@ class Tile {
         // later, this will need to be a function of the grid location...
         
         // these buffers are aligned to the H grid
-        this.H = new DoubleFramebuffer(regl, TILE_SIZE);
+        this.H = new DoubleFramebuffer(regl, TILE_SIZE); // height map
+        this.K = new DoubleFramebuffer(regl, TILE_SIZE); // curvature buffer
 
         // these buffers are aligned to the Q grid
-        this.Q = new DoubleFramebuffer(regl, TILE_SIZE);
+        this.Q = new DoubleFramebuffer(regl, TILE_SIZE); // flux buffer
 
         calculate_initial_conditions({
             target: this.H.front,
@@ -261,6 +279,14 @@ class Tile {
                     a_uv: this.uvs
                 })
                 this.Q.swap();
+
+                // update Kappa
+                calculate_curvature({
+                    target: this.K.back,
+                    u_H: this.H.front,
+                    a_uv: this.uvs
+                })
+                this.K.swap();
                 
                 // update H
                 advance_water_depth({
@@ -337,6 +363,7 @@ class Tile {
                 regl.clear({depth: 1.0});
                 render_edges({
                     u_H: this.H.front,
+                    u_K: this.K.front,
                     u_scalefactor: 0.5,
     
                     a_position: this.positions,
