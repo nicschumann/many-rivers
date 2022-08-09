@@ -27,7 +27,7 @@ void main() {
     float mag = length(flux_norm);
     float angle = acos(flux_norm.x / mag);
     float y = flux_norm.y;
-    
+
     #else
     
     float mag = length(flux);
@@ -39,6 +39,7 @@ void main() {
     if (y < 0.0) { angle = M_PI - (angle + M_PI); }
     angle += M_PI * 1.5;
     float hue = (angle / M_PI) / 2.0;
+
     gl_FragColor = vec4(hsl2rgb(vec3(hue, mag, mag * 0.5)), 1.0);
 
 

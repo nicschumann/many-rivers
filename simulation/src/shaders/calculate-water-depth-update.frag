@@ -38,7 +38,7 @@ void main() {
     vec3 e = vec3(1.0 / u_resolution, 0.);
     
     vec2 d = vec2(5.0, 5.0);
-    float dt = 0.1;
+    float dt = 0.1; // max 0.1
 
     vec2 flow_depth_lt = vec2(
         flow_depth(uv - e.xz).x,

@@ -24,6 +24,8 @@ const parameters = {
     upper_bank: 0.47,
     lower_bank: 0.53,
     bank_width: 0.01,
+
+    smoothing_iterations: 5
 }
 
 // GPU calls: initial conditions calculation
@@ -93,7 +95,24 @@ const calculate_curvature = regl({
     },
     uniforms: {
         u_H: regl.prop('u_H'),
+        u_E: regl.prop('u_E'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+const calculate_averaging = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-K-averaging.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
         u_K: regl.prop('u_K'),
+        u_E: regl.prop('u_E'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -262,6 +281,7 @@ class Tile {
         // these buffers are aligned to the H grid
         this.H = new DoubleFramebuffer(regl, TILE_SIZE); // height map
         this.K = new DoubleFramebuffer(regl, TILE_SIZE); // curvature buffer
+        this.E = new SingleFramebuffer(regl, TILE_SIZE);
 
         // these buffers are aligned to the Q grid
         this.Q = new DoubleFramebuffer(regl, TILE_SIZE); // flux buffer
@@ -285,7 +305,7 @@ class Tile {
 
 
             // CALCULATION STEPS:
-            let UPDATES_PER_RENDER = 100;
+            let UPDATES_PER_RENDER = 50;
             // if (resources.t < 2100) {
             //     UPDATES_PER_RENDER = 50;
             // }
@@ -304,20 +324,33 @@ class Tile {
 
                 // update edges
                 calculate_edges({
-                    target: this.K.back,
+                    target: this.E.buffer,
                     u_H: this.H.front,
                     a_uv: this.uvs
                 })
-                this.K.swap();
 
                 // update Kappa
                 calculate_curvature({
                     target: this.K.back,
                     u_H: this.H.front,
-                    u_K: this.K.front,
+                    u_E: this.E.buffer,
                     a_uv: this.uvs
                 })
                 this.K.swap();
+
+                // averaging passes.
+                for (let i = 0; i < parameters.smoothing_iterations; i++) {
+                    calculate_averaging({
+                        target: this.K.back,
+                        u_K: this.K.front,
+                        u_E: this.E.buffer,
+                        a_uv: this.uvs
+                    })
+                    this.K.swap();
+                }
+                
+
+                // for some number of iterations, average it out.
                 
                 // update H
                 advance_water_depth({

@@ -18,7 +18,7 @@ float sediment_height(vec2 uv)
     float cw = 0.05; // channel width
 
     // float cc = (0.25 * pow(uv.x, 3.)) + 0.5; // channel center: polynomial bank placement.
-    float cc = 0.25 * cos(uv.x * 2.5) + 0.5;
+    float cc = 0.25 * cos(uv.x * 10.) + 0.5;
 
     float ub = cc - cw * 0.5; // upper bank
     float lb = cc + cw * 0.5; // lower bank
@@ -42,7 +42,7 @@ void main() {
     float SH_min = u_sediment_height_min;
     float ubw_w = u_bank_width;
 
-    float flood_scale_factor = 1.0; 
+    float flood_scale_factor = 1.05; 
 
     float incoming_water = 
         sediment_height( uv ) *

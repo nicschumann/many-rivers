@@ -30,7 +30,17 @@ void main() {
     //     (1.0 - smoothstep(u_lower_bank - ubw_w, u_lower_bank + ubw_w, uv.y)) *
     //     (SH_max - SH_min);
 
-    if (uv.x >= 1.0 - (1.0 / u_resolution.x) ) {
+    if (uv.x <= 1.0 / u_resolution.x ) {
+
+        vec2 slope = vec2(0.0008, 0.0);
+
+        vec2 new_flux = -k_vel * slope * flow_depth;
+
+        gl_FragColor = vec4(
+            flow_depth, new_flux
+        );
+
+    } else if (uv.x >= 1.0 - (1.0 / u_resolution.x) ) {
 
         vec2 slope = vec2(0.0008, 0.0);
 
