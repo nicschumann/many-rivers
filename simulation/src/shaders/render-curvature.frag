@@ -14,9 +14,9 @@ void main() {
     if ( color.a == 0. ) { discard; }
 
     if (color.r > 0.0) {
-        gl_FragColor = vec4(color.r / 16.0, 0., 0., 1.);
+        gl_FragColor = vec4(color.r / u_scalefactor, 0., 0., 1.);
     } else {
-        gl_FragColor = vec4(0., -color.r / 16.0, 0., 1.);
+        gl_FragColor = vec4(0., -color.r / u_scalefactor, 0., 1.);
     }
     
     // vec2 uv = v_uv;

@@ -16,7 +16,7 @@ const TERRAIN_SIZE = [TILE_SIZE[0] * 1.5, TILE_SIZE[1] * 1.5];
 const parameters = {
     render_flux: false,
     render_height: true,
-    render_edges: true,
+    render_curvature: true,
 
     sediment_height_max: 1.0,
     sediment_height_min: 0.75,
@@ -32,7 +32,7 @@ const parameters = {
 const calculate_initial_conditions = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-initial-conditions.frag'),
+    frag: require('./shaders/calculate-H-initial-conditions.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -121,10 +121,32 @@ const calculate_averaging = regl({
 
 // end of curvature stuff
 
+// sediment stuff
+
+const calculate_erosion_accretion = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-H-erosion-accretion.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_K: regl.prop('u_K'),
+        u_H: regl.prop('u_H'),
+        u_Q: regl.prop('u_Q'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+
+
 const advance_water_depth = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-water-depth-update.frag'),
+    frag: require('./shaders/calculate-H-water-depth-update.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -234,9 +256,9 @@ const render_flux = regl({
     count: 4  
 })
 
-const render_edges = regl({
+const render_curvature = regl({
     vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/render-edges.frag'),
+    frag: require('./shaders/render-curvature.frag'),
     attributes: {
         a_position: regl.prop('a_position'),
         a_uv: regl.prop('a_uv')
@@ -348,9 +370,16 @@ class Tile {
                     })
                     this.K.swap();
                 }
-                
 
-                // for some number of iterations, average it out.
+                calculate_erosion_accretion({
+                    target: this.H.back,
+                    u_Q: this.Q.front,
+                    u_H: this.H.front,
+                    u_K: this.K.front,
+                    a_uv: this.uvs,
+                })
+                this.H.swap();
+
                 
                 // update H
                 advance_water_depth({
@@ -422,13 +451,13 @@ class Tile {
                 })
             }
             
-            if (parameters.render_edges)
+            if (parameters.render_curvature)
             {
                 regl.clear({depth: 1.0});
-                render_edges({
+                render_curvature({
                     u_H: this.H.front,
                     u_K: this.K.front,
-                    u_scalefactor: 0.5,
+                    u_scalefactor: 16.0,
     
                     a_position: this.positions,
                     a_uv: this.uvs,
@@ -466,7 +495,7 @@ class TileProvider {
         this.tile_map = {};
         this.resources = { t: 0.0 };
 
-        this.tile_center = [ 0.25, 0.75 ]
+        this.tile_center = [ 0.5, 0.5 ]
 
         this.setup_transform();
         this.tiles.forEach(t => t.get_resources() );
@@ -663,6 +692,11 @@ function setup_controls()
 {
     let toggle = document.getElementById('control-toggle');
     let container = document.getElementById('control-container');
+
+    toggle.addEventListener('click', e => {
+        toggle.classList.toggle('active');
+        container.classList.toggle('active');
+    })
 
     Object.keys(parameters).forEach(key => {
         let input_container = document.createElement('div');

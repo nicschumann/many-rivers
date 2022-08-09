@@ -1,5 +1,7 @@
 precision highp float;
 
+// #define INCOMPLETE_RIVER
+
 varying vec2 v_uv;
 
 uniform float u_upper_bank;
@@ -48,7 +50,9 @@ void main() {
     float WH = sediment_height( uv );
     WH *= (SH_max - SH_min);
 
+    #ifdef INCOMPLETE_RIVER
     if (x >= 1.0 / u_resolution.x ) { WH = 0.; }
+    #endif
 
     gl_FragColor = vec4(
         BH, SH, WH, 1.0

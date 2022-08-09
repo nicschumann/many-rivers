@@ -1,13 +1,18 @@
 @import "./fonts/fonts.css";
+@import "./reset.css";
 
 :root {
     --border-radius: 4px;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 
 #control-toggle {
     position: fixed;
-    right:1vh;
+    left:1vh;
     bottom:1vh;
 
     height: 20px;
@@ -17,6 +22,8 @@
     border:1px solid white; 
     border-radius: var(--border-radius);
     color:white;
+
+    cursor: pointer;
     
     z-index:1;
 }
@@ -29,24 +36,50 @@
 
 #control-container {
     position: fixed;
-    right:1vh;
-    bottom:calc(2vh + 20px);
+    left:1vh;
+    bottom:-100vh;
 
     width: calc(100vw - 2vh);
 
-    background-color:black;
-    border:1px solid white; 
     border-radius: var(--border-radius);
     color:white;
 
     display: flex;
+    flex-wrap: wrap;
         
     z-index: 1;
 }
 
+#control-container.active {
+    bottom:calc(2vh + 20px);
+}
+
+.parameter-title {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 1vh;
+}
+
+.parameter-input {
+    margin:0;
+    padding:5px;
+    width: 100%;
+}
+
+.parameter-input[type="checkbox"] {
+    margin:0;
+    padding:5px;
+    width: auto;
+}
+
 .parameter-container {
-    border: 1px solid red;
-    width: 500px;
+    width: calc((100vw - 2vh) / 6);
+    border: 1px solid white;
+    margin-bottom: 1vh;
+    margin-right: 1vh;
+    padding:5px;
+
+    background-color: black;
 }
 
 

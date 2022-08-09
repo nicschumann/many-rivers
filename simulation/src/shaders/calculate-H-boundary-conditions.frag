@@ -42,7 +42,7 @@ void main() {
     float SH_min = u_sediment_height_min;
     float ubw_w = u_bank_width;
 
-    float flood_scale_factor = 1.05; 
+    float flood_scale_factor = 1.0; 
 
     float incoming_water = 
         sediment_height( uv ) *
