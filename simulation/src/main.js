@@ -22,7 +22,7 @@ const parameters = {
     bank_width: 0.01
 }
 
-// GPU calls: calculation
+// GPU calls: initial conditions calculation
 const calculate_initial_conditions = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
@@ -44,7 +44,41 @@ const calculate_initial_conditions = regl({
 })
 
 // GPU calls: update steps
+const calculate_flow_field = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-Q-field.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
 
+const advance_water_depth = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-water-depth-update.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_Q: regl.prop('u_Q'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+
+// GPU calls: boundary conditions
 const calculate_H_boundary_conditions = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
@@ -81,39 +115,6 @@ const calculate_Q_boundary_conditions = regl({
         u_bank_width: regl.prop('u_bank_width'),
         u_sediment_height_max: regl.prop('u_sediment_height_max'),
         u_sediment_height_min: regl.prop('u_sediment_height_min'),
-        u_resolution: TILE_SIZE
-    },
-    primitive: "triangle strip",
-    count: 4
-});
-
-const calculate_flow_field = regl({
-    framebuffer: regl.prop('target'),
-    vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-Q-field.frag'),
-    attributes: {
-        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
-    },
-    uniforms: {
-        u_H: regl.prop('u_H'),
-        u_resolution: TILE_SIZE
-    },
-    primitive: "triangle strip",
-    count: 4
-});
-
-const advance_water_depth = regl({
-    framebuffer: regl.prop('target'),
-    vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-water-depth-update.frag'),
-    attributes: {
-        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
-    },
-    uniforms: {
-        u_H: regl.prop('u_H'),
-        u_Q: regl.prop('u_Q'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -362,6 +363,7 @@ class TileProvider {
     render_tiles () {
         let s = performance.now();
 
+        // regl.clear({color: [0, 0, 0, 1]});
         this.tiles.forEach((tile, i) => { tile.render(this.transform, this.resources); });
         this.resources.t += 1;
 
@@ -535,6 +537,7 @@ async function main () {
     // game loop
     // TODO(Nic): replace with requestAnimationFrame
     // TODO(Nic): replace with manual canvas and resize canvas appropriately.
+    regl.clear({color: [0, 0, 0, 1]});
     setInterval(() => {
         provider.setup_transform();
         provider.render_tiles();

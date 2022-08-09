@@ -16,6 +16,8 @@ uniform vec2 u_resolution;
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
     vec2 uv = v_uv;
+    vec2 d = 1.0 / u_resolution;
+
     vec4 H = texture2D(u_H, uv);
 
     float SH_max = u_sediment_height_max;
@@ -27,9 +29,13 @@ void main() {
         (1.0 - smoothstep(u_lower_bank - ubw_w, u_lower_bank + ubw_w, uv.y)) *
         (SH_max - SH_min);
 
-    if (uv.x <= 1.0 / u_resolution.x ) {
+    if (uv.x <= d.x ) {
         gl_FragColor = vec4(
             H.r, H.g, incoming_water, H.a
+        );
+    } else if (uv.x >= 1.0 - d.x)  { // add an outflow at each edge...
+        gl_FragColor = vec4(
+            H.r, H.g, max(0., H.b - incoming_water), H.a
         );
     } else {
         gl_FragColor = vec4(
