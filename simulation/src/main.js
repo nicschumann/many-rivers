@@ -20,7 +20,7 @@ const parameters = {
     render_erosion_accretion: true,
 
     sediment_height_max: 1.0,
-    sediment_height_min: 0.8,
+    sediment_height_min: 0.9,
 
     upper_bank: 0.47,
     lower_bank: 0.53,

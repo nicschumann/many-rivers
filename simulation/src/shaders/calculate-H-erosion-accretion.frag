@@ -56,7 +56,7 @@ void main() {
 
     // NOTE(Nic): Don't do anything for now.
     S = min(max(H.g - E, 0.0), 1.0);
-    W = min(max(0., W - (S - H.g)), 1.0);
+    // W = min(max(0., W - (S - H.g)), 1.0);
 
     gl_FragColor = vec4(
         H.r,

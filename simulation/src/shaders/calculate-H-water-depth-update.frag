@@ -57,6 +57,9 @@ void main() {
 
     float total_flux = lt.x + lt.y + -rb.x + -rb.y;
     float W_new = W(uv) + (dt / (d.x * d.y)) * total_flux;
+    
+    // try just flooring it?
+    // if (W_new < 0.02) { W_new = 0.0; }
 
     vec4 all_height_data = texture2D(u_H, uv);
 
