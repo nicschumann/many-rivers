@@ -26,7 +26,8 @@ const parameters = {
     lower_bank: 0.53,
     bank_width: 0.01,
 
-    smoothing_iterations: 5
+    smoothing_iterations: 5,
+    updates_per_frame: 20
 }
 
 // GPU calls: initial conditions calculation
@@ -346,17 +347,9 @@ class Tile {
     render (transform, resources) {
         if (this.loaded) {
 
-
-            // CALCULATION STEPS:
-            // let UPDATES_PER_RENDER = 50;
-            let UPDATES_PER_RENDER = 20;
-            // if (resources.t < 2100) {
-            //     UPDATES_PER_RENDER = 50;
-            // }
-            
             
             let s = performance.now()
-            for (let i = 0; i < UPDATES_PER_RENDER; i++) {
+            for (let i = 0; i < parameters.updates_per_frame; i++) {
                 // update Q
                 calculate_flow_field({
                     target: this.Q.back,
@@ -820,6 +813,26 @@ async function main () {
 
     window.addEventListener('mouseup', () => {
         mouse_is_down = false
+    })
+
+    window.addEventListener('keydown', e => {
+        if (e.key == 'f') {
+            parameters.render_flux = !parameters.render_flux;
+            parameters.render_curvature = false;
+            parameters.render_erosion_accretion = false;
+        }
+
+        if (e.key == 'c') {
+            parameters.render_flux = false;
+            parameters.render_curvature = !parameters.render_curvature;
+            parameters.render_erosion_accretion = false;
+        }
+
+        if (e.key == 'e') {
+            parameters.render_flux = false;
+            parameters.render_curvature = false;
+            parameters.render_erosion_accretion = !parameters.render_erosion_accretion;
+        }
     })
 }
 
