@@ -1,6 +1,6 @@
 precision highp float;
 
-#define INCOMPLETE_RIVER
+// #define INCOMPLETE_RIVER
 
 varying vec2 v_uv;
 
