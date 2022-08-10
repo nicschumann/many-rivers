@@ -9,14 +9,15 @@ const regl = require('regl')({
     ]
 });
 
+const RENDER_SCALE = 2.0;
 const TILE_SIZE = [512, 512];
-const TERRAIN_SIZE = [TILE_SIZE[0] * 1.0, TILE_SIZE[1] * 1.0];
+const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
 // overall parameters to this model:
 const parameters = {
     render_flux: false,
-    render_height: true,
     render_curvature: false,
+    render_erosion_accretion: true,
 
     sediment_height_max: 1.0,
     sediment_height_min: 0.8,
@@ -276,6 +277,25 @@ const render_curvature = regl({
     count: 4  
 })
 
+const render_erosion_accretion = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-erosion-accretion-values.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_H: regl.prop('u_H'),
+        u_Q: regl.prop('u_Q'),
+        u_K: regl.prop('u_K'),
+        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
+
 // CPU Datastructures
 
 class Tile {
@@ -329,7 +349,7 @@ class Tile {
 
             // CALCULATION STEPS:
             // let UPDATES_PER_RENDER = 50;
-            let UPDATES_PER_RENDER = 50;
+            let UPDATES_PER_RENDER = 20;
             // if (resources.t < 2100) {
             //     UPDATES_PER_RENDER = 50;
             // }
@@ -374,14 +394,14 @@ class Tile {
                     this.K.swap();
                 }
 
-                // calculate_erosion_accretion({
-                //     target: this.H.back,
-                //     u_Q: this.Q.front,
-                //     u_H: this.H.front,
-                //     u_K: this.K.front,
-                //     a_uv: this.uvs,
-                // })
-                // this.H.swap();
+                calculate_erosion_accretion({
+                    target: this.H.back,
+                    u_Q: this.Q.front,
+                    u_H: this.H.front,
+                    u_K: this.K.front,
+                    a_uv: this.uvs,
+                })
+                this.H.swap();
 
                 
                 // update H
@@ -428,18 +448,15 @@ class Tile {
 
             // RENDERING STEPS:
 
-            if (parameters.render_height)
-            {
-                regl.clear({depth: 1.0});
-                render_terrain_height({
-                    u_H: this.H.front,
-                    u_scalefactor: 0.5,
+            regl.clear({depth: 1.0});
+            render_terrain_height({
+                u_H: this.H.front,
+                u_scalefactor: 0.5,
 
-                    a_position: this.positions,
-                    a_uv: this.uvs,
-                    u_transform: transform,
-                });
-            }
+                a_position: this.positions,
+                a_uv: this.uvs,
+                u_transform: transform,
+            });
 
             if (parameters.render_flux)
             {
@@ -458,6 +475,20 @@ class Tile {
             {
                 regl.clear({depth: 1.0});
                 render_curvature({
+                    u_H: this.H.front,
+                    u_K: this.K.front,
+                    u_scalefactor: 4.0,
+    
+                    a_position: this.positions,
+                    a_uv: this.uvs,
+                    u_transform: transform,
+                })
+            }
+
+            if (parameters.render_erosion_accretion)
+            {
+                regl.clear({depth: 1.0});
+                render_erosion_accretion({
                     u_H: this.H.front,
                     u_K: this.K.front,
                     u_scalefactor: 4.0,
@@ -738,11 +769,12 @@ function setup_controls()
 
         }
 
-        
-        
-        input_container.appendChild(title_span);
-        input_container.appendChild(input_element);
-        container.appendChild(input_container);
+        // NOTE(Nic): Only show for boolean inputs.
+        if (typeof parameters[key] == 'boolean') {
+            input_container.appendChild(title_span);
+            input_container.appendChild(input_element);
+            container.appendChild(input_container);
+        }
     })
 }
 

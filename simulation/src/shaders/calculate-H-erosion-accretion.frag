@@ -34,36 +34,34 @@ vec2 flux(vec2 xy) {
     return fl;
 }
 
+#define WINDOW_WIDTH 2.0
+const float D = pow(WINDOW_WIDTH * 2.0 - 1.0, 2.0) - 3.0;
+
 void main() {
     vec2 uv = v_uv;
     vec3 e = vec3(1.0 / u_resolution, 0.);
+
     vec4 H = texture2D(u_H, uv);
-    
-    const float k_bed = 0.005;
+    vec4 K = texture2D(u_K, uv);
 
-    const float Q_threshold_high = 0.8;
-    const float Q_threshold_low = 0.03;
+    float E = 0.0;
+    float W = H.b;
+    float S = H.g;
+    float k_erosion = 0.00001;
 
-    float Q_local = length( texture2D(u_Q, uv).ba );
-    float E = 0.;
-
-    if (H.b > 0.0) {
-        if (Q_local > Q_threshold_high) {
-            
-            E = k_bed * (Q_threshold_high - Q_local);
-            
-        } else if (Q_local < Q_threshold_low) {
-            
-            E = k_bed * (Q_threshold_low - Q_local);
-        
-        }
+    if (K.a != 0.0) { // edge cell
+        float R_norm = K.r;
+        E = k_erosion * S * R_norm;
     }
+
+    // NOTE(Nic): Don't do anything for now.
+    S = min(max(H.g - E, 0.0), 1.0);
+    W = min(max(0., W - (S - H.g)), 1.0);
 
     gl_FragColor = vec4(
         H.r,
-        min(max(0., H.g + E), 1.1),
-        // H.g,
-        H.b,
+        S,
+        W,
         E
     );
 }

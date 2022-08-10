@@ -13,10 +13,11 @@ void main() {
     vec4 color = texture2D(u_K, uv);
     if ( color.a == 0. ) { discard; }
 
+    const float sf = 2.0;
     if (color.r > 0.0) {
-        gl_FragColor = vec4(color.r / u_scalefactor, 0., 0., 1.);
+        gl_FragColor = vec4(color.r * sf, 0., 0., 1.);
     } else {
-        gl_FragColor = vec4(0., -color.r / u_scalefactor, 0., 1.);
+        gl_FragColor = vec4(0., -color.r * sf, 0., 1.);
     }
     
     // vec2 uv = v_uv;

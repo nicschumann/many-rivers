@@ -44,10 +44,9 @@ void main() {
     float hue = (angle / M_PI) / 2.0;
 
     #ifdef RENDER_FLUX_MAGNITUDE
-
-    gl_FragColor = vec4(vec3(length(flow_depth)), 1.0);
+    gl_FragColor = vec4(vec3(length(flux)) * 10., 1.0);
     #else
-    gl_FragColor = vec4(hsl2rgb(vec3(hue, mag, mag * 0.5)), 1.0);
+    gl_FragColor = vec4(hsl2rgb(vec3(hue, 0.1 + length(flux), mag * 0.5)), 1.0);
     #endif
 
 

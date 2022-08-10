@@ -33,14 +33,33 @@ void main() {
                 if ( n_edge.a > 0. ) {
                     k += n_edge.r;
                     count += 1.;
-                 }
+                }
             }
         }
 
         gl_FragColor = vec4(vec3(k / count), 1.0);
         
     } else if (w > 0.0) { // it's a wet cell
-        gl_FragColor = vec4(0.); 
+        
+        float a = 0.0;
+        float count = 0.0;
+
+        for (int i = -FILTER_RANGE; i < FILTER_RANGE + 1; i++) {
+            for (int j = -FILTER_RANGE; j < FILTER_RANGE + 1; j++) {
+
+                vec2 offset = vec2(float(i), float(j)) * e.xy;
+                vec4 n_edge = texture2D(u_K, uv + offset);
+                vec4 n_H = texture2D(u_H, uv + offset);
+                
+                if (n_edge.a > 0. || n_H.b > 0.) { // its an edge or it's wet
+                    a += n_edge.r;
+                    count += 1.0;
+                }
+                
+            }
+        }
+
+        gl_FragColor = vec4(a / count); 
 
     } else {
         gl_FragColor = vec4(0.); 

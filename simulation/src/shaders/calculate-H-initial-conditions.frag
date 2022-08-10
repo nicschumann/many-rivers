@@ -1,6 +1,6 @@
 precision highp float;
 
-// #define INCOMPLETE_RIVER
+#define INCOMPLETE_RIVER
 
 varying vec2 v_uv;
 
@@ -55,6 +55,6 @@ void main() {
     #endif
 
     gl_FragColor = vec4(
-        BH, SH, WH, 1.0
+        BH, SH, WH, 0.0
     );
 }
