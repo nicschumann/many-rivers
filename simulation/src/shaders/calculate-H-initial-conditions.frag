@@ -4,6 +4,8 @@ precision highp float;
 
 varying vec2 v_uv;
 
+uniform sampler2D u_elevation;
+
 uniform float u_upper_bank;
 uniform float u_lower_bank;
 uniform float u_bank_width;

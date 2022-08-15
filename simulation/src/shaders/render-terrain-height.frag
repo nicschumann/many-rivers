@@ -38,7 +38,7 @@ void main() {
     if (w > 0.0) { // if it's wet:
         gl_FragColor = vec4(water.rgb - w, 1.0);
     } else {
-        vec3 height = vec3( pow((b + s) * u_scalefactor, 0.78) );
+        vec3 height = vec3( b + s );
         vec3 color = vec3(0.38, 0.31, 0.25);
         gl_FragColor = vec4(height * color, 1.0);
     }

@@ -13,11 +13,25 @@ const RENDER_SCALE = 1.5;
 const TILE_SIZE = [512, 512];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
+const load_image = (url) => {
+    return new Promise((accept, reject) => {
+        const img = new Image();
+        img.onload = () => { 
+            createImageBitmap(img).then(accept)            
+        }
+        
+        img.onerror = reject;
+        img.crossOrigin = 'anonymous';
+        img.src = url;
+    });
+}
+
 // overall parameters to this model:
 const parameters = {
     render_flux: false,
     render_curvature: false,
     render_erosion_accretion: false,
+    running: true,
 
     sediment_height_max: 1.0,
     sediment_height_min: 0.9,
@@ -34,12 +48,15 @@ const parameters = {
 const calculate_initial_conditions = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-H-initial-conditions.frag'),
+    frag: require('./shaders/calculate-H-initial-conditions-with-elevation.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
     },
     uniforms: {
+        u_elevation: regl.prop('u_elevation'),
+        u_boundary: regl.prop('u_boundary'),
+
         u_upper_bank: regl.prop('u_upper_bank'),
         u_lower_bank: regl.prop('u_lower_bank'),
         u_bank_width: regl.prop('u_bank_width'),
@@ -146,6 +163,8 @@ const calculate_erosion_accretion = regl({
 
 
 
+
+
 const advance_water_depth = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
@@ -169,13 +188,14 @@ const advance_water_depth = regl({
 const calculate_H_boundary_conditions = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-H-boundary-conditions.frag'),
+    frag: require('./shaders/calculate-H-boundary-conditions-with-elevation.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
     },
     uniforms: {
         u_H: regl.prop('u_H'),
+        u_boundary: regl.prop('u_boundary'),
         u_upper_bank: regl.prop('u_upper_bank'),
         u_lower_bank: regl.prop('u_lower_bank'),
         u_bank_width: regl.prop('u_bank_width'),
@@ -253,6 +273,7 @@ const render_flux = regl({
     uniforms: {
         u_transform: regl.prop('u_transform'),
         u_Q: regl.prop('u_Q'),
+        u_H: regl.prop('u_H'),
         u_scalefactor: regl.prop('u_scalefactor'),
         u_resolution: TILE_SIZE
     },
@@ -301,9 +322,10 @@ const render_erosion_accretion = regl({
 // CPU Datastructures
 
 class Tile {
-    constructor(x, y) {
+    constructor(x, y, z) {
         this.x = x;
         this.y = y;
+        this.z = z;
 
         this.positions = [
             [x, y], [x + 1, y],
@@ -321,8 +343,17 @@ class Tile {
     }
 
     async get_resources() {
-        // later, this will need to be a function of the grid location...
-        
+        const terrain_url = `/data/${this.z}-${this.x}-${this.y}-terrain.png`;
+        const boundary_url = `/data/${this.z}-${this.x}-${this.y}-boundary-all.png`;
+
+        let textures = await Promise.all([ 
+            load_image(terrain_url), 
+            load_image(boundary_url), 
+        ]);
+
+        this.elevation = regl.texture({ data: textures[0], mag: 'linear', min: 'linear' });
+        this.boundary = regl.texture({ data: textures[1], mag: 'nearest', min: 'nearest' });
+
         // these buffers are aligned to the H grid
         this.H = new DoubleFramebuffer(regl, TILE_SIZE); // height map
         this.K = new DoubleFramebuffer(regl, TILE_SIZE); // curvature buffer
@@ -334,6 +365,9 @@ class Tile {
         calculate_initial_conditions({
             target: this.H.front,
             a_uv: this.uvs,
+
+            u_elevation: this.elevation,
+            u_boundary: this.boundary,
 
             u_upper_bank: parameters.upper_bank,
             u_lower_bank: parameters.lower_bank,
@@ -347,96 +381,98 @@ class Tile {
 
     render (transform, resources) {
         if (this.loaded) {
+            if (parameters.running) { 
 
-            
-            let s = performance.now()
-            for (let i = 0; i < parameters.updates_per_frame; i++) {
-                // update Q
-                calculate_flow_field({
-                    target: this.Q.back,
-                    u_H: this.H.front,
-                    
-                    a_uv: this.uvs
-                })
-                this.Q.swap();
+                let s = performance.now()
+                for (let i = 0; i < parameters.updates_per_frame; i++) {
+                    // update Q
+                    calculate_flow_field({
+                        target: this.Q.back,
+                        u_H: this.H.front,
+                        
+                        a_uv: this.uvs
+                    })
+                    this.Q.swap();
 
-                // update edges
-                calculate_edges({
-                    target: this.E.buffer,
-                    u_H: this.H.front,
-                    a_uv: this.uvs
-                })
-
-                // update Kappa
-                calculate_curvature({
-                    target: this.K.back,
-                    u_H: this.H.front,
-                    u_E: this.E.buffer,
-                    a_uv: this.uvs
-                })
-                this.K.swap();
-
-                // averaging passes.
-                for (let i = 0; i < parameters.smoothing_iterations; i++) {
-                    calculate_averaging({
-                        target: this.K.back,
-                        u_K: this.K.front,
-                        u_E: this.E.buffer,
+                    // update edges
+                    calculate_edges({
+                        target: this.E.buffer,
                         u_H: this.H.front,
                         a_uv: this.uvs
                     })
+
+                    // update Kappa
+                    calculate_curvature({
+                        target: this.K.back,
+                        u_H: this.H.front,
+                        u_E: this.E.buffer,
+                        a_uv: this.uvs
+                    })
                     this.K.swap();
+
+                    // averaging passes.
+                    for (let i = 0; i < parameters.smoothing_iterations; i++) {
+                        calculate_averaging({
+                            target: this.K.back,
+                            u_K: this.K.front,
+                            u_E: this.E.buffer,
+                            u_H: this.H.front,
+                            a_uv: this.uvs
+                        })
+                        this.K.swap();
+                    }
+
+                    // calculate_erosion_accretion({
+                    //     target: this.H.back,
+                    //     u_Q: this.Q.front,
+                    //     u_H: this.H.front,
+                    //     u_K: this.K.front,
+                    //     a_uv: this.uvs,
+                    // })
+                    // this.H.swap();
+
+                    
+                    // update H
+                    advance_water_depth({
+                        target: this.H.back,
+                        u_Q: this.Q.front,
+                        u_H: this.H.front,
+                        u_K: this.K.front,
+                        a_uv: this.uvs,
+                    });
+
+                    this.H.swap();
+
+
+                    // enforce boundary conditions
+                    calculate_H_boundary_conditions({
+                        target: this.H.back,
+                        u_boundary: this.boundary,
+                        u_H: this.H.front,
+                        u_upper_bank: parameters.upper_bank,
+                        u_lower_bank: parameters.lower_bank,
+                        u_bank_width: parameters.bank_width,
+                        u_sediment_height_max: parameters.sediment_height_max,
+                        u_sediment_height_min: parameters.sediment_height_min,
+                        a_uv: this.uvs,
+                    })
+                    this.H.swap();
+
+                    calculate_Q_boundary_conditions({
+                        target: this.Q.back,
+                        u_Q: this.Q.front,
+                        u_upper_bank: parameters.upper_bank,
+                        u_lower_bank: parameters.lower_bank,
+                        u_bank_width: parameters.bank_width,
+                        u_sediment_height_max: parameters.sediment_height_max,
+                        u_sediment_height_min: parameters.sediment_height_min,
+                        a_uv: this.uvs,
+                    })
+                    this.Q.swap();
                 }
-
-                // calculate_erosion_accretion({
-                //     target: this.H.back,
-                //     u_Q: this.Q.front,
-                //     u_H: this.H.front,
-                //     u_K: this.K.front,
-                //     a_uv: this.uvs,
-                // })
-                // this.H.swap();
-
-                
-                // update H
-                advance_water_depth({
-                    target: this.H.back,
-                    u_Q: this.Q.front,
-                    u_H: this.H.front,
-                    u_K: this.K.front,
-                    a_uv: this.uvs,
-                });
-
-                this.H.swap();
-
-
-                // enforce boundary conditions
-                calculate_H_boundary_conditions({
-                    target: this.H.back,
-                    u_H: this.H.front,
-                    u_upper_bank: parameters.upper_bank,
-                    u_lower_bank: parameters.lower_bank,
-                    u_bank_width: parameters.bank_width,
-                    u_sediment_height_max: parameters.sediment_height_max,
-                    u_sediment_height_min: parameters.sediment_height_min,
-                    a_uv: this.uvs,
-                })
-                this.H.swap();
-
-                calculate_Q_boundary_conditions({
-                    target: this.Q.back,
-                    u_Q: this.Q.front,
-                    u_upper_bank: parameters.upper_bank,
-                    u_lower_bank: parameters.lower_bank,
-                    u_bank_width: parameters.bank_width,
-                    u_sediment_height_max: parameters.sediment_height_max,
-                    u_sediment_height_min: parameters.sediment_height_min,
-                    a_uv: this.uvs,
-                })
-                this.Q.swap();
+                let e = performance.now();
+                // console.log(`${resources.t} ${UPDATES_PER_RENDER} updates: ${e - s}ms`);
             }
-            let e = performance.now();
-            // console.log(`${resources.t} ${UPDATES_PER_RENDER} updates: ${e - s}ms`);
 
             
 
@@ -458,6 +494,7 @@ class Tile {
                 regl.clear({depth: 1.0});
                 render_flux({
                     u_Q: this.Q.front,
+                    u_H: this.H.front,
                     u_scalefactor: 0.5,
     
                     a_position: this.positions,
@@ -513,18 +550,17 @@ class Tile {
 
 // TileProvider
 class TileProvider {
-    // corrected
     constructor () {
 
         // specify the map you want...
         this.tiles = [
-            new Tile(0, 0)
+            new Tile(1878, 3483, 13) // matamoros/brownsville data
         ];
 
         this.tile_map = {};
         this.resources = { t: 0.0 };
 
-        this.tile_center = [ 0.5, 0.5 ]
+        this.tile_center = [ 1878.5, 3483.5 ]
 
         this.setup_transform();
         this.tiles.forEach(t => t.get_resources() );
@@ -737,6 +773,7 @@ function setup_controls()
 
         input_element = document.createElement('input');
         input_element.classList.add('parameter-input');
+        input_element.id = key;
 
         if (typeof parameters[key] == 'boolean') {
             input_element.type = 'checkbox';
@@ -818,8 +855,16 @@ async function main () {
     })
 
     window.addEventListener('keydown', e => {
+        console.log(e.key);
+        if (e.key == ' ') {
+            parameters.running = !parameters.running;
+            document.getElementById('running').checked = parameters.running;
+        }
+
         if (e.key == 'f') {
             parameters.render_flux = !parameters.render_flux;
+            document.getElementById('render_flux').checked = parameters.render_flux;
+
             parameters.render_curvature = false;
             parameters.render_erosion_accretion = false;
         }
@@ -827,6 +872,7 @@ async function main () {
         if (e.key == 'c') {
             parameters.render_flux = false;
             parameters.render_curvature = !parameters.render_curvature;
+            document.getElementById('render_curvature').checked = parameters.render_curvature;
             parameters.render_erosion_accretion = false;
         }
 
@@ -834,6 +880,7 @@ async function main () {
             parameters.render_flux = false;
             parameters.render_curvature = false;
             parameters.render_erosion_accretion = !parameters.render_erosion_accretion;
+            document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
         }
     })
 }

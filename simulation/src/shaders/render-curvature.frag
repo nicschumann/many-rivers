@@ -14,7 +14,7 @@ void main() {
     vec4 color = texture2D(u_K, uv);
     if ( color.a == 0. && H.b == 0. ) { discard; }
 
-    const float sf = 2.0;
+    const float sf = 5.0;
     if (color.r > 0.0) {
         gl_FragColor = vec4(color.r * sf, 0., 0., 1.);
     } else {

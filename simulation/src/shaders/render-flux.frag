@@ -7,6 +7,7 @@ precision highp float;
 varying vec2 v_uv;
 
 uniform sampler2D u_Q;
+uniform sampler2D u_H;
 uniform float u_scalefactor;
 
 vec3 hsl2rgb( in vec3 c ){
@@ -18,6 +19,9 @@ void main() {
     vec2 uv = v_uv;
     
     vec4 Q = texture2D(u_Q, uv);
+    vec4 H = texture2D(u_H, uv);
+    if (H.b <= 0.) { discard; }
+
     vec2 flow_depth = Q.rg;
     vec2 flux = Q.ba;
     vec2 flux_norm = normalize(flux);
@@ -44,7 +48,7 @@ void main() {
     float hue = (angle / M_PI) / 2.0;
 
     #ifdef RENDER_FLUX_MAGNITUDE
-    gl_FragColor = vec4(vec3(length(flux)) * 10., 1.0);
+    gl_FragColor = vec4(vec3(length(flux)), 1.0);
     #else
     gl_FragColor = vec4(hsl2rgb(vec3(hue, 0.1 + length(flux), mag * 0.5)), 1.0);
     #endif
