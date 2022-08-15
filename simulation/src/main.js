@@ -9,7 +9,7 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 2.0;
+const RENDER_SCALE = 1.5;
 const TILE_SIZE = [512, 512];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -17,7 +17,7 @@ const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 const parameters = {
     render_flux: false,
     render_curvature: false,
-    render_erosion_accretion: true,
+    render_erosion_accretion: false,
 
     sediment_height_max: 1.0,
     sediment_height_min: 0.9,
@@ -149,7 +149,7 @@ const calculate_erosion_accretion = regl({
 const advance_water_depth = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-H-water-depth-update.frag'),
+    frag: require('./shaders/calculate-H-depth-update.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -157,6 +157,7 @@ const advance_water_depth = regl({
     uniforms: {
         u_H: regl.prop('u_H'),
         u_Q: regl.prop('u_Q'),
+        u_K: regl.prop('u_K'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -387,14 +388,14 @@ class Tile {
                     this.K.swap();
                 }
 
-                calculate_erosion_accretion({
-                    target: this.H.back,
-                    u_Q: this.Q.front,
-                    u_H: this.H.front,
-                    u_K: this.K.front,
-                    a_uv: this.uvs,
-                })
-                this.H.swap();
+                // calculate_erosion_accretion({
+                //     target: this.H.back,
+                //     u_Q: this.Q.front,
+                //     u_H: this.H.front,
+                //     u_K: this.K.front,
+                //     a_uv: this.uvs,
+                // })
+                // this.H.swap();
 
                 
                 // update H
@@ -402,6 +403,7 @@ class Tile {
                     target: this.H.back,
                     u_Q: this.Q.front,
                     u_H: this.H.front,
+                    u_K: this.K.front,
                     a_uv: this.uvs,
                 });
 

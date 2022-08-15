@@ -52,11 +52,12 @@ void main() {
     if (K.a != 0.0) { // edge cell
         float R_norm = K.r;
         E = k_erosion * S * R_norm;
+        if (E > 0.) { E *= 2.0; }
     }
 
     // NOTE(Nic): Don't do anything for now.
-    S = min(max(H.g - E, 0.0), 1.0);
-    // W = min(max(0., W - (S - H.g)), 1.0);
+    S = min(max(S - E, 0.0), 1.0);
+    // W = min(max(0., W + E), 1.0);
 
     gl_FragColor = vec4(
         H.r,

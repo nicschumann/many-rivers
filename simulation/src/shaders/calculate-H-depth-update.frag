@@ -4,6 +4,7 @@ varying vec2 v_uv;
 
 uniform sampler2D u_H;
 uniform sampler2D u_Q;
+uniform sampler2D u_K;
 
 uniform vec2 u_resolution;
 
@@ -21,6 +22,11 @@ float BS(vec2 xy) {
 float W(vec2 xy) {
     vec3 h = texture2D(u_H, xy).rgb;
     return h.b;
+}
+
+float S(vec2 xy) {
+    vec3 h = texture2D(u_H, xy).rgb;
+    return h.g;
 }
 
 vec2 flow_depth(vec2 xy) {
@@ -57,9 +63,16 @@ void main() {
 
     float total_flux = lt.x + lt.y + -rb.x + -rb.y;
     float W_new = W(uv) + (dt / (d.x * d.y)) * total_flux;
+
+    // vec2 u = lt - rb;
+    // float k = texture2D(u_K, uv).r;
+    // // float S_new = (S(uv) - S(uv - normalize(u) * e.xy)) * total_flux * k;
+    // float E = S(uv) * total_flux * -k * 0.01;
+    // float S_new = S(uv) + E;
+    // W_new = W_new - E;
     
-    // try just flooring it?
-    // if (W_new < 0.02) { W_new = 0.0; }
+    // // try just flooring itf?
+    // if (k < -0.02 && W_new < 0.01) { W_new = 0.0; }
 
     vec4 all_height_data = texture2D(u_H, uv);
 

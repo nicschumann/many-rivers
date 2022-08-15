@@ -17,7 +17,7 @@ float BS(vec2 xy) {
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
-    float k_vel = 3.0; // max 1. on this regime.
+    float k_vel = 0.5; // max 1. on this regime.
     vec2 d = 1.0 / u_resolution;
     
     vec2 uv = v_uv;
@@ -35,6 +35,9 @@ void main() {
     );
 
     vec2 flux = -k_vel * slope * flow_depth;
+    float flux_norm = length(flux);
+
+    // if (flux_norm > 1.0) { flux /= flux_norm; }
 
     gl_FragColor = vec4(flow_depth, flux);
 }
