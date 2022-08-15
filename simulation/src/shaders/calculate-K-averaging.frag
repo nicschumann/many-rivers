@@ -42,7 +42,7 @@ void main() {
     } else if (w > 0.0) { // it's a wet cell
         
         float a = 0.0;
-        float count = 0.0;
+        float count = pow(float(FILTER_RANGE * 2 - 1), 2.0);
 
         for (int i = -FILTER_RANGE; i < FILTER_RANGE + 1; i++) {
             for (int j = -FILTER_RANGE; j < FILTER_RANGE + 1; j++) {
@@ -51,14 +51,15 @@ void main() {
                 vec4 n_edge = texture2D(u_K, uv + offset);
                 vec4 n_H = texture2D(u_H, uv + offset);
                 
-                if (n_edge.a > 0. || n_H.b > 0.) { // its an edge or it's wet
+                if (n_edge.a > 0.) { // its an edge or it's wet
                     a += n_edge.r;
-                    count += 1.0;
+                    // count += 1.0;
                 }
                 
             }
         }
 
+        // gl_FragColor = vec4(a / pow(float(FILTER_RANGE * 2), 2.0)); 
         gl_FragColor = vec4(a / count); 
 
     } else {
