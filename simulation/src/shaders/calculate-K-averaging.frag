@@ -1,6 +1,6 @@
 precision highp float;
 
-#define FILTER_RANGE 4
+#define FILTER_RANGE 3
 
 varying vec2 v_uv;
 

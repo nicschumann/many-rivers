@@ -39,6 +39,38 @@ const float D = pow(WINDOW_WIDTH * 2.0 - 1.0, 2.0) - 3.0;
 const float k_bed = 0.2;
 
 // new version [8/16/22]
+// void main () {
+//     vec2 uv = v_uv;
+//     vec3 e = vec3(1.0 / u_resolution, 0.);
+
+//     vec4 H = texture2D(u_H, uv);
+//     vec4 K = texture2D(u_K, uv);
+//     vec4 Q = texture2D(u_Q, uv);
+
+//     float E = 0.0;  
+
+//     float Q_representative = length(Q.ba);
+
+//     float R_norm = K.r / D; // clamp this.
+
+//     const float R_check = 0.001;
+
+//     if (K.a > 0.0 && R_norm > 0.001 && R_norm < 0.005) {
+//         E -= 0.001 * abs(R_norm) * Q_representative;
+//     }  else if (K.a > 0.0 && R_norm < -0.0001 && R_norm > -0.005) {
+//         E += 0.1 * abs(R_norm) * Q_representative;
+//     }
+
+//     gl_FragColor = vec4(
+//         H.r,
+//         H.g + E,
+//         H.b,
+//         1000. * E
+//     );
+// }
+
+
+// new version [8/16/22] v2
 void main () {
     vec2 uv = v_uv;
     vec3 e = vec3(1.0 / u_resolution, 0.);
@@ -51,21 +83,17 @@ void main () {
 
     float Q_representative = length(Q.ba);
 
-    float R_norm = K.r / D; // clamp this.
+    float R_norm = K.r; // clamp this.
 
-    const float R_check = 0.0001;
-
-    if (K.a > 0.0 && R_norm > R_check) {
-        E -= 0.0001;
-    }  else if (K.a > 0.0 && R_norm < -R_check) {
-        E += 0.0001;
-    }
+    if (K.a > 0.) {
+        E = -R_norm * 0.00001;
+    } 
 
     gl_FragColor = vec4(
         H.r,
         H.g + E,
         H.b,
-        R_norm
+        1000. * E
     );
 }
 

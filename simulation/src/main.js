@@ -42,7 +42,7 @@ const parameters = {
     bank_width: 0.01,
 
     smoothing_iterations: 5,
-    updates_per_frame: 20
+    updates_per_frame: 100
 }
 
 // GPU calls: initial conditions calculation
