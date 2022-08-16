@@ -33,7 +33,7 @@ void main() {
     float mask = texture2D(u_boundary, uv).a;
 
     // the amount of water to pump through the system.
-    float incoming_water = 0.1; // smarter way to set this, pls.
+    float incoming_water = 0.3; // smarter way to set this, pls.
 
     if ((uv.x >= 1.0 - d.x ||
         uv.x <= d.x ||
@@ -41,7 +41,7 @@ void main() {
         uv.y <= d.y) && mask > 0.) { // add inflow where the channel is.
         
         gl_FragColor = vec4(
-            H.r, H.g, incoming_water, H.a
+            H.r, H.g, min(H.b + incoming_water, 0.2), H.a
         );
 
     } else if (
@@ -52,6 +52,7 @@ void main() {
         mask == 0. // it's not a source
     )  { // add outflows at edges.
         
+        // incoming_water = 0.0;
         gl_FragColor = vec4(
             H.r, H.g, max(0., H.b - incoming_water), H.a
         );
@@ -62,9 +63,10 @@ void main() {
         if (WH < 0.00001) { WH = 0.0; }
         
         // drain some water here?
+        WH -= 0.000005;
 
         gl_FragColor = vec4(
-            H.r, H.g, WH, H.a
+            H.r, H.g, max(0., WH), H.a
         );
     } 
 }

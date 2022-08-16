@@ -61,8 +61,10 @@ void main() {
         float WH = H.b;
         if (WH < 0.00001) { WH = 0.0; }
 
+        WH -= 0.0001;
+
         gl_FragColor = vec4(
-            H.r, H.g, WH, H.a
+            H.r, H.g, max(0., WH), H.a
         );
     } 
 }

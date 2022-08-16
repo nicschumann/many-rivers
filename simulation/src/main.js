@@ -31,7 +31,8 @@ const parameters = {
     render_flux: false,
     render_curvature: false,
     render_erosion_accretion: false,
-    running: true,
+    render_slope: false,
+    running: false,
 
     sediment_height_max: 1.0,
     sediment_height_min: 0.9,
@@ -69,6 +70,23 @@ const calculate_initial_conditions = regl({
 })
 
 // GPU calls: update steps
+
+const calculate_slope_field = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-S-field.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+})
+
 const calculate_flow_field = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
@@ -79,6 +97,7 @@ const calculate_flow_field = regl({
     },
     uniforms: {
         u_H: regl.prop('u_H'),
+        u_S: regl.prop('u_S'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -281,6 +300,24 @@ const render_flux = regl({
     count: 4  
 })
 
+const render_slope = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-slope.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_S: regl.prop('u_S'),
+        u_H: regl.prop('u_H'),
+        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
+
 const render_curvature = regl({
     vert: require('./shaders/place-tile.vert'),
     frag: require('./shaders/render-curvature.frag'),
@@ -358,6 +395,7 @@ class Tile {
         this.H = new DoubleFramebuffer(regl, TILE_SIZE); // height map
         this.K = new DoubleFramebuffer(regl, TILE_SIZE); // curvature buffer
         this.E = new SingleFramebuffer(regl, TILE_SIZE);
+        this.S = new SingleFramebuffer(regl, TILE_SIZE); // slope buffer
 
         // these buffers are aligned to the Q grid
         this.Q = new DoubleFramebuffer(regl, TILE_SIZE); // flux buffer
@@ -382,14 +420,21 @@ class Tile {
     render (transform, resources) {
         if (this.loaded) {
             if (parameters.running) { 
+                console.log('step tiles');
 
                 let s = performance.now()
                 for (let i = 0; i < parameters.updates_per_frame; i++) {
                     // update Q
+                    calculate_slope_field({
+                        target: this.S.buffer,
+                        u_H: this.H.front,
+                        a_uv: this.uvs
+                    })
+
                     calculate_flow_field({
                         target: this.Q.back,
                         u_H: this.H.front,
-                        
+                        u_S: this.S.buffer,
                         a_uv: this.uvs
                     })
                     this.Q.swap();
@@ -422,14 +467,14 @@ class Tile {
                         this.K.swap();
                     }
 
-                    // calculate_erosion_accretion({
-                    //     target: this.H.back,
-                    //     u_Q: this.Q.front,
-                    //     u_H: this.H.front,
-                    //     u_K: this.K.front,
-                    //     a_uv: this.uvs,
-                    // })
-                    // this.H.swap();
+                    calculate_erosion_accretion({
+                        target: this.H.back,
+                        u_Q: this.Q.front,
+                        u_H: this.H.front,
+                        u_K: this.K.front,
+                        a_uv: this.uvs,
+                    })
+                    this.H.swap();
 
                     
                     // update H
@@ -496,6 +541,20 @@ class Tile {
                     u_Q: this.Q.front,
                     u_H: this.H.front,
                     u_scalefactor: 0.5,
+    
+                    a_position: this.positions,
+                    a_uv: this.uvs,
+                    u_transform: transform,
+                })
+            }
+
+            if (parameters.render_slope)
+            {
+                regl.clear({depth: 1.0});
+                render_slope({
+                    u_S: this.S.buffer,
+                    u_K: this.K.front,
+                    u_scalefactor: 4.0,
     
                     a_position: this.positions,
                     a_uv: this.uvs,
@@ -863,14 +922,15 @@ async function main () {
 
         if (e.key == 'f') {
             parameters.render_flux = !parameters.render_flux;
+            parameters.render_slope = false;
             document.getElementById('render_flux').checked = parameters.render_flux;
-
             parameters.render_curvature = false;
             parameters.render_erosion_accretion = false;
         }
 
         if (e.key == 'c') {
             parameters.render_flux = false;
+            parameters.render_slope = false;
             parameters.render_curvature = !parameters.render_curvature;
             document.getElementById('render_curvature').checked = parameters.render_curvature;
             parameters.render_erosion_accretion = false;
@@ -878,9 +938,27 @@ async function main () {
 
         if (e.key == 'e') {
             parameters.render_flux = false;
+            parameters.render_slope = false;
             parameters.render_curvature = false;
             parameters.render_erosion_accretion = !parameters.render_erosion_accretion;
             document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
+        }
+
+        if (e.key == 's') {
+            parameters.render_flux = false;
+            parameters.render_curvature = false;
+            parameters.render_slope = !parameters.render_slope;
+            parameters.render_erosion_accretion = false;
+            document.getElementById('render_slope').checked = parameters.render_slope;
+        }
+
+        if (e.key == 'ArrowRight') {
+            regl.clear({color: [0, 0, 0, 1]});
+            let running = parameters.running;
+            parameters.running = true;
+            provider.setup_transform();
+            provider.render_tiles();
+            parameters.running = running;
         }
     })
 }
