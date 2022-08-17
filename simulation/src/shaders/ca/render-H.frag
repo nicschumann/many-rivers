@@ -12,7 +12,9 @@ uniform vec2 u_resolution;
 void main() {
     vec2 uv = v_uv;
 
-    float height = texture2D(u_H, uv).r;
+    vec4 H = texture2D(u_H, uv);
+    float s = H.r;
+    float w = H.g;
 
     float max_elev = 10.;
     float min_elev = -3.;
@@ -29,7 +31,13 @@ void main() {
     if (uv.y >= 1.0 - 1.0 / u_resolution.x) { gl_FragColor = vec4(color_bounds, 1.); return; }
     #endif
     
-    float t = (height - min_elev) / (max_elev - min_elev);
+    float t = (s - min_elev) / (max_elev - min_elev);
+    vec3 terrain_color = t * color_max + (1. - t) * color_min;
+    vec3 water_color = vec3(0.04, 0.1, 0.9);
 
-    gl_FragColor = vec4(t * color_max + (1. - t) * color_min, 1.0);
+    if (w > 0.) {
+        gl_FragColor = vec4(w * water_color, 1.0);
+    } else {
+        gl_FragColor = vec4(terrain_color, 1.0);
+    }
 }

@@ -9,7 +9,7 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 1.0;
+const RENDER_SCALE = 2.0;
 const TILE_SIZE = [512, 512];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -28,10 +28,12 @@ const load_image = (url) => {
 
 // overall parameters to this model:
 const parameters = {
-    running: true
+    running: false,
+    render_neighbors: false,
 }
 
-// GPU calls: initial conditions calculation
+
+// GPU calls: initial conditions computations
 
 const ca_H_initial_conditions = regl({
     framebuffer: regl.prop('target'),
@@ -49,6 +51,41 @@ const ca_H_initial_conditions = regl({
     primitive: "triangle strip",
     count: 4
 });
+
+// GPU calls: state update computations
+
+const ca_N_flows = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/ca/calculate-N-flows.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+})
+
+const ca_H_flows = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/ca/calculate-H-flows.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_N: regl.prop('u_N'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+})
 
 
 
@@ -80,7 +117,24 @@ const render_H = regl({
         u_H: regl.prop('u_H'),
 
         u_transform: regl.prop('u_transform'),
-        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
+
+const render_N = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/ca/render-N.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_N: regl.prop('u_N'),
+        u_H: regl.prop('u_H'),
+
+        u_transform: regl.prop('u_transform'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -111,7 +165,7 @@ class Tile {
     }
 
     async get_resources() {
-        const terrain_url = `/data/${this.z}-${this.x}-${this.y}-terrain.png`;
+        const terrain_url = `/data/${this.z}-${this.x}-${this.y}-terrain-blurred-10.png`;
         const boundary_url = `/data/${this.z}-${this.x}-${this.y}-boundary.png`;
 
         let textures = await Promise.all([ 
@@ -124,6 +178,7 @@ class Tile {
 
         // these buffers are aligned to the H grid
         this.H = new DoubleFramebuffer(regl, TILE_SIZE);
+        this.N = new SingleFramebuffer(regl, TILE_SIZE);
 
         ca_H_initial_conditions({
             target: this.H.back,
@@ -131,28 +186,51 @@ class Tile {
             u_boundary: this.boundary,
             a_uv: this.uvs,
         });
-        // this.H.swap();
+        this.H.swap();
 
         this.loaded = true
     }
 
     render (transform, resources) {
         if (this.loaded) {
-            if (parameters.running) { 
+                if (parameters.running) { 
+                    // COMPUTE STEPS
 
-                console.log('step');
+                    ca_N_flows({
+                        target: this.N.buffer,
+                        u_H: this.H.front,
+                        a_uv: this.uvs
+                    })
+
+                    ca_H_flows({
+                        target: this.H.back,
+                        u_H: this.H.front,
+                        u_N: this.N.buffer,
+                        a_uv: this.uvs
+                    });
+                    this.H.swap();
+                    
+                }
 
                 // RENDERING STEPS:
-                regl.clear({depth: 5.})
+                regl.clear({depth: 1.})
                 render_H({
-                    u_H: this.H.back,
-                    u_scalefactor: 0.5,
+                    u_H: this.H.front,
 
                     a_position: this.positions,
                     u_transform: transform,
                     a_uv: this.uvs,
                 });
-            }
+
+                if (parameters.render_neighbors) {
+                    regl.clear({depth: 1.});
+                    render_N({
+                        u_N: this.N.buffer,
+                        a_position: this.positions,
+                        u_transform: transform,
+                        a_uv: this.uvs,
+                    })
+                }
 
         } else {
             console.log('still loading!');
@@ -293,7 +371,7 @@ async function main () {
     
     
     setInterval(() => {
-        regl.clear({color: [0, 0, 0, 1]});
+        // regl.clear({color: [0, 0, 0, 1]});
         provider.setup_transform();
         provider.render_tiles();
     }, 1000 / 30);
@@ -328,54 +406,21 @@ async function main () {
         mouse_is_down = false
     })
 
-    // window.addEventListener('keydown', e => {
-    //     console.log(e.key);
-    //     if (e.key == ' ') {
-    //         parameters.running = !parameters.running;
-    //         document.getElementById('running').checked = parameters.running;
-    //     }
+    window.addEventListener('keydown', e => {
+        console.log(e.key);
+        if (e.key == ' ') {
+            parameters.running = !parameters.running;
+            document.getElementById('running').checked = parameters.running;
+        }
 
-    //     if (e.key == 'f') {
-    //         parameters.render_flux = !parameters.render_flux;
-    //         parameters.render_slope = false;
-    //         document.getElementById('render_flux').checked = parameters.render_flux;
-    //         parameters.render_curvature = false;
-    //         parameters.render_erosion_accretion = false;
-    //     }
-
-    //     if (e.key == 'c') {
-    //         parameters.render_flux = false;
-    //         parameters.render_slope = false;
-    //         parameters.render_curvature = !parameters.render_curvature;
-    //         document.getElementById('render_curvature').checked = parameters.render_curvature;
-    //         parameters.render_erosion_accretion = false;
-    //     }
-
-    //     if (e.key == 'e') {
-    //         parameters.render_flux = false;
-    //         parameters.render_slope = false;
-    //         parameters.render_curvature = false;
-    //         parameters.render_erosion_accretion = !parameters.render_erosion_accretion;
-    //         document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
-    //     }
-
-    //     if (e.key == 's') {
-    //         parameters.render_flux = false;
-    //         parameters.render_curvature = false;
-    //         parameters.render_slope = !parameters.render_slope;
-    //         parameters.render_erosion_accretion = false;
-    //         document.getElementById('render_slope').checked = parameters.render_slope;
-    //     }
-
-    //     if (e.key == 'ArrowRight') {
-    //         regl.clear({color: [0, 0, 0, 1]});
-    //         let running = parameters.running;
-    //         parameters.running = true;
-    //         provider.setup_transform();
-    //         provider.render_tiles();
-    //         parameters.running = running;
-    //     }
-    // })
+        if (e.key == 'ArrowRight') {
+            let running = parameters.running;
+            parameters.running = true;
+            provider.setup_transform();
+            provider.render_tiles();
+            parameters.running = running;
+        }
+    })
 }
 
 setup_controls()
