@@ -38,21 +38,20 @@ void main() {
     // vec2 flux = -k_vel * slope * flow_depth;
 
     vec2 flux = vec2(0.0);
-    float min_flow_depth = 0.01;
+    float min_flux = 0.00000001;
 
-    if (flow_depth.x > min_flow_depth) {
-        // flux.x = -k_vel * slope.x * flow_depth.x;
-        flux.x = (-k / n) * sign(slope.x) * sqrt(abs(slope.x)) * pow(flow_depth.x, 0.66667);
+    // flux.x = -k_vel * slope.x * flow_depth.x;
+    flux.x = (-k / n) * sign(slope.x) * sqrt(abs(slope.x)) * pow(flow_depth.x, 1.66667);
+    // flux.y = -k_vel * slope.y * flow_depth.y;
+    flux.y = (-k / n) * sign(slope.y) * sqrt(abs(slope.y)) * pow(flow_depth.y, 1.66667);   
+
+    if (abs(flux.x) < min_flux) {
+        flux.x = 0.0;
     }
 
-    if (flow_depth.y > min_flow_depth) {
-        // flux.y = -k_vel * slope.y * flow_depth.y;
-        flux.y = (-k / n) * sign(slope.y) * sqrt(abs(slope.y)) * pow(flow_depth.y, 0.66667);   
+    if (abs(flux.y) < min_flux) {
+        flux.y = 0.0;
     }
-
-    // vec2 flux = (-k / n) * sign(slope) * sqrt(abs(slope)) * pow(flow_depth, vec2(0.66667));
-
-    // flux /= flux_norm;
 
     gl_FragColor = vec4(flow_depth, flux);
 }

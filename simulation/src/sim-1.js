@@ -38,9 +38,10 @@ const parameters = {
 
     p1: [0.0, 0.65],
     p2: [1.0, 0.65],
-    flux_magnitude_scale: 1.5,
+    flux_magnitude_scale: 10,
 
     smoothing_iterations: 5,
+    flux_averaging_steps: 0,
     updates_per_frame: 50
 }
 
@@ -115,6 +116,22 @@ const calculate_flow_field = regl({
     uniforms: {
         u_H: regl.prop('u_H'),
         u_S: regl.prop('u_S'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+const calculate_flow_field_averaging = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-Q-averaging.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_Q: regl.prop('u_Q'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -526,6 +543,17 @@ class Tile {
                     })
                     this.Q.swap();
 
+                    // single averaging step
+                    for (let i = 0; i < parameters.flux_averaging_steps; i++) {
+                        calculate_flow_field_averaging({
+                            target: this.Q.back,
+                            u_Q: this.Q.front,
+                            a_uv: this.uvs 
+                        });
+                        this.Q.swap();
+                    }
+                    
+
                     // update edges
                     calculate_edges({
                         target: this.E.buffer,
@@ -579,18 +607,18 @@ class Tile {
                     this.H.swap();
 
                     // enforce boundary conditions
-                    calculate_H_boundary_conditions({
-                        target: this.H.back,
-                        u_boundary: (this.is_testcase) ? this.elevation : this.boundary,
-                        u_H: this.H.front,
-                        u_upper_bank: parameters.upper_bank,
-                        u_lower_bank: parameters.lower_bank,
-                        u_bank_width: parameters.bank_width,
-                        u_sediment_height_max: parameters.sediment_height_max,
-                        u_sediment_height_min: parameters.sediment_height_min,
-                        a_uv: this.uvs,
-                    })
-                    this.H.swap();
+                    // calculate_H_boundary_conditions({
+                    //     target: this.H.back,
+                    //     u_boundary: (this.is_testcase) ? this.elevation : this.boundary,
+                    //     u_H: this.H.front,
+                    //     u_upper_bank: parameters.upper_bank,
+                    //     u_lower_bank: parameters.lower_bank,
+                    //     u_bank_width: parameters.bank_width,
+                    //     u_sediment_height_max: parameters.sediment_height_max,
+                    //     u_sediment_height_min: parameters.sediment_height_min,
+                    //     a_uv: this.uvs,
+                    // })
+                    // this.H.swap();
 
                     calculate_Q_boundary_conditions({
                         target: this.Q.back,
@@ -788,12 +816,12 @@ class TileProvider {
 
         // specify the map you want...
         this.tiles = [
-            new Tile(1878, 3483, 13), // matamoros/brownsville data
-            // new Tile(0, 1, 13, true) // TC 1
-            // new Tile(0, 3, 13, true) // TC 3
-            // new Tile(0, 2, 13, true) // TC 2
-            // new Tile(0, 4, 13, true), // TC 4
-            // new Tile(0, 5, 13, true) // TC 5
+            // new Tile(1878, 3483, 13), // matamoros/brownsville data
+            // new Tile(0, 1, 13, true), // TC 1
+            // new Tile(0, 3, 13, true), // TC 3
+            // new Tile(0, 2, 13, true), // TC 2 short circuit
+            new Tile(0, 4, 13, true), // TC 4
+            // new Tile(0, 5, 13, true), // TC 5
             new CrossSection(1879, 3483, 13, true)
         ];
 
