@@ -9,7 +9,7 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 2.0;
+const RENDER_SCALE = 1.5;
 const TILE_SIZE = [512, 512];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -29,7 +29,9 @@ const load_image = (url) => {
 // overall parameters to this model:
 const parameters = {
     running: false,
-    render_neighbors: false,
+    render_outflows: true,
+
+    updates_per_render: 1,
 }
 
 
@@ -45,6 +47,23 @@ const ca_H_initial_conditions = regl({
     },
     uniforms: {
         u_elevation: regl.prop('u_elevation'),
+        u_boundary: regl.prop('u_boundary'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+const ca_H_boundary_conditions = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/ca/calculate-H-boundary-conditions.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
         u_boundary: regl.prop('u_boundary'),
         u_resolution: TILE_SIZE
     },
@@ -87,6 +106,39 @@ const ca_H_flows = regl({
     count: 4
 })
 
+const ca_H_outflows = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/ca/calculate-H-outflows.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+})
+
+const ca_H_inflows = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/ca/calculate-H-inflows.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_O: regl.prop('u_O'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+})
+
 
 
 // GPU calls: rendering
@@ -108,7 +160,7 @@ const render_tile_as_color = regl({
 
 const render_H = regl({
     vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/ca/render-H.frag'),
+    frag: require('./shaders/ca/render-H-sw.frag'),
     attributes: {
         a_position: regl.prop('a_position'),
         a_uv: regl.prop('a_uv')
@@ -123,23 +175,25 @@ const render_H = regl({
     count: 4  
 })
 
-const render_N = regl({
+const render_O = regl({
     vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/ca/render-N.frag'),
+    frag: require('./shaders/ca/render-O-outflows.frag'),
     attributes: {
         a_position: regl.prop('a_position'),
         a_uv: regl.prop('a_uv')
     },
     uniforms: {
-        u_N: regl.prop('u_N'),
-        u_H: regl.prop('u_H'),
+        u_O: regl.prop('u_O'),
 
         u_transform: regl.prop('u_transform'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
-    count: 4  
+    count: 4    
 })
+
+
+
 
 // CPU Datastructures
 
@@ -178,7 +232,7 @@ class Tile {
 
         // these buffers are aligned to the H grid
         this.H = new DoubleFramebuffer(regl, TILE_SIZE);
-        this.N = new SingleFramebuffer(regl, TILE_SIZE);
+        this.O = new SingleFramebuffer(regl, TILE_SIZE, 'nearest');
 
         ca_H_initial_conditions({
             target: this.H.back,
@@ -196,41 +250,66 @@ class Tile {
                 if (parameters.running) { 
                     // COMPUTE STEPS
 
-                    ca_N_flows({
-                        target: this.N.buffer,
-                        u_H: this.H.front,
-                        a_uv: this.uvs
-                    })
+                    console.log('running');
+                    for (let i = 0; i < parameters.updates_per_render; i++ ){
+                        // ca_N_flows({
+                        //     target: this.N.buffer,
+                        //     u_H: this.H.front,
+                        //     a_uv: this.uvs
+                        // })
 
-                    ca_H_flows({
-                        target: this.H.back,
-                        u_H: this.H.front,
-                        u_N: this.N.buffer,
-                        a_uv: this.uvs
-                    });
-                    this.H.swap();
-                    
+                        ca_H_outflows({
+                            target: this.O.buffer,
+                            u_H: this.H.front,
+                            a_uv: this.uvs
+                        })
+
+                        ca_H_inflows({
+                            target: this.H.back,
+                            u_H: this.H.front,
+                            u_O: this.O.buffer,
+                            a_uv: this.uvs
+                        })
+                        this.H.swap();
+    
+                        // ca_H_flows({
+                        //     target: this.H.back,
+                        //     u_H: this.H.front,
+                        //     u_N: this.N.buffer,
+                        //     a_uv: this.uvs
+                        // });
+                        // this.H.swap();
+    
+                        ca_H_boundary_conditions({
+                            target: this.H.back,
+                            u_H: this.H.front,
+                            u_boundary: this.boundary,
+                            a_uv: this.uvs
+                        });
+                        this.H.swap();
+                    }
                 }
 
                 // RENDERING STEPS:
                 regl.clear({depth: 1.})
                 render_H({
                     u_H: this.H.front,
-
                     a_position: this.positions,
                     u_transform: transform,
                     a_uv: this.uvs,
                 });
 
-                if (parameters.render_neighbors) {
+                if (parameters.render_outflows) {
                     regl.clear({depth: 1.});
-                    render_N({
-                        u_N: this.N.buffer,
+                    render_O({
+                        u_O: this.O.buffer,
                         a_position: this.positions,
                         u_transform: transform,
                         a_uv: this.uvs,
                     })
                 }
+
+
 
         } else {
             console.log('still loading!');
@@ -419,6 +498,10 @@ async function main () {
             provider.setup_transform();
             provider.render_tiles();
             parameters.running = running;
+        }
+
+        if (e.key == 'o') {
+            parameters.render_outflows = !parameters.render_outflows;
         }
     })
 }

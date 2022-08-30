@@ -15,7 +15,7 @@ uniform vec2 u_resolution;
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
-    float k_vel = 1.0;
+    float k_vel = 0.1;
 
     vec2 uv = v_uv;
     vec2 flow_depth = texture2D(u_Q, uv).rg;
@@ -32,7 +32,7 @@ void main() {
 
     if (uv.x <= 1.0 / u_resolution.x ) {
 
-        vec2 slope = vec2(0.0008, 0.0);
+        vec2 slope = vec2(-0.008, 0.0);
 
         vec2 new_flux = -k_vel * slope * flow_depth;
 
@@ -40,9 +40,9 @@ void main() {
             flow_depth, new_flux
         );
 
-    } else if (uv.x >= 1.0 - (1.0 / u_resolution.x) ) {
+    } else if (uv.x >= 1.0 - (1.0 / u_resolution.x) || uv.y >= 1.0 - (1.0 / u_resolution.y)) {
 
-        vec2 slope = vec2(0.0008, 0.0);
+        vec2 slope = vec2(-0.008, 0.0);
 
         vec2 new_flux = -k_vel * slope * flow_depth;
 

@@ -24,23 +24,28 @@ void main() {
             if (i == 0. && j == 0.) { continue; }
 
             vec2 offset = d * vec2(i, j);
+
             vec2 neighbor_index = uv + offset;
             vec4 neighbor = texture2D(u_H, neighbor_index);
             vec2 neighbor_flows = texture2D(u_N, neighbor_index).rg;
 
             float neighbor_height = neighbor.r + neighbor.g;
 
-            if (neighbor.g > 0. && neighbor_height > total_height) {
-                // there's an inflow here
-                dW += neighbor.g / neighbor_flows.g;
+            // the thresholds for the amount of water
 
-            } else if (cell.g > 0. && total_height > neighbor_height) {
+            if (neighbor.g > 0.0 && neighbor_height > total_height) {
+                // there's an inflow here
+                
+                dW += (neighbor.g * 0.001) / (neighbor_flows.g);
+
+            } else if (cell.g > 0.0 && total_height > neighbor_height) {
                 // there's an outflow here
-                dW -= cell.g / flows.g;
+                dW -= (cell.g * 0.001) / (flows.g);
             }
 
         }
     }
 
-    gl_FragColor = vec4(cell.r, max(0., cell.g + dW), 0., 1.);
+
+    gl_FragColor = vec4(cell.r, max(0., cell.g + dW), dW, 1.); 
 }

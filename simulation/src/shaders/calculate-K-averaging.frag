@@ -1,6 +1,6 @@
 precision highp float;
 
-#define FILTER_RANGE 3
+#define FILTER_RANGE 2
 
 varying vec2 v_uv;
 
@@ -42,7 +42,7 @@ void main() {
     } else if (w > 0.0) { // it's a wet cell
         
         float a = 0.0;
-        float count = pow(float(FILTER_RANGE * 2 - 1), 2.0);
+        float count = pow(float(4 * 2 - 1), 2.0);
 
         for (int i = -FILTER_RANGE; i < FILTER_RANGE + 1; i++) {
             for (int j = -FILTER_RANGE; j < FILTER_RANGE + 1; j++) {

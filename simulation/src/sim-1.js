@@ -29,20 +29,17 @@ const load_image = (url) => {
 // overall parameters to this model:
 const parameters = {
     render_flux: false,
+    render_flux_magnitude: false,
     render_curvature: false,
     render_erosion_accretion: false,
     render_slope: false,
     running: false,
+    run_erosion: false,
 
-    sediment_height_max: 1.0,
-    sediment_height_min: 0.9,
-
-    upper_bank: 0.47,
-    lower_bank: 0.53,
-    bank_width: 0.01,
+    flux_magnitude_scale: 1.5,
 
     smoothing_iterations: 5,
-    updates_per_frame: 100
+    updates_per_frame: 50
 }
 
 // GPU calls: initial conditions calculation
@@ -68,6 +65,24 @@ const calculate_initial_conditions = regl({
     primitive: "triangle strip",
     count: 4
 })
+
+const calculate_testcase_initial_conditions = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-H-initial-conditions-testcase.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_elevation: regl.prop('u_elevation'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+})
+
+
 
 // GPU calls: update steps
 
@@ -300,6 +315,25 @@ const render_flux = regl({
     count: 4  
 })
 
+const render_flux_magnitude = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-flux-magnitude.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_Q: regl.prop('u_Q'),
+        u_H: regl.prop('u_H'),
+        u_flux_magnitude_scale: regl.prop('u_flux_magnitude_scale'),
+        u_scalefactor: regl.prop('u_scalefactor'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4  
+})
+
 const render_slope = regl({
     vert: require('./shaders/place-tile.vert'),
     frag: require('./shaders/render-slope.frag'),
@@ -359,10 +393,11 @@ const render_erosion_accretion = regl({
 // CPU Datastructures
 
 class Tile {
-    constructor(x, y, z) {
+    constructor(x, y, z, testcase=false) {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.is_testcase = testcase
 
         this.positions = [
             [x, y], [x + 1, y],
@@ -381,7 +416,9 @@ class Tile {
 
     async get_resources() {
         const terrain_url = `/data/${this.z}-${this.x}-${this.y}-terrain.png`;
-        const boundary_url = `/data/${this.z}-${this.x}-${this.y}-boundary-all.png`;
+        const boundary_url = (this.is_testcase)
+            ? `/data/${this.z}-${this.x}-${this.y}-terrain.png`
+            : `/data/${this.z}-${this.x}-${this.y}-boundary-all.png`;
 
         let textures = await Promise.all([ 
             load_image(terrain_url), 
@@ -400,19 +437,30 @@ class Tile {
         // these buffers are aligned to the Q grid
         this.Q = new DoubleFramebuffer(regl, TILE_SIZE); // flux buffer
 
-        calculate_initial_conditions({
-            target: this.H.front,
-            a_uv: this.uvs,
+        if (this.is_testcase) {
+            calculate_testcase_initial_conditions({
+                target: this.H.front,
+                a_uv: this.uvs,    
+                u_elevation: this.elevation,
+            })
 
-            u_elevation: this.elevation,
-            u_boundary: this.boundary,
+        } else {
+            calculate_initial_conditions({
+                target: this.H.front,
+                a_uv: this.uvs,
+    
+                u_elevation: this.elevation,
+                u_boundary: this.boundary,
+    
+                u_upper_bank: parameters.upper_bank,
+                u_lower_bank: parameters.lower_bank,
+                u_bank_width: parameters.bank_width,
+                u_sediment_height_max: parameters.sediment_height_max,
+                u_sediment_height_min: parameters.sediment_height_min,
+            })
+        }
 
-            u_upper_bank: parameters.upper_bank,
-            u_lower_bank: parameters.lower_bank,
-            u_bank_width: parameters.bank_width,
-            u_sediment_height_max: parameters.sediment_height_max,
-            u_sediment_height_min: parameters.sediment_height_min,
-        })
+        
 
         this.loaded = true
     }
@@ -466,15 +514,18 @@ class Tile {
                         })
                         this.K.swap();
                     }
-
-                    calculate_erosion_accretion({
-                        target: this.H.back,
-                        u_Q: this.Q.front,
-                        u_H: this.H.front,
-                        u_K: this.K.front,
-                        a_uv: this.uvs,
-                    })
-                    this.H.swap();
+                    
+                    if (parameters.run_erosion) {
+                        calculate_erosion_accretion({
+                            target: this.H.back,
+                            u_Q: this.Q.front,
+                            u_H: this.H.front,
+                            u_K: this.K.front,
+                            a_uv: this.uvs,
+                        })
+                        this.H.swap();
+                    }
+  
 
                     
                     // update H
@@ -488,11 +539,10 @@ class Tile {
 
                     this.H.swap();
 
-
                     // enforce boundary conditions
                     calculate_H_boundary_conditions({
                         target: this.H.back,
-                        u_boundary: this.boundary,
+                        u_boundary: (this.is_testcase) ? this.elevation : this.boundary,
                         u_H: this.H.front,
                         u_upper_bank: parameters.upper_bank,
                         u_lower_bank: parameters.lower_bank,
@@ -541,6 +591,21 @@ class Tile {
                     u_Q: this.Q.front,
                     u_H: this.H.front,
                     u_scalefactor: 0.5,
+    
+                    a_position: this.positions,
+                    a_uv: this.uvs,
+                    u_transform: transform,
+                })
+            }
+
+            if (parameters.render_flux_magnitude)
+            {
+                regl.clear({depth: 1.0});
+                render_flux_magnitude({
+                    u_Q: this.Q.front,
+                    u_H: this.H.front,
+                    u_scalefactor: 0.5,
+                    u_flux_magnitude_scale: parameters.flux_magnitude_scale,
     
                     a_position: this.positions,
                     a_uv: this.uvs,
@@ -613,13 +678,19 @@ class TileProvider {
 
         // specify the map you want...
         this.tiles = [
-            new Tile(1878, 3483, 13) // matamoros/brownsville data
+            // new Tile(1878, 3483, 13) // matamoros/brownsville data
+            // new Tile(0, 1, 13, true) // TC 1
+            // new Tile(0, 3, 13, true) // TC 3
+            // new Tile(0, 2, 13, true) // TC 2
+            new Tile(0, 4, 13, true) // TC 4
+            // new Tile(0, 5, 13, true) // TC 5
         ];
 
         this.tile_map = {};
         this.resources = { t: 0.0 };
 
-        this.tile_center = [ 1878.5, 3483.5 ]
+        // this.tile_center = [ 1878.5, 3483.5 ]
+        this.tile_center = [ this.tiles[0].x + 0.5, this.tiles[0].y + 0.5 ]
 
         this.setup_transform();
         this.tiles.forEach(t => t.get_resources() );
@@ -861,11 +932,11 @@ function setup_controls()
         }
 
         // NOTE(Nic): Only show for boolean inputs.
-        if (typeof parameters[key] == 'boolean') {
+        // if (typeof parameters[key] == 'boolean') {
             input_container.appendChild(title_span);
             input_container.appendChild(input_element);
             container.appendChild(input_container);
-        }
+        // }
     })
 }
 
@@ -923,6 +994,16 @@ async function main () {
         if (e.key == 'f') {
             parameters.render_flux = !parameters.render_flux;
             parameters.render_slope = false;
+            parameters.render_flux_magnitude = false;
+            document.getElementById('render_flux').checked = parameters.render_flux;
+            parameters.render_curvature = false;
+            parameters.render_erosion_accretion = false;
+        }
+
+        if (e.key == 'm') {
+            parameters.render_flux_magnitude = !parameters.render_flux_magnitude;
+            parameters.render_flux = false;
+            parameters.render_slope = false;
             document.getElementById('render_flux').checked = parameters.render_flux;
             parameters.render_curvature = false;
             parameters.render_erosion_accretion = false;
@@ -930,6 +1011,7 @@ async function main () {
 
         if (e.key == 'c') {
             parameters.render_flux = false;
+            parameters.render_flux_magnitude = false;
             parameters.render_slope = false;
             parameters.render_curvature = !parameters.render_curvature;
             document.getElementById('render_curvature').checked = parameters.render_curvature;
@@ -938,6 +1020,7 @@ async function main () {
 
         if (e.key == 'e') {
             parameters.render_flux = false;
+            parameters.render_flux_magnitude = false;
             parameters.render_slope = false;
             parameters.render_curvature = false;
             parameters.render_erosion_accretion = !parameters.render_erosion_accretion;
@@ -946,6 +1029,7 @@ async function main () {
 
         if (e.key == 's') {
             parameters.render_flux = false;
+            parameters.render_flux_magnitude = false;
             parameters.render_curvature = false;
             parameters.render_slope = !parameters.render_slope;
             parameters.render_erosion_accretion = false;

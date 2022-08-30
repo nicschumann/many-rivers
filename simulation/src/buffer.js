@@ -23,8 +23,8 @@ const create_linear_buffer = (regl, resolution, filter='linear') => {
 
 
 export class SingleFramebuffer {
-    constructor(regl, resolution) {
-        this.buffer = create_linear_buffer(regl, resolution);
+    constructor(regl, resolution, filter='linear') {
+        this.buffer = create_linear_buffer(regl, resolution, filter);
     }
 
     destroy() {
@@ -33,10 +33,10 @@ export class SingleFramebuffer {
 }
 
 export class DoubleFramebuffer {
-    constructor(regl, resolution) {
+    constructor(regl, resolution, filter='linear') {
         this.tmp = null;
-        this.front = create_linear_buffer(regl, resolution);
-        this.back = create_linear_buffer(regl, resolution);
+        this.front = create_linear_buffer(regl, resolution, filter);
+        this.back = create_linear_buffer(regl, resolution, filter);
     }
   
     swap() {

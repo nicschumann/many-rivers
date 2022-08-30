@@ -14,7 +14,7 @@ float sediment_height(vec2 uv)
     vec3 rgb = texture2D(u_elevation, uv).rgb;
     float e = -10000.0 + ((rgb.r * 255.0 * 256.0 * 256.0 + rgb.g * 255.0 * 256.0 + rgb.b * 255.0) * 0.1);
 
-    return e + 5.0 * (1.0 - uv.x); // forcing a slight slope...
+    return e; // + 5.0 * (1.0 - uv.x); // forcing a slight slope...
 }
 
 
@@ -48,6 +48,7 @@ void main() {
     float mask = texture2D(u_boundary, uv).a;
     
     // water height of 1 meter
+    // WH = 1.0;
     if (mask > 0.0) { WH = 3.0; } 
 
 

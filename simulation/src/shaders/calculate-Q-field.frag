@@ -32,8 +32,25 @@ void main() {
         max(H(uv), H(uv + e.zy)) - max(BS(uv), BS(uv + e.zy))
     );
 
-    vec2 flux = -k_vel * slope * flow_depth;
-    float flux_norm = length(flux);
+    float k = 0.01;
+    float n = 0.2;
+
+    // vec2 flux = -k_vel * slope * flow_depth;
+
+    vec2 flux = vec2(0.0);
+    float min_flow_depth = 0.01;
+
+    if (flow_depth.x > min_flow_depth) {
+        // flux.x = -k_vel * slope.x * flow_depth.x;
+        flux.x = (-k / n) * sign(slope.x) * sqrt(abs(slope.x)) * pow(flow_depth.x, 0.66667);
+    }
+
+    if (flow_depth.y > min_flow_depth) {
+        // flux.y = -k_vel * slope.y * flow_depth.y;
+        flux.y = (-k / n) * sign(slope.y) * sqrt(abs(slope.y)) * pow(flow_depth.y, 0.66667);   
+    }
+
+    // vec2 flux = (-k / n) * sign(slope) * sqrt(abs(slope)) * pow(flow_depth, vec2(0.66667));
 
     // flux /= flux_norm;
 

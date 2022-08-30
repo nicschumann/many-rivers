@@ -33,10 +33,11 @@ void main() {
     
     float t = (s - min_elev) / (max_elev - min_elev);
     vec3 terrain_color = t * color_max + (1. - t) * color_min;
+
     vec3 water_color = vec3(0.04, 0.1, 0.9);
 
     if (w > 0.) {
-        gl_FragColor = vec4(w * water_color, 1.0);
+        gl_FragColor = vec4(water_color * (1.0 - w), 1.);
     } else {
         gl_FragColor = vec4(terrain_color, 1.0);
     }

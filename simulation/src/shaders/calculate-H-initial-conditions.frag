@@ -1,6 +1,6 @@
 precision highp float;
 
-// #define INCOMPLETE_RIVER
+#define INCOMPLETE_RIVER
 
 varying vec2 v_uv;
 
@@ -40,6 +40,7 @@ void main() {
     float x = v_uv.x;
 
     float BH = 5.0 * (1.0 - uv.x); // 1.0m over 2.5km
+    BH = 0.;
 
     float SH_max = u_sediment_height_max;
     float SH_min = u_sediment_height_min;
