@@ -1,5 +1,5 @@
 import "./style/main.css";
-import { vec3, mat3 } from "gl-matrix";
+import { vec2, vec3, mat3 } from "gl-matrix";
 import { DoubleFramebuffer, SingleFramebuffer } from "./buffer";
 
 const regl = require('regl')({
@@ -9,7 +9,7 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 1.5;
+const RENDER_SCALE = 1.0;
 const TILE_SIZE = [512, 512];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -36,6 +36,8 @@ const parameters = {
     running: false,
     run_erosion: false,
 
+    p1: [0.0, 0.65],
+    p2: [1.0, 0.65],
     flux_magnitude_scale: 1.5,
 
     smoothing_iterations: 5,
@@ -390,6 +392,43 @@ const render_erosion_accretion = regl({
     count: 4  
 })
 
+const render_section_line = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-section-line.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_p1: regl.prop('u_p1'),
+        u_p2: regl.prop('u_p2'),
+        u_color: regl.prop('u_color'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4 
+});
+
+const render_crosssection = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-crosssection.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_p1: regl.prop('u_p1'),
+        u_p2: regl.prop('u_p2'),
+        u_H: regl.prop('u_H'),
+        u_color: regl.prop('u_color'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4 
+});
+
 // CPU Datastructures
 
 class Tile {
@@ -655,6 +694,16 @@ class Tile {
                 })
             } 
 
+            regl.clear({depth: 1.0});
+            render_section_line({
+                u_p1: parameters.p1,
+                u_p2: parameters.p2,
+                u_color: [0.65, 0.2, 0.0],
+                a_position: this.positions,
+                a_uv: this.uvs,
+                u_transform: transform,
+            })
+
         } else {
             console.log('still loading!');
             // If we're still waiting for textures...
@@ -672,19 +721,84 @@ class Tile {
     }
 }
 
+
+// CrossSection
+
+class CrossSection {
+    constructor(x, y, z, testcase=False) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+        this.is_testcase = testcase
+
+        this.positions = [
+            [this.x, this.y], [this.x + 1, this.y],
+            [this.x, this.y + 1], [this.x + 1, this.y + 1]
+        ]
+
+        this.uvs = [
+            [0, 0], [1, 0],
+            [0, 1], [1, 1]
+        ]
+
+        this.parent = null
+        this.loaded = false
+    }
+
+    get_resources() {
+    }
+
+    update_positions () {
+        this.positions = [
+            [this.x, this.y], [this.x + 1, this.y],
+            [this.x, this.y + 1], [this.x + 1, this.y + 1]
+        ]
+    }
+
+    set_parent(parent) {
+        this.parent = parent;
+        this.x = parent.x + 1.0;
+        this.y = parent.y + 0.0;
+        this.z = parent.z;
+        this.update_positions();
+    }
+
+    render(transform, resources) {
+        if (this.parent == null || !this.parent.loaded) { return; }
+
+        regl.clear({depth: 1.0});
+        render_crosssection({
+            u_p1: parameters.p1,
+            u_p2: parameters.p2,
+            u_H: this.parent.H.front,
+
+            a_position: this.positions,
+            a_uv: this.uvs,
+            u_transform: transform,
+            u_color: this.loading_color
+        });
+
+    }
+}
+
 // TileProvider
 class TileProvider {
     constructor () {
 
         // specify the map you want...
         this.tiles = [
-            // new Tile(1878, 3483, 13) // matamoros/brownsville data
+            new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true) // TC 1
             // new Tile(0, 3, 13, true) // TC 3
             // new Tile(0, 2, 13, true) // TC 2
-            new Tile(0, 4, 13, true) // TC 4
+            // new Tile(0, 4, 13, true), // TC 4
             // new Tile(0, 5, 13, true) // TC 5
+            new CrossSection(1879, 3483, 13, true)
         ];
+
+        // hook up the cross section renderer
+        this.tiles[1].set_parent( this.tiles[0] );
 
         this.tile_map = {};
         this.resources = { t: 0.0 };
@@ -958,7 +1072,8 @@ async function main () {
     // internal state for the drag events...
     let mouse_is_down = false;
     let last_coords = [0, 0];
-
+    let current_p_update = 0;
+    let shift_key_is_down = false;
 
     window.addEventListener('mousedown', e => {
         mouse_is_down = true
@@ -966,7 +1081,7 @@ async function main () {
     })
 
     window.addEventListener('mousemove', e => {
-        if (mouse_is_down) {
+        if (mouse_is_down && !shift_key_is_down) {
             let [dx, dy] = [e.clientX - last_coords[0], e.clientY - last_coords[1]];
             last_coords = [e.clientX, e.clientY];
 
@@ -977,15 +1092,56 @@ async function main () {
 
             // NOTE(Nic): turned off tile updating to debug shadow shading.
             // provider.update_tiles();
+        } else if (mouse_is_down && shift_key_is_down) {
+            console.log(shift_key_is_down)
+            // NOTE(Nic): todo:
+            // 1. project the mouse coordinates into the device coordinate frame
+            // 2. discard if not between -1 and 1
+            // 3. decide how to deal with p1 p2. Probably just cycle between placing p1 and p2.
+
+            let tile = provider.tiles[0] // anchor tile for now
+            // NOTE(Nic): we don't need to invert this every click...
+            let T_inv = mat3.invert([], provider.transform);
+
+            let pos_s = [2.0 * e.clientX/window.innerWidth - 1, 2.0 * (1.0 - e.clientY/window.innerHeight) - 1.0]
+            let pos_c = vec2.transformMat3([], pos_s, T_inv);
+            
+            if (
+                pos_c[0] >= tile.x && pos_c[0] < tile.x + 1 &&
+                pos_c[1] >= tile.y && pos_c[1] < tile.y + 1
+            ) {
+                let new_p = [pos_c[0] - tile.x, pos_c[1] - tile.y]
+                
+                if (current_p_update == 0) {
+                    parameters.p1 = new_p;
+                } else {
+                    parameters.p2 = new_p;
+                }
+
+                // console.log(parameters.p1)
+                // console.log(parameters.p2);
+
+
+
+                
+            }
         }
     });
 
     window.addEventListener('mouseup', () => {
         mouse_is_down = false
+        
+        if (shift_key_is_down) { 
+            current_p_update = (current_p_update + 1) % 2; 
+        }
     })
 
     window.addEventListener('keydown', e => {
-        console.log(e.key);
+        console.log(e.key)
+        if (e.key == 'Shift') {
+            shift_key_is_down = true;
+        }
+
         if (e.key == ' ') {
             parameters.running = !parameters.running;
             document.getElementById('running').checked = parameters.running;
@@ -1043,6 +1199,13 @@ async function main () {
             provider.setup_transform();
             provider.render_tiles();
             parameters.running = running;
+        }
+    })
+
+    window.addEventListener('keyup', e => {
+        if (e.key == 'Shift') {
+            shift_key_is_down = false;
+            current_p_update = 0;
         }
     })
 }

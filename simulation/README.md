@@ -31,3 +31,7 @@ npm run deploy-gh-pages
 ```
 
 This will compile and push the public folder to a gh-pages branch, in case you quickly want to get a test-site up and running. I'd typically add an additional deploy script for a custom environment later.
+
+## References / Parking Lot
+
+- "Modeling meander morphodynamics over self-formed heterogeneous floodplains." [Here](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2017WR020726) *A non-cellular model of the dynamics we're looking for.*
