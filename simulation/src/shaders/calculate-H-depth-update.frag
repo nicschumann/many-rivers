@@ -45,7 +45,7 @@ void main() {
     vec4 H = texture2D(u_H, uv);
     
     vec2 d = vec2(5.0, 5.0);
-    float dt = 0.2; // max 0.1
+    float dt = 0.1; // max 0.1
 
     vec2 flux_lt = vec2(
         flux(uv - e.xz).x,

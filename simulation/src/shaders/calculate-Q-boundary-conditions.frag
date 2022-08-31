@@ -32,7 +32,7 @@ void main() {
 
     if (uv.x <= 1.0 / u_resolution.x ) {
 
-        vec2 slope = vec2(-0.008, 0.0);
+        vec2 slope = vec2(-1.0, 0.0);
 
         vec2 new_flux = -k_vel * slope * flow_depth;
 
@@ -42,7 +42,7 @@ void main() {
 
     } else if (uv.x >= 1.0 - (1.0 / u_resolution.x) || uv.y >= 1.0 - (1.0 / u_resolution.y)) {
 
-        vec2 slope = vec2(-0.008, 0.0);
+        vec2 slope = vec2(-1.0, 0.0);
 
         vec2 new_flux = -k_vel * slope * flow_depth;
 

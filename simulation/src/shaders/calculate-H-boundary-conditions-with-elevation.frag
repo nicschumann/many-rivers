@@ -43,7 +43,7 @@ void main() {
         if (uv.y >= 1.0 - d.y || uv.x >= 1.0 - d.x) { // this should be an outflow
             
             gl_FragColor = vec4(
-                H.r, H.g, max(H.b - 4.0 * incoming_water, 0.00), H.a
+                H.r, H.g, max(H.b - incoming_water, 0.00), H.a
             );
         
         } else { // this should be an inflow
@@ -64,7 +64,7 @@ void main() {
         
         // incoming_water = 0.0;
         gl_FragColor = vec4(
-            H.r, H.g, max(0., H.b - 4.0 * incoming_water), H.a
+            H.r, H.g, max(0., H.b - incoming_water), H.a
         );
     
     } else {

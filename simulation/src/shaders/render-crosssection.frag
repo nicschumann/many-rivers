@@ -22,9 +22,7 @@ void main() {
     vec2 p_max = vec2(1.0, mb.x + mb.y);
 
     if (p_min.y < 0.0) {
-
         p_min = vec2(-mb.y/mb.x, 0.0);
-
     } else if (p_min.y > 1.0) {
         p_min = vec2((1.0-mb.y)/mb.x, 1.0);
     }
@@ -32,12 +30,11 @@ void main() {
     if (p_max.y < 0.0) {
         p_max = vec2(-mb.y/mb.x, 0.0);
     } else if (p_max.y > 1.0) {
-        p_min = vec2((1.0-mb.y)/mb.x, 1.0);
+        p_max = vec2((1.0-mb.y)/mb.x, 1.0);
     }
 
     float a = uv.x;
     vec2 target_uv = (1.0 - a) * p_min + a * p_max;
-    // vec2 target_uv = vec2(uv.x, uv.x * mb.x + mb.y);
     vec4 H = texture2D(u_H, target_uv);
     
     float h_sf = 1.0 / 10.0;

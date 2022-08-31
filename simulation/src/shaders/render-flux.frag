@@ -1,3 +1,4 @@
+#extension GL_EXT_shader_texture_lod : enable
 precision highp float;
 
 #define M_PI 3.14159265359
@@ -18,7 +19,7 @@ vec3 hsl2rgb( in vec3 c ){
 void main() {
     vec2 uv = v_uv;
     
-    vec4 Q = texture2D(u_Q, uv);
+    vec4 Q = texture2DLodEXT(u_Q, uv, 0.5);
     vec4 H = texture2D(u_H, uv);
     if (H.b <= 0.) { discard; }
 

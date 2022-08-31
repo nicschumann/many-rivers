@@ -5,11 +5,12 @@ import { DoubleFramebuffer, SingleFramebuffer } from "./buffer";
 const regl = require('regl')({
     extensions: [
         'OES_texture_float',
-        'OES_texture_float_linear'
+        'OES_texture_float_linear',
+        'EXT_shader_texture_lod'
     ]
 });
 
-const RENDER_SCALE = 1.0;
+const RENDER_SCALE = 2.0;
 const TILE_SIZE = [512, 512];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -36,8 +37,8 @@ const parameters = {
     running: false,
     run_erosion: false,
 
-    p1: [0.0, 0.65],
-    p2: [1.0, 0.65],
+    p1: [0.0, 0.5],
+    p2: [1.0, 0.5],
     flux_magnitude_scale: 10,
 
     smoothing_iterations: 5,
@@ -819,9 +820,10 @@ class TileProvider {
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true), // TC 1
             // new Tile(0, 3, 13, true), // TC 3
-            // new Tile(0, 2, 13, true), // TC 2 short circuit
-            new Tile(0, 4, 13, true), // TC 4
+            new Tile(0, 2, 13, true), // TC 2 short circuit
+            // new Tile(0, 4, 13, true), // TC 4
             // new Tile(0, 5, 13, true), // TC 5
+
             new CrossSection(1879, 3483, 13, true)
         ];
 
@@ -1109,7 +1111,9 @@ async function main () {
     })
 
     window.addEventListener('mousemove', e => {
+
         if (mouse_is_down && !shift_key_is_down) {
+
             let [dx, dy] = [e.clientX - last_coords[0], e.clientY - last_coords[1]];
             last_coords = [e.clientX, e.clientY];
 
@@ -1121,11 +1125,6 @@ async function main () {
             // NOTE(Nic): turned off tile updating to debug shadow shading.
             // provider.update_tiles();
         } else if (mouse_is_down && shift_key_is_down) {
-            console.log(shift_key_is_down)
-            // NOTE(Nic): todo:
-            // 1. project the mouse coordinates into the device coordinate frame
-            // 2. discard if not between -1 and 1
-            // 3. decide how to deal with p1 p2. Probably just cycle between placing p1 and p2.
 
             let tile = provider.tiles[0] // anchor tile for now
             // NOTE(Nic): we don't need to invert this every click...
@@ -1138,6 +1137,32 @@ async function main () {
                 pos_c[0] >= tile.x && pos_c[0] < tile.x + 1 &&
                 pos_c[1] >= tile.y && pos_c[1] < tile.y + 1
             ) {
+                let get_slope_intercept = (p1, p2) => {
+                    let m = (p2[1] - p1[1]) / (p2[0] - p1[0]);
+                    let b = -p1[0] * m + p1[1];
+
+                    return [m, b];
+                }
+
+                let get_boundary_points = (m, b) => {
+                    let p_min = [0, b];
+                    let p_max = [1, m + b];
+
+                    if (p_min[1] < 0) {
+                        p_min = [-b/m, 0.0];
+                    } else if (p_min[1] > 1) {
+                        p_min = [(1.0 - b)/m, 1.0];
+                    }
+
+                    if (p_max[1] < 0) {
+                        p_max = [-b/m, 0.0];
+                    } else if (p_max[1] > 1) {
+                        p_max = [(1.0 - b)/m, 1.0];
+                    }
+
+                    return [p_min, p_max];
+                }
+
                 let new_p = [pos_c[0] - tile.x, pos_c[1] - tile.y]
                 
                 if (current_p_update == 0) {
@@ -1146,12 +1171,15 @@ async function main () {
                     parameters.p2 = new_p;
                 }
 
-                // console.log(parameters.p1)
-                // console.log(parameters.p2);
-
-
-
+                let [m, b] = get_slope_intercept(parameters.p1, parameters.p2);
+                let [p_min, p_max] = get_boundary_points(m, b);
                 
+                let p1_inp = document.getElementById('p1');
+                let p2_inp = document.getElementById('p2');
+
+                p1_inp.value = p_min.map(v => v.toFixed(3));
+                p2_inp.value = p_max.map(v => v.toFixed(3));
+
             }
         }
     });
