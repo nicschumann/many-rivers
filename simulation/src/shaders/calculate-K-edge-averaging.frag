@@ -1,6 +1,6 @@
 precision highp float;
 
-#define FILTER_RANGE 2
+#define FILTER_RANGE 10
 
 varying vec2 v_uv;
 
@@ -29,7 +29,8 @@ void main() {
                 vec2 offset = vec2(float(i), float(j)) * e.xy;
                 vec4 n_edge = texture2D(u_K, uv + offset);
                 
-                // we have an edge.
+                // we only care about neighbor edges for this first 
+                // smoothing pass, so ignore it if it's not a not edge.
                 if ( n_edge.a > 0. ) {
                     k += n_edge.r;
                     count += 1.;
@@ -38,29 +39,6 @@ void main() {
         }
 
         gl_FragColor = vec4(vec3(k / count), 1.0);
-        
-    } else if (w > 0.0) { // it's a wet cell
-        
-        float a = 0.0;
-        float count = pow(float(4 * 2 - 1), 2.0);
-
-        for (int i = -FILTER_RANGE; i < FILTER_RANGE + 1; i++) {
-            for (int j = -FILTER_RANGE; j < FILTER_RANGE + 1; j++) {
-
-                vec2 offset = vec2(float(i), float(j)) * e.xy;
-                vec4 n_edge = texture2D(u_K, uv + offset);
-                vec4 n_H = texture2D(u_H, uv + offset);
-                
-                if (n_edge.a > 0.) { // its an edge or it's wet
-                    a += n_edge.r;
-                    // count += 1.0;
-                }
-                
-            }
-        }
-
-        // gl_FragColor = vec4(a / pow(float(FILTER_RANGE * 2), 2.0)); 
-        gl_FragColor = vec4(a / count); 
 
     } else {
         gl_FragColor = vec4(0.); 

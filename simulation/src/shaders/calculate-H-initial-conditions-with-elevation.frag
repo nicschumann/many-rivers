@@ -33,7 +33,7 @@ void main() {
 
     float SH = sediment_height(v_uv) * 0.2;
     
-    float WH = 0.0;
+    float WH = 0.01;
     float mask = texture2D(u_boundary, uv).a;
     if (mask > 0.0) { WH = 0.3 * (1.0 - uv.x); }
 

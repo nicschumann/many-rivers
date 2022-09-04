@@ -20,7 +20,7 @@ void main() {
     if (mask == 1.0) {
         SH = 0.5;
     } else {
-        SH = 2.0;
+        SH = 1.1;
     }
 
     if (mask == 1.0) { 

@@ -12,7 +12,7 @@ void main() {
     
     vec4 H = texture2D(u_H, uv);
     vec4 color = texture2D(u_K, uv);
-    if ( color.a == 0. ) { discard; }
+    if ( H.b == 0. ) { discard; }
 
     const float sf = 1.0;
     if (color.r > 0.0) {

@@ -109,16 +109,27 @@ void main() {
 
     vec4 H = texture2D(u_H, uv);
     vec4 K = texture2D(u_K, uv);
+    vec4 Q = texture2D(u_Q, uv);
+    vec2 flux = Q.ba;
 
-    float E = 0.0;
+    
     float W = H.b;
     float S = H.g;
     float k_erosion = 0.00001;
+    float E = 0.;
 
-    if (K.a > 0.0) { // edge cell
+    // there needs to be some flux in this cell
+    // or no accumulation can happen.
+    if (length(flux) > 0.) { // edge cell
         float R_norm = K.r;
-        E = k_erosion * S * R_norm;
+        E = k_erosion * S * R_norm * length(Q.xy);
+
+        // if (E > 0.) { // accretive regime
+        //     E *= 100.;
+        // }
     }
+
+
 
     // NOTE(Nic): Don't do anything for now.
     S = S - E;

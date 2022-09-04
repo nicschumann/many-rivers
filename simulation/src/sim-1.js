@@ -10,8 +10,8 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 2.0;
-const TILE_SIZE = [512, 512];
+const RENDER_SCALE = 2.5;
+const TILE_SIZE = [256, 256];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
 const load_image = (url) => {
@@ -35,13 +35,13 @@ const parameters = {
     render_erosion_accretion: false,
     render_slope: false,
     running: false,
-    run_erosion: false,
+    run_erosion: true,
 
     p1: [0.0, 0.5],
     p2: [1.0, 0.5],
     flux_magnitude_scale: 10,
 
-    smoothing_iterations: 5,
+    smoothing_iterations: 2,
     flux_averaging_steps: 0,
     updates_per_frame: 50
 }
@@ -175,10 +175,28 @@ const calculate_curvature = regl({
     count: 4
 });
 
-const calculate_averaging = regl({
+const calculate_edge_averaging = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-K-averaging.frag'),
+    frag: require('./shaders/calculate-K-edge-averaging.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_K: regl.prop('u_K'),
+        u_E: regl.prop('u_E'),
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+const calculate_stream_averaging = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-K-stream-averaging.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -573,7 +591,7 @@ class Tile {
 
                     // averaging passes.
                     for (let i = 0; i < parameters.smoothing_iterations; i++) {
-                        calculate_averaging({
+                        calculate_edge_averaging({
                             target: this.K.back,
                             u_K: this.K.front,
                             u_E: this.E.buffer,
@@ -582,6 +600,26 @@ class Tile {
                         })
                         this.K.swap();
                     }
+
+                    // for (let i = 0; i < parameters.smoothing_iterations; i++) {
+                    //     calculate_stream_averaging({
+                    //         target: this.K.back,
+                    //         u_K: this.K.front,
+                    //         u_E: this.E.buffer,
+                    //         u_H: this.H.front,
+                    //         a_uv: this.uvs
+                    //     })
+                    //     this.K.swap();
+                    // }
+
+                    calculate_stream_averaging({
+                        target: this.K.back,
+                        u_K: this.K.front,
+                        u_E: this.E.buffer,
+                        u_H: this.H.front,
+                        a_uv: this.uvs
+                    })
+                    this.K.swap();
                     
                     if (parameters.run_erosion) {
                         calculate_erosion_accretion({
@@ -819,8 +857,8 @@ class TileProvider {
         this.tiles = [
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true), // TC 1
-            // new Tile(0, 3, 13, true), // TC 3
-            new Tile(0, 2, 13, true), // TC 2 short circuit
+            new Tile(0, 3, 13, true), // TC 3
+            // new Tile(0, 2, 13, true), // TC 2 short circuit
             // new Tile(0, 4, 13, true), // TC 4
             // new Tile(0, 5, 13, true), // TC 5
 
@@ -834,7 +872,7 @@ class TileProvider {
         this.resources = { t: 0.0 };
 
         // this.tile_center = [ 1878.5, 3483.5 ]
-        this.tile_center = [ this.tiles[0].x + 0.5, this.tiles[0].y + 0.5 ]
+        this.tile_center = [ this.tiles[0].x + 1.0, this.tiles[0].y + 0.5]
 
         this.setup_transform();
         this.tiles.forEach(t => t.get_resources() );
