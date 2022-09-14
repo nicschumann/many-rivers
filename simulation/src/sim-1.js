@@ -227,6 +227,7 @@ const calculate_erosion_accretion = regl({
         u_K: regl.prop('u_K'),
         u_H: regl.prop('u_H'),
         u_Q: regl.prop('u_Q'),
+        u_S: regl.prop('u_S'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -627,6 +628,7 @@ class Tile {
                             u_Q: this.Q.front,
                             u_H: this.H.front,
                             u_K: this.K.front,
+                            u_S: this.S.buffer,
                             a_uv: this.uvs,
                         })
                         this.H.swap();
@@ -856,11 +858,11 @@ class TileProvider {
         // specify the map you want...
         this.tiles = [
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
-            // new Tile(0, 1, 13, true), // TC 1
-            new Tile(0, 3, 13, true), // TC 3
+            // new Tile(0, 1, 13, true), // TC 1 dead end
+            new Tile(0, 3, 13, true), // TC 3 simple sine
             // new Tile(0, 2, 13, true), // TC 2 short circuit
-            // new Tile(0, 4, 13, true), // TC 4
-            // new Tile(0, 5, 13, true), // TC 5
+            // new Tile(0, 4, 13, true), // TC 4 
+            // new Tile(0, 5, 13, true), // TC 5 lake
 
             new CrossSection(1879, 3483, 13, true)
         ];

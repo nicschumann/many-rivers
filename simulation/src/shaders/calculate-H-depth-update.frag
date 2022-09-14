@@ -55,7 +55,7 @@ void main() {
 
     vec2 lt = flux_lt;
     vec2 rb = flux_rb;
-
+ 
     float total_flux = lt.x + lt.y + -rb.x + -rb.y;
     float W_new = W(uv) + (dt / (d.x * d.y)) * total_flux;
 

@@ -21,7 +21,10 @@ void main() {
     float edge = K.a;
     float w = texture2D(u_H, uv).b;
 
-    if (w > 0.0) { // it's a wet cell
+    if (w > 0.0) { 
+        // it's a wet cell, we need to propagate 
+        // the cross-stream curvature gradient across
+        // this cell.
         
         float a = 0.0;
 
