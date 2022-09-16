@@ -20,6 +20,11 @@ void main() {
     vec2 p_min = u_p1;
     vec2 p_max = u_p2;
 
+    if (p_min.x > p_max.x) {
+        p_min = u_p2;
+        p_max = u_p1;
+    }
+
     float a = uv.x;
     vec2 target_uv = (1.0 - a) * p_min + a * p_max;
     vec4 H = texture2D(u_H, target_uv);

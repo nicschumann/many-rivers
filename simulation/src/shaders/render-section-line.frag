@@ -26,7 +26,15 @@ void main() {
     vec2 uv = v_uv;
     vec2 d = 1.0 / u_resolution;
 
-    const float threshold_dist = 0.005;
+
+    float line_dist = 0.002;
+    float point_dist = 0.005;
+    float threshold_dist = line_dist;
+
+    float min_dist_to_pt = min(length(uv - u_p1), length(uv - u_p2));
+
+    if (min_dist_to_pt < point_dist) {threshold_dist = point_dist;}
+    
     float dist = line_segment(uv, u_p1, u_p2);
 
     if (dist < threshold_dist) {
