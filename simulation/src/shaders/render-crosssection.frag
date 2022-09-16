@@ -46,9 +46,50 @@ void main() {
     if (target_uv.y > 1.0) { discard; }
 
     if (uv.y <= SH_norm) {
-        gl_FragColor = vec4(vec3(0.65, 0.2, 0.), 1. );
+        
+        float gradient_sf = 1.5;
+        float a = 1.0 - ((gradient_sf * (SH_norm + WH_norm) - uv.y) / (SH_norm + WH_norm));
+        gl_FragColor = vec4(a * vec3(0.65, 0.2, 0.), 1. );
+
+
     } else if (uv.y >= SH_norm && uv.y <= SH_norm + WH_norm) {
-        gl_FragColor = vec4(vec3(0., 0.2, 1.), 1.);
+
+        float w = H.b;
+        const float sf = 5.0;
+        vec3 min_color = vec3(0.02, 0.02, 0.02);
+        vec3 max_color = vec3(1.0, 0., 0.);
+        float fract_w = fract(w * sf);
+        float b = 0.2;
+
+        if (w < b + 0.1) {
+            
+            max_color = vec3(0., 0., 1.); // b
+
+        } else if (w < b + 0.2) {
+            
+            max_color = vec3(0., 1., 1.);
+
+        } else if (w < b + 0.3) {
+
+            max_color = vec3(0., 1., 0.);
+
+        } else if (w < b + 0.4) {
+        
+            max_color = vec3(1., 1., 0.); // yellow
+        
+        } else if (w < b + 0.5) {
+        
+            max_color = vec3(1., 0., 0.);
+        
+        } else if (w > b + 0.6) {
+            
+            max_color = vec3(1., 0., 1.);
+
+        }        
+
+        min_color = min_color * max_color;
+        gl_FragColor = vec4(max_color * fract_w + min_color * (1. - fract_w), 1.0);
+
     } else {
         discard;
         // gl_FragColor = vec4(vec3(0.), 1.);

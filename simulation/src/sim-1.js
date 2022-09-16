@@ -859,9 +859,9 @@ class TileProvider {
         this.tiles = [
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true), // TC 1 dead end
-            new Tile(0, 3, 13, true), // TC 3 simple sine
-            // new Tile(0, 2, 13, true), // TC 2 short circuit
-            // new Tile(0, 4, 13, true), // TC 4 
+            // new Tile(0, 3, 13, true), // TC 3 simple sine
+            new Tile(0, 2, 13, true), // TC 2 short circuit
+            // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
 
             new CrossSection(1879, 3483, 13, true)
@@ -1133,6 +1133,8 @@ async function main () {
     
     
     setInterval(() => {
+        // TODO(Nic): Add window resize handler here, please...
+
         regl.clear({color: [0, 0, 0, 1]});
         provider.setup_transform();
         provider.render_tiles();
