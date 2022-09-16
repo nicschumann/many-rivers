@@ -16,22 +16,9 @@ vec2 p1p2_to_mxb(vec2 p1, vec2 p2) {
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
     vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y);
-    vec2 mb = p1p2_to_mxb(u_p1, u_p2);
 
-    vec2 p_min = vec2(0., mb.y);
-    vec2 p_max = vec2(1.0, mb.x + mb.y);
-
-    if (p_min.y < 0.0) {
-        p_min = vec2(-mb.y/mb.x, 0.0);
-    } else if (p_min.y > 1.0) {
-        p_min = vec2((1.0-mb.y)/mb.x, 1.0);
-    }
-
-    if (p_max.y < 0.0) {
-        p_max = vec2(-mb.y/mb.x, 0.0);
-    } else if (p_max.y > 1.0) {
-        p_max = vec2((1.0-mb.y)/mb.x, 1.0);
-    }
+    vec2 p_min = u_p1;
+    vec2 p_max = u_p2;
 
     float a = uv.x;
     vec2 target_uv = (1.0 - a) * p_min + a * p_max;
@@ -47,7 +34,7 @@ void main() {
 
     if (uv.y <= SH_norm) {
         
-        float gradient_sf = 1.5;
+        float gradient_sf = 1.3;
         float a = 1.0 - ((gradient_sf * (SH_norm + WH_norm) - uv.y) / (SH_norm + WH_norm));
         gl_FragColor = vec4(a * vec3(0.65, 0.2, 0.), 1. );
 

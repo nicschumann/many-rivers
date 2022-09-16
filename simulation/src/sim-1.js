@@ -449,7 +449,7 @@ const render_section_line = regl({
 
 const render_crosssection = regl({
     vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/render-crosssection.frag'),
+    frag: require('./shaders/render-point-crosssection.frag'),
     attributes: {
         a_position: regl.prop('a_position'),
         a_uv: regl.prop('a_uv')
@@ -794,11 +794,7 @@ class Tile {
 // CrossSection
 
 class CrossSection {
-    constructor(x, y, z, testcase=False) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-
+    constructor(testcase=False) {
         this.is_testcase = testcase
 
         this.positions = [
@@ -864,7 +860,7 @@ class TileProvider {
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
 
-            new CrossSection(1879, 3483, 13, true)
+            new CrossSection(true)
         ];
 
         // hook up the cross section renderer
@@ -1124,6 +1120,11 @@ function setup_controls()
     })
 }
 
+
+function setup_resize() {
+    
+}
+
 async function main () {
     let provider = new TileProvider();
 
@@ -1146,6 +1147,16 @@ async function main () {
     let last_coords = [0, 0];
     let current_p_update = 0;
     let shift_key_is_down = false;
+
+    window.addEventListener('resize', () => {
+        let canvas = document.getElementsByTagName('canvas');
+        if (canvas.length != 1) { console.error('unexpected <canvas> elements picked up in resize!'); } 
+        
+        regl._gl.canvas.width = window.innerWidth * 2.0;
+        regl._gl.canvas.height = window.innerHeight * 2.0;
+
+        provider.setup_transform();
+    });
 
     window.addEventListener('mousedown', e => {
         mouse_is_down = true
@@ -1179,6 +1190,7 @@ async function main () {
                 pos_c[0] >= tile.x && pos_c[0] < tile.x + 1 &&
                 pos_c[1] >= tile.y && pos_c[1] < tile.y + 1
             ) {
+                
                 let get_slope_intercept = (p1, p2) => {
                     let m = (p2[1] - p1[1]) / (p2[0] - p1[0]);
                     let b = -p1[0] * m + p1[1];
@@ -1310,3 +1322,4 @@ async function main () {
 
 setup_controls()
 main();
+setup_resize();
