@@ -83,3 +83,13 @@
 }
 
 
+#timestep-container {
+    position: fixed;
+    left:1vh;
+    top:1vh;
+
+    font-size: 0.8em;
+    color: white;
+
+    z-index: 1;
+}

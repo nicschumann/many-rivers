@@ -10,7 +10,7 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 2.5;
+const RENDER_SCALE = 3.0;
 const TILE_SIZE = [256, 256];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -39,11 +39,17 @@ const parameters = {
 
     p1: [0.0, 0.5],
     p2: [1.0, 0.5],
-    flux_magnitude_scale: 10,
+    flux_magnitude_scale: 30,
 
+    non_erosive_timesteps: 500,
     smoothing_iterations: 2,
     flux_averaging_steps: 0,
-    updates_per_frame: 50
+    updates_per_frame: 50,
+
+    k_erosion: 0.00002,
+    k_accretion: 0.00001, 
+    accretion_upper_bound: 0.014,
+    erosion_lower_bound: 0.014,
 }
 
 // GPU calls: initial conditions calculation
@@ -218,7 +224,7 @@ const calculate_stream_averaging = regl({
 const calculate_erosion_accretion = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-H-erosion-accretion.frag'),
+    frag: require('./shaders/calculate-H-erosion-accretion-4.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -228,6 +234,12 @@ const calculate_erosion_accretion = regl({
         u_H: regl.prop('u_H'),
         u_Q: regl.prop('u_Q'),
         u_S: regl.prop('u_S'),
+
+        u_k_erosion: regl.prop('u_k_erosion'),
+        u_k_accretion: regl.prop('u_k_accretion'),
+        u_Q_accretion_upper_bound: regl.prop('u_Q_accretion_upper_bound'),
+        u_Q_erosion_lower_bound: regl.prop('u_Q_erosion_lower_bound'),
+
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -412,8 +424,8 @@ const render_curvature = regl({
 
 const render_erosion_accretion = regl({
     vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/render-erosion-accretion-values.frag'),
-    attributes: {
+    frag: require('./shaders/render-erosion-accretion-values-1.frag'),
+    attributes: { 
         a_position: regl.prop('a_position'),
         a_uv: regl.prop('a_uv')
     },
@@ -421,7 +433,14 @@ const render_erosion_accretion = regl({
         u_transform: regl.prop('u_transform'),
         u_H: regl.prop('u_H'),
         u_Q: regl.prop('u_Q'),
+        u_S: regl.prop('u_S'),
         u_K: regl.prop('u_K'),
+
+        u_k_erosion: regl.prop('u_k_erosion'),
+        u_k_accretion: regl.prop('u_k_accretion'),
+        u_Q_accretion_upper_bound: regl.prop('u_Q_accretion_upper_bound'),
+        u_Q_erosion_lower_bound: regl.prop('u_Q_erosion_lower_bound'),
+
         u_scalefactor: regl.prop('u_scalefactor'),
         u_resolution: TILE_SIZE
     },
@@ -622,13 +641,19 @@ class Tile {
                     })
                     this.K.swap();
                     
-                    if (parameters.run_erosion) {
+                    console.log(resources);
+                    if (parameters.run_erosion && resources.t > parameters.non_erosive_timesteps) {
                         calculate_erosion_accretion({
                             target: this.H.back,
                             u_Q: this.Q.front,
                             u_H: this.H.front,
                             u_K: this.K.front,
                             u_S: this.S.buffer,
+
+                            u_k_erosion: parameters.k_erosion,
+                            u_k_accretion: parameters.k_accretion,
+                            u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
+                            u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
                             a_uv: this.uvs,
                         })
                         this.H.swap();
@@ -755,6 +780,14 @@ class Tile {
                 render_erosion_accretion({
                     u_H: this.H.front,
                     u_K: this.K.front,
+                    u_Q: this.Q.front,
+                    u_S: this.S.buffer,
+
+                    u_k_erosion: parameters.k_erosion,
+                    u_k_accretion: parameters.k_accretion,
+                    u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
+                    u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                    
                     u_scalefactor: 4.0,
     
                     a_position: this.positions,
@@ -899,7 +932,7 @@ class TileProvider {
 
         // regl.clear({color: [0, 0, 0, 1]});
         this.tiles.forEach((tile, i) => { tile.render(this.transform, this.resources); });
-        this.resources.t += 1;
+        this.resources.t += (parameters.running) ? 1 : 0;
 
         let e = performance.now();
         // console.log(`total render: ${e - s}ms`);
@@ -1127,18 +1160,26 @@ function setup_resize() {
 
 async function main () {
     let provider = new TileProvider();
+    let counter_icon = document.getElementById('timestep-container');
 
     // game loop
     // TODO(Nic): replace with requestAnimationFrame
     // TODO(Nic): replace with manual canvas and resize canvas appropriately.
     
-    
+    let i = 0;
     setInterval(() => {
         // TODO(Nic): Add window resize handler here, please...
 
         regl.clear({color: [0, 0, 0, 1]});
         provider.setup_transform();
         provider.render_tiles();
+
+        if (parameters.running) { 
+            counter_icon.innerText = 
+                `${i} (${i * parameters.updates_per_frame}) [${(i / 60).toFixed(2)}s]`;
+            i += 1
+        }
+        
     }, 1000 / 30);
 
     // handle drag events.

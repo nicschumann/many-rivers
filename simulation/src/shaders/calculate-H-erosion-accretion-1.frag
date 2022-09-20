@@ -7,6 +7,11 @@ uniform sampler2D u_K;
 uniform sampler2D u_Q;
 uniform sampler2D u_S;
 
+uniform float u_k_erosion;
+uniform float u_k_accretion;
+uniform float u_Q_accretion_upper_bound;
+uniform float u_Q_erosion_lower_bound;
+
 uniform vec2 u_resolution;
 
 
@@ -17,6 +22,7 @@ void main() {
     vec4 H = texture2D(u_H, uv);
     vec4 K = texture2D(u_K, uv);
     vec4 Q = texture2D(u_Q, uv);
+    vec4 slope = texture2D(u_S, uv);
     vec2 flux = Q.ba;
     float flux_rep = length(flux);
 
@@ -40,13 +46,14 @@ void main() {
 
     /**
      * Pattern 2: Flux based evolution
-     */
-    const float min_flux = 0.0;
-    float k_erosion = 0.00001;
-    if (flux_rep > min_flux) {
-        float FD_rep = length(Q.xy);
+     */ 
+
+    if (flux_rep > u_Q_erosion_lower_bound) {
+
+        float slope_rep = length(slope.ba);
         float R_norm = K.r;
-        E = k_erosion * S * R_norm * FD_rep;
+
+        E = u_k_erosion * slope_rep * R_norm * flux_rep;
     }
     
     S = S - E;

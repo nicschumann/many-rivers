@@ -1,4 +1,6 @@
-const create_linear_buffer = (regl, resolution, filter='linear') => {
+const DEFAULT_INTERPOLATION = 'nearest';
+
+const create_linear_buffer = (regl, resolution, filter=DEFAULT_INTERPOLATION) => {
     let color = regl.texture({
         shape: [resolution[0], resolution[1], 4],
         min: filter,
@@ -23,7 +25,7 @@ const create_linear_buffer = (regl, resolution, filter='linear') => {
 
 
 export class SingleFramebuffer {
-    constructor(regl, resolution, filter='linear') {
+    constructor(regl, resolution, filter=DEFAULT_INTERPOLATION) {
         this.buffer = create_linear_buffer(regl, resolution, filter);
     }
 
@@ -33,7 +35,7 @@ export class SingleFramebuffer {
 }
 
 export class DoubleFramebuffer {
-    constructor(regl, resolution, filter='linear') {
+    constructor(regl, resolution, filter=DEFAULT_INTERPOLATION) {
         this.tmp = null;
         this.front = create_linear_buffer(regl, resolution, filter);
         this.back = create_linear_buffer(regl, resolution, filter);

@@ -38,7 +38,7 @@ void main() {
     // vec2 flux = -k_vel * slope * flow_depth;
 
     vec2 flux = vec2(0.0);
-    float min_flux = 0.00000001;
+    float min_flux = 0.0000000000;
 
     // flux.x = -k_vel * slope.x * flow_depth.x;
     flux.x = (-k / n) * sign(slope.x) * sqrt(abs(slope.x)) * pow(flow_depth.x, 1.66667);
