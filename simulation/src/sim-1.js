@@ -50,6 +50,8 @@ const parameters = {
     k_accretion: 0.00001, 
     accretion_upper_bound: 0.014,
     erosion_lower_bound: 0.014,
+
+    saturation_point: 0.1
 }
 
 // GPU calls: initial conditions calculation
@@ -287,6 +289,7 @@ const advance_water_depth = regl({
         u_H: regl.prop('u_H'),
         u_Q: regl.prop('u_Q'),
         u_K: regl.prop('u_K'),
+        u_clamp_water: regl.prop('u_clamp_water'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -367,6 +370,7 @@ const render_terrain_height = regl({
         u_transform: regl.prop('u_transform'),
         u_H: regl.prop('u_H'),
         u_scalefactor: regl.prop('u_scalefactor'),
+        u_saturation_point: regl.prop('u_saturation_point'),
         u_resolution: TILE_SIZE
     },
     primitive: "triangle strip",
@@ -706,6 +710,7 @@ class Tile {
                         u_Q: this.Q.front,
                         u_H: this.H.front,
                         u_K: this.K.front,
+                        u_clamp_water: (resources.t + i) % 50 == 0, 
                         a_uv: this.uvs,
                     });
 
@@ -750,6 +755,7 @@ class Tile {
             render_terrain_height({
                 u_H: this.H.front,
                 u_scalefactor: 0.5,
+                u_saturation_point: parameters.saturation_point,
 
                 a_position: this.positions,
                 a_uv: this.uvs,

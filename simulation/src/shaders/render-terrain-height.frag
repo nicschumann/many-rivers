@@ -4,6 +4,7 @@ varying vec2 v_uv;
 
 uniform sampler2D u_H;
 uniform float u_scalefactor;
+uniform float u_saturation_point;
 
 void main() {
     vec2 uv = v_uv;
@@ -19,8 +20,16 @@ void main() {
     vec4 terrain = vec4(0.38, 0.31, 0.25, 1.0 - w);
     vec3 h = vec3( b + s );
 
-    const float min_water_render = 0.1;
-    if (w > min_water_render) { // if it's wet:
+    /**
+    * NOTE(Nic): I've added a minimum render depth for the water.
+    * this number is basically a threshold of water below which we consider 
+    * a tile to be "mostly dry", like marshland that's more silt and mud 
+    * than water, I suppose.
+    * 
+    * This value is in u_saturation_point
+    */
+
+    if (w > u_saturation_point) { // if it's wet:
         // gl_FragColor = vec4(water.rgb - w / 1.5, 1.0);
 
         // w = w / 0.5;
@@ -34,6 +43,7 @@ void main() {
         vec3 max_color = vec3(1.0, 0., 0.);
         float fract_w = fract(w * sf);
         float b = 0.2 ;
+
 
         if (w < b + 0.1) {
             
