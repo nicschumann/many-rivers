@@ -59,8 +59,29 @@ void main() {
     float total_flux = lt.x + lt.y + -rb.x + -rb.y;
     float W_new = W(uv) + (dt / (d.x * d.y)) * total_flux;
 
+    /**
+    * NOTE(Nic): I've removed depth clamping. Setting different 
+    * min-water values cause the river to behave very differently.
+    * At high min-water values, the river essentially cannot spill 
+    * into new areas, because the flux is never high enough to generate 
+    * enough water to make a new cell go from 0 to above the threshold 
+    * in a single timestep.
+    *
+    * at low values, you can observe significant bank overflow. 
+    *
+    * In some ways, this parameter behaves like a viscousity for the 
+    * entire water systems. The higher the value, the more viscous
+    * the system appreas to be.
+    */
+
     // depth clamping.
-    const float min_water_depth = 0.01;
+    const float min_water_depth = 0.0; // no min-water
+    
+    /* NOTE(Nic): You can also add a total_flux constraint here: 
+     * only set the water to 0 if it's below the min-depth AND 
+     * the total flux on the cell is negative, meaning there's net 
+     * water loss occuring.
+     */
     if (W_new < min_water_depth) { W_new = 0.0; }
 
     gl_FragColor = vec4(

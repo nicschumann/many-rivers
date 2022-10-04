@@ -1,8 +1,7 @@
 precision highp float;
 
 #define M_PI 3.14159265359
-#define NORMALIZE_FLUX
-#define RENDER_FLUX_MAGNITUDE
+#define TOTAL_FLUX
 
 varying vec2 v_uv;
 
@@ -10,51 +9,61 @@ uniform sampler2D u_Q;
 uniform sampler2D u_H;
 uniform float u_scalefactor;
 uniform float u_flux_magnitude_scale;
+uniform vec2 u_resolution;
 
-vec3 hsl2rgb( in vec3 c ){
-    vec3 rgb = clamp( abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0,1.0);
-    return c.z + c.y * (rgb-0.5)*(1.0-abs(2.0*c.z-1.0));
+vec2 flux(vec2 xy) {
+    vec2 fl = texture2D(u_Q, xy).ba;
+    return fl;
 }
 
 void main() {
     vec2 uv = v_uv;
+    vec3 e = vec3(1.0 / u_resolution, 0.);
     
     vec4 Q = texture2D(u_Q, uv);
     vec4 H = texture2D(u_H, uv);
     if (H.b <= 0.) { discard; }
 
-    vec2 flow_depth = Q.rg;
-    vec2 flux = Q.ba;
-    vec2 flux_norm = normalize(flux);
+
+    #ifdef TOTAL_FLUX
+
+        vec2 flux_lt = vec2(
+            flux(uv - e.xz).x,
+            flux(uv - e.zy).y
+        );
+        vec2 flux_rb = flux(uv);
+
+        vec2 lt = flux_lt;
+        vec2 rb = flux_rb;
     
-    // magnitude
-    // gl_FragColor = vec4(length(flow_depth) * 10., 0., 0., 1.);
+        float total_flux = lt.x + lt.y + -rb.x + -rb.y;
 
-    #ifdef NORMALIZE_FLUX
+        if (total_flux > 0.0) {
+
+            gl_FragColor = vec4(total_flux * u_flux_magnitude_scale, 0.0, 0.0, 1.0);
+
+        } else if (total_flux < 0.0) {
+
+            gl_FragColor = vec4(0.0, -total_flux * u_flux_magnitude_scale, 0.0, 1.0);
+
+        } else {
+            gl_FragColor = vec4(vec3(0.0), 1.0);
+        }
+
+    #else 
+
+        vec2 flow_depth = Q.rg;
+        vec2 flux = Q.ba;
+        vec2 flux_norm = normalize(flux);   
+
+        gl_FragColor = vec4(vec3(length(flux) * u_flux_magnitude_scale), 1.0);
+
+    #endif 
+
+
+
     
-    float mag = length(flux_norm);
-    float angle = acos(flux_norm.x / mag);
-    float y = flux_norm.y;
 
-    #else
-    
-    float mag = length(flux);
-    float angle = acos(flux.x / mag);
-    float y = flux.y;
-
-    #endif
-
-    if (y < 0.0) { angle = M_PI - (angle + M_PI); }
-    angle += M_PI * 1.5;
-    float hue = (angle / M_PI) / 2.0;
-
-    #ifdef RENDER_FLUX_MAGNITUDE
-    
-
-    gl_FragColor = vec4(vec3(length(flux) * u_flux_magnitude_scale), 1.0);
-    #else
-    gl_FragColor = vec4(hsl2rgb(vec3(hue, 0.4 + length(flux), 0.5)), 1.0);
-    #endif
 
 
 

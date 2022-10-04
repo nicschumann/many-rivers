@@ -246,6 +246,31 @@ const calculate_erosion_accretion = regl({
     count: 4
 });
 
+const calculate_collapse = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-H-collapse.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_K: regl.prop('u_K'),
+        u_H: regl.prop('u_H'),
+        u_Q: regl.prop('u_Q'),
+        u_S: regl.prop('u_S'),
+
+        u_k_erosion: regl.prop('u_k_erosion'),
+        u_k_accretion: regl.prop('u_k_accretion'),
+        u_Q_accretion_upper_bound: regl.prop('u_Q_accretion_upper_bound'),
+        u_Q_erosion_lower_bound: regl.prop('u_Q_erosion_lower_bound'),
+
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
 
 
 
@@ -641,7 +666,6 @@ class Tile {
                     })
                     this.K.swap();
                     
-                    console.log(resources);
                     if (parameters.run_erosion && resources.t > parameters.non_erosive_timesteps) {
                         calculate_erosion_accretion({
                             target: this.H.back,
@@ -657,6 +681,21 @@ class Tile {
                             a_uv: this.uvs,
                         })
                         this.H.swap();
+
+                        // calculate_collapse({
+                        //     target: this.H.back,
+                        //     u_Q: this.Q.front,
+                        //     u_H: this.H.front,
+                        //     u_K: this.K.front,
+                        //     u_S: this.S.buffer,
+
+                        //     u_k_erosion: parameters.k_erosion,
+                        //     u_k_accretion: parameters.k_accretion,
+                        //     u_Q_accretion _upper_bound: parameters.accretion_upper_bound,
+                        //     u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                        //     a_uv: this.uvs,
+                        // })
+                        // this.H.swap();
                     }
   
 
@@ -889,7 +928,8 @@ class TileProvider {
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true), // TC 1 dead end
             // new Tile(0, 3, 13, true), // TC 3 simple sine
-            new Tile(0, 2, 13, true), // TC 2 short circuit
+            new Tile(0, 6, 13, true), // TC 3 flipped simple sine
+            // new Tile(0, 2, 13, true), // TC 2 short circuit
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
 

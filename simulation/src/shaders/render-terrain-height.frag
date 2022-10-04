@@ -19,7 +19,8 @@ void main() {
     vec4 terrain = vec4(0.38, 0.31, 0.25, 1.0 - w);
     vec3 h = vec3( b + s );
 
-    if (w > 0.0) { // if it's wet:
+    const float min_water_render = 0.1;
+    if (w > min_water_render) { // if it's wet:
         // gl_FragColor = vec4(water.rgb - w / 1.5, 1.0);
 
         // w = w / 0.5;
