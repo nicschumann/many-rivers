@@ -34,12 +34,12 @@ void main() {
     float E = 0.;
     float A = 0.;
 
-    const float erode_min_curvature = 0.1;
-    const float accrete_max_curvature = -0.1;
+    const float erode_min_curvature = 0.2;
+    const float accrete_max_curvature = -0.2;
 
 
     // TODO(Nic): rename u_Q_accretion_upper_bound -> lower
-    
+
     if (H.b > 0.0) { // there better be water...
 
         if (flux_rep > u_Q_erosion_lower_bound) { // HIGH FLUX CASE
@@ -63,6 +63,7 @@ void main() {
             if (curv_rep > erode_min_curvature) { // Outer Bank Positive Curvature 
                 
                 A = 0.0;
+                E = u_k_erosion * abs(curv_rep) * 0.1;
 
             } else if ( curv_rep > accrete_max_curvature ) { // straight bank, zero-ish
 
@@ -70,10 +71,10 @@ void main() {
 
             } else { // Inner Bank Neg Curvature 
 
-                A = u_k_accretion * abs(curv_rep);
+                A = u_k_accretion * abs(curv_rep); // adding in flux rep to control accretion.
                 
             }
-
+        
         } else { // VLOW/NO FLUX CASE
             
             if (curv_rep > erode_min_curvature) { // Outer Bank Positive Curvature 
@@ -82,11 +83,11 @@ void main() {
 
             } else if ( curv_rep > accrete_max_curvature ) { // straight bank, zero-ish
 
-                A = u_k_accretion * abs(curv_rep);
+                A = u_k_accretion * abs(curv_rep) * 0.1;
 
             } else { // Inner Bank Neg Curvature 
 
-                A = u_k_accretion * abs(curv_rep);
+                A = u_k_accretion * abs(curv_rep) * 0.1;
                 
             }
         

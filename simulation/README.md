@@ -35,3 +35,5 @@ This will compile and push the public folder to a gh-pages branch, in case you q
 ## References / Parking Lot
 
 - "Modeling meander morphodynamics over self-formed heterogeneous floodplains." [Here](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2017WR020726) *A non-cellular model of the dynamics we're looking for.*
+
+- "Monte Carlo Geometry Processing". [Here](https://www.cs.cmu.edu/~kmcrane/Projects/MonteCarloGeometryProcessing/paper.pdf) *An non-grid-based approach to interpolating curvature boundary conditions over the river domain by solving a Laplace equation.*

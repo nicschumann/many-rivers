@@ -23,14 +23,22 @@ void main() {
     
     vec2 uv = v_uv;
     vec3 e = vec3(1.0 / u_resolution, 0.0);
+    float W = texture2D(u_H, uv).b;
 
     // calculate slope
     vec2 slope = texture2D(u_S, uv).rg;
 
     vec2 flow_depth = vec2(
-        max(H(uv), H(uv + e.xz)) - max(BS(uv), BS(uv + e.xz)),
-        max(H(uv), H(uv + e.zy)) - max(BS(uv), BS(uv + e.zy))
+            max(H(uv), H(uv + e.xz)) - max(BS(uv), BS(uv + e.xz)),
+            max(H(uv), H(uv + e.zy)) - max(BS(uv), BS(uv + e.zy))
     );
+
+    const vec2 min_flow_depth = vec2(0.04, 0.04);
+
+    if (W > 0.0) { // enforce a min flow depth for wet cells.
+        flow_depth = max(flow_depth, min_flow_depth);
+    }
+
 
     float k = 0.01;
     float n = 0.2;
@@ -38,7 +46,7 @@ void main() {
     // vec2 flux = -k_vel * slope * flow_depth;
 
     vec2 flux = vec2(0.0);
-    float min_flux = 0.0000000000;
+    float min_flux = 0.0;
 
     // flux.x = -k_vel * slope.x * flow_depth.x;
     flux.x = (-k / n) * sign(slope.x) * sqrt(abs(slope.x)) * pow(flow_depth.x, 1.66667);

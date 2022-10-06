@@ -48,7 +48,7 @@ void main() {
     float E = 0.;
     float A = 0.;
 
-    const float collapse_height = 0.2;
+    const float collapse_height = 0.5;
     const float u_k_collapse = 0.2;
 
     for (int i = -FILTER_RANGE; i < FILTER_RANGE + 1; i++) {

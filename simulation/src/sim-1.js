@@ -41,15 +41,16 @@ const parameters = {
     p2: [1.0, 0.5],
     flux_magnitude_scale: 30,
 
-    non_erosive_timesteps: 500,
+    non_erosive_timesteps: 150,
     smoothing_iterations: 2,
     flux_averaging_steps: 0,
     updates_per_frame: 50,
 
-    k_erosion: 0.00005,
-    k_accretion: 0.00001, 
-    accretion_upper_bound: 0.014,
-    erosion_lower_bound: 0.014,
+    k_erosion: 0.000025,
+    k_accretion: 0.00002, 
+    // accretion_upper_bound: 0.014,
+    accretion_upper_bound: 0.0005,
+    erosion_lower_bound: 0.02,
     min_failure_slope: 100.0,
 
     saturation_point: 0.1
@@ -455,7 +456,7 @@ const render_curvature = regl({
 
 const render_erosion_accretion = regl({
     vert: require('./shaders/place-tile.vert'),
-    frag: require('./shaders/render-erosion-accretion-values-1.frag'),
+    frag: require('./shaders/render-erosion-accretion-values-2.frag'),
     attributes: { 
         a_position: regl.prop('a_position'),
         a_uv: regl.prop('a_uv')
@@ -688,21 +689,21 @@ class Tile {
                         })
                         this.H.swap();
 
-                        // calculate_collapse({
-                        //     target: this.H.back,
-                        //     u_Q: this.Q.front,
-                        //     u_H: this.H.front,
-                        //     u_K: this.K.front,
-                        //     u_S: this.S.buffer,
+                        calculate_collapse({
+                            target: this.H.back,
+                            u_Q: this.Q.front,
+                            u_H: this.H.front,
+                            u_K: this.K.front,
+                            u_S: this.S.buffer,
 
-                        //     u_k_erosion: parameters.k_erosion,
-                        //     u_k_accretion: parameters.k_accretion,
-                        //     u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
-                        //     u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
-                        //     u_min_failure_slope: parameters.min_failure_slope,
-                        //     a_uv: this.uvs,
-                        // })
-                        // this.H.swap();
+                            u_k_erosion: parameters.k_erosion,
+                            u_k_accretion: parameters.k_accretion,
+                            u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
+                            u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                            u_min_failure_slope: parameters.min_failure_slope,
+                            a_uv: this.uvs,
+                        })
+                        this.H.swap();
                     }
   
 
@@ -936,8 +937,8 @@ class TileProvider {
         this.tiles = [
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true), // TC 1 dead end
-            // new Tile(0, 3, 13, true), // TC 3 simple sine
-            new Tile(0, 6, 13, true), // TC 3 flipped simple sine
+            new Tile(0, 3, 13, true), // TC 3 simple sine
+            // new Tile(0, 6, 13, true), // TC 3 flipped simple sine
             // new Tile(0, 2, 13, true), // TC 2 short circuit
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
