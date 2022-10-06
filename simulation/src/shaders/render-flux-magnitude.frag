@@ -1,7 +1,7 @@
 precision highp float;
 
 #define M_PI 3.14159265359
-#define TOTAL_FLUX
+// #define TOTAL_FLUX
 
 varying vec2 v_uv;
 

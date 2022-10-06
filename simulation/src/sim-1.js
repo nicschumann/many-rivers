@@ -10,7 +10,7 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 3.0;
+const RENDER_SCALE = 2.5;
 const TILE_SIZE = [256, 256];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -46,10 +46,11 @@ const parameters = {
     flux_averaging_steps: 0,
     updates_per_frame: 50,
 
-    k_erosion: 0.00002,
+    k_erosion: 0.00005,
     k_accretion: 0.00001, 
     accretion_upper_bound: 0.014,
     erosion_lower_bound: 0.014,
+    min_failure_slope: 100.0,
 
     saturation_point: 0.1
 }
@@ -226,7 +227,7 @@ const calculate_stream_averaging = regl({
 const calculate_erosion_accretion = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-H-erosion-accretion-4.frag'),
+    frag: require('./shaders/calculate-H-erosion-accretion-5.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -251,7 +252,7 @@ const calculate_erosion_accretion = regl({
 const calculate_collapse = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-H-collapse.frag'),
+    frag: require('./shaders/calculate-H-collapse-2.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -266,6 +267,7 @@ const calculate_collapse = regl({
         u_k_accretion: regl.prop('u_k_accretion'),
         u_Q_accretion_upper_bound: regl.prop('u_Q_accretion_upper_bound'),
         u_Q_erosion_lower_bound: regl.prop('u_Q_erosion_lower_bound'),
+        u_min_failure_slope: regl.prop('u_min_failure_slope'),
 
         u_resolution: TILE_SIZE
     },
@@ -695,8 +697,9 @@ class Tile {
 
                         //     u_k_erosion: parameters.k_erosion,
                         //     u_k_accretion: parameters.k_accretion,
-                        //     u_Q_accretion _upper_bound: parameters.accretion_upper_bound,
+                        //     u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
                         //     u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                        //     u_min_failure_slope: parameters.min_failure_slope,
                         //     a_uv: this.uvs,
                         // })
                         // this.H.swap();
@@ -938,6 +941,7 @@ class TileProvider {
             // new Tile(0, 2, 13, true), // TC 2 short circuit
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
+            // new Tile(0, 7, 13, true), // TC 7 Parabola
 
             new CrossSection(true)
         ];

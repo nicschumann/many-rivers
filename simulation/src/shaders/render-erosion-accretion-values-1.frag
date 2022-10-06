@@ -16,6 +16,8 @@ void main() {
         gl_FragColor = vec4(H.a * sf, 0., 0., 1.0);
     } else if (H.a < 0.) {
         gl_FragColor = vec4(0., -H.a * sf, 0., 1.0);
+    } else if (H.b > 0.) {
+        gl_FragColor = vec4(0.0, 0., 0., 1.0);
     } else {
         discard;
     }

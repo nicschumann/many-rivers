@@ -44,6 +44,11 @@ void main() {
         gl_FragColor = vec4(a * vec3(0.65, 0.2, 0.), 1. );
 
 
+    } else if (uv.y <= SH_norm + 0.0015) {
+        
+        if (WH_norm > 0.) { gl_FragColor = vec4(0., 1., 1.0, 1.0); }
+        else { gl_FragColor = vec4(1.0, 0., 0., 1.0); }  
+
     } else if (uv.y >= SH_norm && uv.y < SH_norm + WH_norm) {
 
         float w = H.b;
@@ -84,7 +89,8 @@ void main() {
 
     } else if (uv.y <= SH_norm + WH_norm + 0.0015) {
         
-        gl_FragColor = vec4(1.0);
+        if (WH_norm > 0.) { gl_FragColor = vec4(0., 1.0, 1.0, 1.0); }
+        else { gl_FragColor = vec4(1.0, 0., 0., 1.0); }
 
     } else {
         discard;

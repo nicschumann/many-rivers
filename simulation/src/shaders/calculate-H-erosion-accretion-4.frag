@@ -35,15 +35,23 @@ void main() {
 
     if (curv_rep < 0.) {
         // accretion area
+        
+        // low flux, negative curvature (inside bank)
         if (flux_rep > 0. && flux_rep <= u_Q_accretion_upper_bound) {
             A = u_k_accretion * abs(curv_rep); // take out flux rep, because it should be small here.
         }
 
+        // high flux, negative curvature (inside bank)
+
     } else if (curv_rep > 0.) {
         // erosion area
+
+        // low flux, positive curvature (outer bank)
+
+        // high flux, positive curvature (outer bank)
         if (flux_rep >= u_Q_erosion_lower_bound) {
             E = u_k_erosion * abs(curv_rep);
-        }
+        }  
     }
 
     

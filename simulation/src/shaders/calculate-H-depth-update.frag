@@ -75,7 +75,7 @@ void main() {
     */
 
     // depth clamping.
-    const float min_water_depth = 0.0; // no min-water
+    const float min_water_depth = 0.00001; // no min-water
     
     /* NOTE(Nic): You can also add a total_flux constraint here: 
      * only set the water to 0 if it's below the min-depth AND 

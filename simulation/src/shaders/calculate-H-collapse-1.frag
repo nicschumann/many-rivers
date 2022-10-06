@@ -53,17 +53,28 @@ void main() {
     S_avg /= total_neighbors;
 
     // ??
-    const float collapse_distance = 0.2;
-    const float collapse_multiplier = 5.0; // collapse should happen 5x faster than normal erosion
+    const float dynamic_collapse_distance = 0.1;
+    const float static_collapse_distance = 0.5;
+    const float collapse_multiplier = 1000.0; // collapse should happen 50x faster than normal erosion
 
-    if (Q_avg > u_Q_erosion_lower_bound && curv_rep > 0.0) {
-        if (S - S_avg > collapse_distance) {
+    // if (Q_avg > u_Q_erosion_lower_bound && curv_rep > 0.0) {
+    //     if (S - S_avg > dynamic_collapse_distance) {
+    //         E = u_k_erosion * collapse_multiplier * (S - S_avg);
+    //     }
+    // }
+
+    if (Q_avg > u_Q_erosion_lower_bound) {
+        if (S - S_avg > dynamic_collapse_distance) {
             E = u_k_erosion * collapse_multiplier * (S - S_avg);
         }
     }
 
+    if (S - S_avg > static_collapse_distance) {
+        E = u_k_erosion * collapse_multiplier * (S - S_avg);
+    }
+
     S = S - E;
-    W = W + E;
+    // W = W + E;
 
     gl_FragColor = vec4(
         H.r,
