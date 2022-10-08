@@ -46,7 +46,7 @@ const parameters = {
     flux_averaging_steps: 0,
     updates_per_frame: 50,
 
-    k_erosion: 0.00002,
+    k_erosion: 0.00004, // 4x faster than accretion in this mode.e
     k_accretion: 0.00001, 
     // accretion_upper_bound: 0.014,
     accretion_upper_bound: 0.0005,

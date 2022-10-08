@@ -83,11 +83,11 @@ void main() {
 
             } else if ( curv_rep > accrete_max_curvature ) { // straight bank, zero-ish
 
-                A = u_k_accretion * abs(curv_rep);
+                A = u_k_accretion * abs(curv_rep) * 1.0; // accretion speed factor...
 
             } else { // Inner Bank Neg Curvature 
 
-                A = u_k_accretion * abs(curv_rep);
+                A = u_k_accretion * abs(curv_rep) * 1.0; // accretion speed factor...
                 
             }
         
