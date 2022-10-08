@@ -33,7 +33,7 @@ void main() {
             max(H(uv), H(uv + e.zy)) - max(BS(uv), BS(uv + e.zy))
     );
 
-    const vec2 min_flow_depth = vec2(0.04, 0.04);
+    const vec2 min_flow_depth = vec2(0.045, 0.045);
 
     if (W > 0.0) { // enforce a min flow depth for wet cells.
         flow_depth = max(flow_depth, min_flow_depth);

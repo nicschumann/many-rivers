@@ -1,6 +1,6 @@
 precision highp float;
 
-#define FILTER_RANGE 10
+#define FILTER_RANGE 5
 
 varying vec2 v_uv;
 
@@ -37,8 +37,10 @@ void main() {
                 }
             }
         }
-
-        gl_FragColor = vec4(vec3(k / count), 1.0);
+        
+        const float k_max_mag = 3.0;
+        float v = min(max(k / count, -k_max_mag), k_max_mag); // clamp the max curvature for the boundaries
+        gl_FragColor = vec4(vec3(v), 1.0);
 
     } else {
         gl_FragColor = vec4(0.); 

@@ -10,8 +10,8 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_SCALE = 2.5;
-const TILE_SIZE = [256, 256];
+const RENDER_SCALE = 1.5;
+const TILE_SIZE = [384, 384];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
 const load_image = (url) => {
@@ -42,18 +42,18 @@ const parameters = {
     flux_magnitude_scale: 30,
 
     non_erosive_timesteps: 150,
-    smoothing_iterations: 2,
+    smoothing_iterations: 40,
     flux_averaging_steps: 0,
     updates_per_frame: 50,
 
-    k_erosion: 0.000025,
-    k_accretion: 0.00002, 
+    k_erosion: 0.00002,
+    k_accretion: 0.00001, 
     // accretion_upper_bound: 0.014,
     accretion_upper_bound: 0.0005,
     erosion_lower_bound: 0.02,
     min_failure_slope: 100.0,
 
-    saturation_point: 0.1
+    saturation_point: 0.0
 }
 
 // GPU calls: initial conditions calculation
@@ -206,7 +206,7 @@ const calculate_edge_averaging = regl({
 const calculate_stream_averaging = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-K-stream-averaging.frag'),
+    frag: require('./shaders/calculate-K-stream-averaging-2.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
@@ -625,54 +625,53 @@ class Tile {
                     }
                     
 
-                    // update edges
-                    calculate_edges({
-                        target: this.E.buffer,
-                        u_H: this.H.front,
-                        a_uv: this.uvs
-                    })
-
-                    // update Kappa
-                    calculate_curvature({
-                        target: this.K.back,
-                        u_H: this.H.front,
-                        u_E: this.E.buffer,
-                        a_uv: this.uvs
-                    })
-                    this.K.swap();
-
-                    // averaging passes.
-                    for (let i = 0; i < parameters.smoothing_iterations; i++) {
-                        calculate_edge_averaging({
-                            target: this.K.back,
-                            u_K: this.K.front,
-                            u_E: this.E.buffer,
+                    // this averaging system is appropriate with 
+                    // stream-averaging-2, which iteratively solved 
+                    // a laplace equation across the river domain.
+                    if (i % parameters.smoothing_iterations == 0) {
+                        // update edges
+                        calculate_edges({
+                            target: this.E.buffer,
                             u_H: this.H.front,
                             a_uv: this.uvs
                         })
+
+                        // update Kappa
+                        calculate_curvature({
+                            target: this.K.back,
+                            u_H: this.H.front,
+                            u_E: this.E.buffer,
+                            a_uv: this.uvs
+                        })
                         this.K.swap();
-                    }
 
-                    // for (let i = 0; i < parameters.smoothing_iterations; i++) {
-                    //     calculate_stream_averaging({
-                    //         target: this.K.back,
-                    //         u_K: this.K.front,
-                    //         u_E: this.E.buffer,
-                    //         u_H: this.H.front,
-                    //         a_uv: this.uvs
-                    //     })
-                    //     this.K.swap();
-                    // }
+                        // averaging passes.
+                        
+                        for (let i = 0; i < parameters.smoothing_iterations; i++) {
+                            calculate_edge_averaging({
+                                target: this.K.back,
+                                u_K: this.K.front,
+                                u_E: this.E.buffer,
+                                u_H: this.H.front,
+                                a_uv: this.uvs
+                            })
+                            this.K.swap();
+                        }
 
-                    calculate_stream_averaging({
-                        target: this.K.back,
-                        u_K: this.K.front,
-                        u_E: this.E.buffer,
-                        u_H: this.H.front,
-                        a_uv: this.uvs
-                    })
-                    this.K.swap();
                     
+                        for (let j = 0; j < parameters.smoothing_iterations; j++) {
+                            calculate_stream_averaging({
+                                target: this.K.back,
+                                u_K: this.K.front,
+                                u_E: this.E.buffer,
+                                u_H: this.H.front,
+                                a_uv: this.uvs
+                            })
+                            this.K.swap();
+                        }
+                    }
+                    
+                    // calculate erosion and collapse.
                     if (parameters.run_erosion && resources.t > parameters.non_erosive_timesteps) {
                         calculate_erosion_accretion({
                             target: this.H.back,
@@ -747,7 +746,8 @@ class Tile {
                     this.Q.swap();
                 }
                 let e = performance.now();
-                // console.log(`${resources.t} ${UPDATES_PER_RENDER} updates: ${e - s}ms`);
+                let avg_update_time = (e - s) / parameters.updates_per_frame
+                console.log(`${resources.t} ${parameters.updates_per_frame} updates: ${e - s}ms (${avg_update_time.toFixed(3)}ms / step)`);
             }
 
             
@@ -937,9 +937,9 @@ class TileProvider {
         this.tiles = [
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true), // TC 1 dead end
-            new Tile(0, 3, 13, true), // TC 3 simple sine
+            // new Tile(0, 3, 13, true), // TC 3 simple sine
             // new Tile(0, 6, 13, true), // TC 3 flipped simple sine
-            // new Tile(0, 2, 13, true), // TC 2 short circuit
+            new Tile(0, 2, 13, true), // TC 2 short circuit
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
             // new Tile(0, 7, 13, true), // TC 7 Parabola

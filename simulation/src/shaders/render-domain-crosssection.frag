@@ -23,7 +23,7 @@ void main() {
 
     if (p_min.y < 0.0) {
         p_min = vec2(-mb.y/mb.x, 0.0);
-    } else if (p_min.y > 1.0) {
+    } else if (p_min.y > 1.0) {f
         p_min = vec2((1.0-mb.y)/mb.x, 1.0);
     }
 

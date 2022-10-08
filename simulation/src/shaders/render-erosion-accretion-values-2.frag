@@ -68,7 +68,7 @@ void main() {
         if (curv_rep > erode_min_curvature) { // Outer Bank Positive Curvature 
             
             // BRIGHT Purple
-            color = vec3(0.78, 0.01, 0.78);
+            color = vec3(0.78, 0.1, 0.78);
             alpha = 0.75;
 
         } else if ( curv_rep > accrete_max_curvature ) { // straight bank, zero-ish

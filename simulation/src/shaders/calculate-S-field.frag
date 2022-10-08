@@ -84,7 +84,7 @@ void main() {
     ) / d.x;
 
     // vec2 hydraulic_slope = get_haudraulic_slope(uv);
-
+ 
     // calculate sediment slope
     vec2 sediment_slope = vec2(
         BS(uv + e.xz) - BS(uv),
