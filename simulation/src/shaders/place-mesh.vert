@@ -10,11 +10,17 @@ varying vec2 v_id;
 uniform mat4 u_transform;
 uniform vec3 u_basepoint;
 
+uniform sampler2D u_H;
+
+const float scale = 0.1;
+
 void main() {
     v_uv = a_uv;
     v_id = a_id;
 
-    vec4 position = vec4(a_position + u_basepoint, 1.0);
+    float S = texture2D(u_H, a_uv).g * scale;
+    vec3 displaced = u_basepoint + vec3(0., S, 0.);
+    vec4 position = vec4(a_position + displaced, 1.0);
 
     vec4 pos = u_transform * position;
     gl_Position = pos;

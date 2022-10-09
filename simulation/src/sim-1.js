@@ -492,7 +492,7 @@ const render_crosssection = regl({
 });
 
 // 3D RENDER CALLS
-let DOMAIN_MESH = new DomainMesh(regl, [2, 2]);
+let DOMAIN_MESH = new DomainMesh(regl, [250 , 250 ]);
 
 console.log(DOMAIN_MESH.vertices);
 console.log(DOMAIN_MESH.indices);
@@ -510,7 +510,9 @@ const render_domain = regl({
     uniforms: {
         u_transform: regl.prop('u_transform'),
         u_basepoint: regl.prop('u_basepoint'),
-        u_resolution: TILE_SIZE
+        u_resolution: TILE_SIZE,
+
+        u_H: regl.prop('u_H')
     },
     primitive: 'triangles',
     offset: 0,
@@ -791,6 +793,8 @@ class Tile {
                 render_domain({
                     u_basepoint: [this.x, 0.0, this.y],
                     u_transform: PV,
+
+                    u_H: this.H.front
                 });
 
             } else {
