@@ -1,6 +1,8 @@
 import "./style/main.css";
-import { vec2, vec3, mat3 } from "gl-matrix";
+import { vec2, vec3, mat3, mat4, vec4 } from "gl-matrix";
 import { DoubleFramebuffer, SingleFramebuffer } from "./buffer";
+import { DomainMesh } from "./mesh";
+import parameters from './parameters';
 
 const regl = require('regl')({
     extensions: [
@@ -10,6 +12,7 @@ const regl = require('regl')({
     ]
 });
 
+const RENDER_3D = true;
 const RENDER_SCALE = 1.5;
 const TILE_SIZE = [384, 384];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
@@ -25,35 +28,6 @@ const load_image = (url) => {
         img.crossOrigin = 'anonymous';
         img.src = url;
     });
-}
-
-// overall parameters to this model:
-const parameters = {
-    render_flux: false,
-    render_flux_magnitude: false,
-    render_curvature: false,
-    render_erosion_accretion: false,
-    render_slope: false,
-    running: false,
-    run_erosion: true,
-
-    p1: [0.0, 0.5],
-    p2: [1.0, 0.5],
-    flux_magnitude_scale: 30,
-
-    non_erosive_timesteps: 150,
-    smoothing_iterations: 40,
-    flux_averaging_steps: 0,
-    updates_per_frame: 50,
-
-    k_erosion: 0.00004, // 4x faster than accretion in this mode.e
-    k_accretion: 0.00001, 
-    // accretion_upper_bound: 0.014,
-    accretion_upper_bound: 0.0005,
-    erosion_lower_bound: 0.02,
-    min_failure_slope: 100.0,
-
-    saturation_point: 0.0
 }
 
 // GPU calls: initial conditions calculation
@@ -517,7 +491,35 @@ const render_crosssection = regl({
     count: 4 
 });
 
+// 3D RENDER CALLS
+let DOMAIN_MESH = new DomainMesh(regl, [2, 2]);
+
+console.log(DOMAIN_MESH.vertices);
+console.log(DOMAIN_MESH.indices);
+
+const render_domain = regl({
+    framebuffer: null,
+    vert: require('./shaders/place-mesh.vert'),
+    frag: require('./shaders/render-domain.frag'),
+    attributes: {
+        a_position: DOMAIN_MESH.vertices,
+        a_uv: DOMAIN_MESH.uvs,
+        a_id: DOMAIN_MESH.ids
+    },
+    elements: DOMAIN_MESH.indices,
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_basepoint: regl.prop('u_basepoint'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: 'triangles',
+    offset: 0,
+    count: DOMAIN_MESH.indices.length * 3.0
+});
+
 // CPU Datastructures
+
+
 
 class Tile {
     constructor(x, y, z, testcase=false) {
@@ -542,6 +544,8 @@ class Tile {
     }
 
     async get_resources() {
+        // console.log(DOMAIN_MESH);
+
         const terrain_url = `/data/${this.z}-${this.x}-${this.y}-terrain.png`;
         const boundary_url = (this.is_testcase)
             ? `/data/${this.z}-${this.x}-${this.y}-terrain.png`
@@ -558,7 +562,7 @@ class Tile {
         // these buffers are aligned to the H grid
         this.H = new DoubleFramebuffer(regl, TILE_SIZE); // height map
         this.K = new DoubleFramebuffer(regl, TILE_SIZE); // curvature buffer
-        this.E = new SingleFramebuffer(regl, TILE_SIZE);
+        this.E = new SingleFramebuffer(regl, TILE_SIZE); // Edge Map
         this.S = new SingleFramebuffer(regl, TILE_SIZE); // slope buffer
 
         // these buffers are aligned to the Q grid
@@ -751,109 +755,148 @@ class Tile {
             }
 
             
+            // 3D RENDERING STEPS
+            if (RENDER_3D) {
 
-
-            // RENDERING STEPS:
-
-            regl.clear({depth: 1.0});
-            render_terrain_height({
-                u_H: this.H.front,
-                u_scalefactor: 0.5,
-                u_saturation_point: parameters.saturation_point,
-
-                a_position: this.positions,
-                a_uv: this.uvs,
-                u_transform: transform,
-            });
-
-            if (parameters.render_flux)
-            {
+                // console.log('render');
                 regl.clear({depth: 1.0});
-                render_flux({
-                    u_Q: this.Q.front,
+
+
+                const test_point = [this.x, 0.0, this.y];
+                const dist = 0.5;
+                const target = [this.x + 0.5, 0.0, this.y + 0.5];
+                const camera_position = [this.x - dist, dist, this.y - dist];
+
+                const front = vec3.subtract([], target, camera_position);
+                const right = vec3.cross([], front, [0.0, -1.0, 0.0]);
+                const up = vec3.cross([], front, right);
+
+                const V = mat4.lookAt([], camera_position, target, up);
+                const P = mat4.perspective([], Math.PI / 4.0, window.innerWidth / window.innerHeight, 0.001, 100.0);
+
+                const PV = mat4.multiply([], P, V);
+
+                console.log(vec3.transformMat4([], test_point, PV))
+
+
+
+                // console.log(vec3.transformMat3([], [this.x, this.y, 0.0], transform));
+
+                // console.log(this.x, this.y);
+                // console.log(transform);
+
+                // console.log(DOMAIN_MESH.vertices);
+                // console.log(DOMAIN_MESH.indices);
+
+                render_domain({
+                    u_basepoint: [this.x, 0.0, this.y],
+                    u_transform: PV,
+                });
+
+            } else {
+                // 2D RENDERING STEPS:
+
+                regl.clear({depth: 1.0});
+                render_terrain_height({
                     u_H: this.H.front,
                     u_scalefactor: 0.5,
-    
+                    u_saturation_point: parameters.saturation_point,
+
                     a_position: this.positions,
                     a_uv: this.uvs,
                     u_transform: transform,
-                })
-            }
+                });
 
-            if (parameters.render_flux_magnitude)
-            {
+                if (parameters.render_flux)
+                {
+                    regl.clear({depth: 1.0});
+                    render_flux({
+                        u_Q: this.Q.front,
+                        u_H: this.H.front,
+                        u_scalefactor: 0.5,
+        
+                        a_position: this.positions,
+                        a_uv: this.uvs,
+                        u_transform: transform,
+                    })
+                }
+
+                if (parameters.render_flux_magnitude)
+                {
+                    regl.clear({depth: 1.0});
+                    render_flux_magnitude({
+                        u_Q: this.Q.front,
+                        u_H: this.H.front,
+                        u_scalefactor: 0.5,
+                        u_flux_magnitude_scale: parameters.flux_magnitude_scale,
+        
+                        a_position: this.positions,
+                        a_uv: this.uvs,
+                        u_transform: transform,
+                    })
+                }
+
+                if (parameters.render_slope)
+                {
+                    regl.clear({depth: 1.0});
+                    render_slope({
+                        u_S: this.S.buffer,
+                        u_K: this.K.front,
+                        u_scalefactor: 4.0,
+        
+                        a_position: this.positions,
+                        a_uv: this.uvs,
+                        u_transform: transform,
+                    })
+                }
+                
+                if (parameters.render_curvature)
+                {
+                    regl.clear({depth: 1.0});
+                    render_curvature({
+                        u_H: this.H.front,
+                        u_K: this.K.front,
+                        u_scalefactor: 4.0,
+        
+                        a_position: this.positions,
+                        a_uv: this.uvs,
+                        u_transform: transform,
+                    })
+                }
+
+                if (parameters.render_erosion_accretion)
+                {
+                    regl.clear({depth: 1.0});
+                    render_erosion_accretion({
+                        u_H: this.H.front,
+                        u_K: this.K.front,
+                        u_Q: this.Q.front,
+                        u_S: this.S.buffer,
+
+                        u_k_erosion: parameters.k_erosion,
+                        u_k_accretion: parameters.k_accretion,
+                        u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
+                        u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                        
+                        u_scalefactor: 4.0,
+        
+                        a_position: this.positions,
+                        a_uv: this.uvs,
+                        u_transform: transform,
+                    })
+                } 
+
                 regl.clear({depth: 1.0});
-                render_flux_magnitude({
-                    u_Q: this.Q.front,
-                    u_H: this.H.front,
-                    u_scalefactor: 0.5,
-                    u_flux_magnitude_scale: parameters.flux_magnitude_scale,
-    
+                render_section_line({
+                    u_p1: parameters.p1,
+                    u_p2: parameters.p2,
+                    u_color: [0.65, 0.2, 0.0],
                     a_position: this.positions,
                     a_uv: this.uvs,
                     u_transform: transform,
                 })
+
             }
-
-            if (parameters.render_slope)
-            {
-                regl.clear({depth: 1.0});
-                render_slope({
-                    u_S: this.S.buffer,
-                    u_K: this.K.front,
-                    u_scalefactor: 4.0,
-    
-                    a_position: this.positions,
-                    a_uv: this.uvs,
-                    u_transform: transform,
-                })
-            }
-            
-            if (parameters.render_curvature)
-            {
-                regl.clear({depth: 1.0});
-                render_curvature({
-                    u_H: this.H.front,
-                    u_K: this.K.front,
-                    u_scalefactor: 4.0,
-    
-                    a_position: this.positions,
-                    a_uv: this.uvs,
-                    u_transform: transform,
-                })
-            }
-
-            if (parameters.render_erosion_accretion)
-            {
-                regl.clear({depth: 1.0});
-                render_erosion_accretion({
-                    u_H: this.H.front,
-                    u_K: this.K.front,
-                    u_Q: this.Q.front,
-                    u_S: this.S.buffer,
-
-                    u_k_erosion: parameters.k_erosion,
-                    u_k_accretion: parameters.k_accretion,
-                    u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
-                    u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
-                    
-                    u_scalefactor: 4.0,
-    
-                    a_position: this.positions,
-                    a_uv: this.uvs,
-                    u_transform: transform,
-                })
-            } 
-
-            regl.clear({depth: 1.0});
-            render_section_line({
-                u_p1: parameters.p1,
-                u_p2: parameters.p2,
-                u_color: [0.65, 0.2, 0.0],
-                a_position: this.positions,
-                a_uv: this.uvs,
-                u_transform: transform,
-            })
 
         } else {
             console.log('still loading!');
@@ -913,6 +956,7 @@ class CrossSection {
 
     render(transform, resources) {
         if (this.parent == null || !this.parent.loaded) { return; }
+        if (RENDER_3D) { return; }
 
         regl.clear({depth: 1.0});
         render_crosssection({
