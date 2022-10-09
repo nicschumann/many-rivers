@@ -492,7 +492,7 @@ const render_crosssection = regl({
 });
 
 // 3D RENDER CALLS
-let DOMAIN_MESH = new DomainMesh(regl, [250 , 250 ]);
+let DOMAIN_MESH = new DomainMesh(regl, [100 , 100]);
 
 console.log(DOMAIN_MESH.vertices);
 console.log(DOMAIN_MESH.indices);
@@ -510,7 +510,7 @@ const render_domain = regl({
     uniforms: {
         u_transform: regl.prop('u_transform'),
         u_basepoint: regl.prop('u_basepoint'),
-        u_resolution: TILE_SIZE,
+        u_resolution: DOMAIN_MESH.cells,
 
         u_H: regl.prop('u_H')
     },
@@ -765,9 +765,9 @@ class Tile {
 
 
                 const test_point = [this.x, 0.0, this.y];
-                const dist = 0.5;
+                const dist = 0.25;
                 const target = [this.x + 0.5, 0.0, this.y + 0.5];
-                const camera_position = [this.x - dist, dist, this.y - dist];
+                const camera_position = [this.x - dist, dist + 2.0, this.y - dist];
 
                 const front = vec3.subtract([], target, camera_position);
                 const right = vec3.cross([], front, [0.0, -1.0, 0.0]);
