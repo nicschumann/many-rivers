@@ -20,7 +20,7 @@ const make_data = ( cells ) => {
             );
 
             uvs.push(
-                [x * dx, y * dy]
+                [x * dx + (dx / 2.0), y * dy + (dy / 2.0)]
             );
 
             ids.push([

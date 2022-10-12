@@ -1,6 +1,6 @@
 import "./style/main.css";
 import { vec2, vec3, mat3, mat4, vec4 } from "gl-matrix";
-import { DoubleFramebuffer, SingleFramebuffer } from "./buffer";
+import { DoubleFramebuffer, SingleFramebuffer, DEFAULT_INTERPOLATION } from "./buffer";
 import { DomainMesh } from "./mesh";
 import parameters from './parameters';
 
@@ -8,12 +8,14 @@ const regl = require('regl')({
     extensions: [
         'OES_texture_float',
         'OES_texture_float_linear',
+        'OES_element_index_uint',
+        'OES_standard_derivatives',
         'EXT_shader_texture_lod'
     ]
 });
 
 const RENDER_3D = true;
-const RENDER_SCALE = 1.5;
+const RENDER_SCALE = 2.0;
 const TILE_SIZE = [384, 384];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -196,6 +198,23 @@ const calculate_stream_averaging = regl({
 });
 
 // end of curvature stuff
+
+// surface normal calculation
+const calculate_N_normals = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-N-normals.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_resolution: TILE_SIZE,
+    },
+    primitive: "triangle strip",
+    count: 4
+});
 
 // sediment stuff
 
@@ -492,7 +511,7 @@ const render_crosssection = regl({
 });
 
 // 3D RENDER CALLS
-let DOMAIN_MESH = new DomainMesh(regl, [100 , 100]);
+let DOMAIN_MESH = new DomainMesh(regl, [384, 384]);
 
 console.log(DOMAIN_MESH.vertices);
 console.log(DOMAIN_MESH.indices);
@@ -512,10 +531,41 @@ const render_domain = regl({
         u_basepoint: regl.prop('u_basepoint'),
         u_resolution: DOMAIN_MESH.cells,
 
-        u_H: regl.prop('u_H')
+        u_H: regl.prop('u_H'),
+        u_N: regl.prop('u_N')
     },
     primitive: 'triangles',
     offset: 0,
+    count: DOMAIN_MESH.indices.length * 3.0
+});
+
+const render_river = regl({
+    framebuffer: null,
+    vert: require('./shaders/place-river.vert'),
+    frag: require('./shaders/render-river.frag'),
+    attributes: {
+        a_position: DOMAIN_MESH.vertices,
+        a_uv: DOMAIN_MESH.uvs,
+        a_id: DOMAIN_MESH.ids
+    },
+    elements: DOMAIN_MESH.indices,
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_basepoint: regl.prop('u_basepoint'),
+        u_resolution: DOMAIN_MESH.cells,
+        u_tex_resolution: TILE_SIZE,
+
+        u_H: regl.prop('u_H'),
+        u_N: regl.prop('u_N'),
+        u_view_pos: regl.prop('u_view_pos')
+    },
+    primitive: 'triangles',
+    offset: 0,
+    depth: { func: 'lequal' },
+    blend: {
+        enable: true,
+        func: {src: 'src alpha', dst: 'one minus src alpha'}
+    },
     count: DOMAIN_MESH.indices.length * 3.0
 });
 
@@ -558,14 +608,15 @@ class Tile {
             load_image(boundary_url), 
         ]);
 
-        this.elevation = regl.texture({ data: textures[0], mag: 'linear', min: 'linear' });
-        this.boundary = regl.texture({ data: textures[1], mag: 'nearest', min: 'nearest' });
+        this.elevation = regl.texture({ data: textures[0], mag: DEFAULT_INTERPOLATION, min: DEFAULT_INTERPOLATION });
+        this.boundary = regl.texture({ data: textures[1], mag: DEFAULT_INTERPOLATION, min: DEFAULT_INTERPOLATION });
 
         // these buffers are aligned to the H grid
         this.H = new DoubleFramebuffer(regl, TILE_SIZE); // height map
         this.K = new DoubleFramebuffer(regl, TILE_SIZE); // curvature buffer
         this.E = new SingleFramebuffer(regl, TILE_SIZE); // Edge Map
         this.S = new SingleFramebuffer(regl, TILE_SIZE); // slope buffer
+        this.N = new SingleFramebuffer(regl, TILE_SIZE);
 
         // these buffers are aligned to the Q grid
         this.Q = new DoubleFramebuffer(regl, TILE_SIZE); // flux buffer
@@ -764,10 +815,9 @@ class Tile {
                 regl.clear({depth: 1.0});
 
 
-                const test_point = [this.x, 0.0, this.y];
-                const dist = 0.25;
                 const target = [this.x + 0.5, 0.0, this.y + 0.5];
-                const camera_position = [this.x - dist, dist + 2.0, this.y - dist];
+
+                const camera_position = [this.x + 0.85, 0.065, this.y + 0.85];
 
                 const front = vec3.subtract([], target, camera_position);
                 const right = vec3.cross([], front, [0.0, -1.0, 0.0]);
@@ -778,23 +828,22 @@ class Tile {
 
                 const PV = mat4.multiply([], P, V);
 
-                console.log(vec3.transformMat4([], test_point, PV))
-
-
-
-                // console.log(vec3.transformMat3([], [this.x, this.y, 0.0], transform));
-
-                // console.log(this.x, this.y);
-                // console.log(transform);
-
-                // console.log(DOMAIN_MESH.vertices);
-                // console.log(DOMAIN_MESH.indices);
 
                 render_domain({
                     u_basepoint: [this.x, 0.0, this.y],
                     u_transform: PV,
 
-                    u_H: this.H.front
+                    u_H: this.H.front,
+                    u_N: this.N.buffer
+                });
+
+                render_river({
+                    u_basepoint: [this.x, 0.0, this.y],
+                    u_transform: PV,
+
+                    u_H: this.H.front,
+                    u_N: this.N.buffer,
+                    u_view_pos: camera_position
                 });
 
             } else {

@@ -1,4 +1,4 @@
-const DEFAULT_INTERPOLATION = 'nearest';
+export const DEFAULT_INTERPOLATION = 'linear';
 
 const create_linear_buffer = (regl, resolution, filter=DEFAULT_INTERPOLATION) => {
     let color = regl.texture({

@@ -82,6 +82,7 @@ void main() {
     }
 
     S = S + (A - E);
+    W = W - (A - E);
 
     if (A - E > 0.0) {
 
