@@ -513,8 +513,6 @@ const render_crosssection = regl({
 // 3D RENDER CALLS
 let DOMAIN_MESH = new DomainMesh(regl, [384, 384]);
 
-console.log(DOMAIN_MESH.vertices);
-console.log(DOMAIN_MESH.indices);
 
 const render_domain = regl({
     framebuffer: null,
@@ -569,12 +567,32 @@ const render_river = regl({
     count: DOMAIN_MESH.indices.length * 3.0
 });
 
+// const render_point = regl({
+//     framebuffer: null,
+//     vert: require('./shaders/place-point.vert'),
+//     frag: require('./shaders/render-point.frag'),
+//     attributes: {
+//         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+//     },
+//     elements: DOMAIN_MESH.indices,
+//     uniforms: {
+//         u_transform: regl.prop('u_transform'),
+//         u_basepoint: regl.prop('u_basepoint'),
+//         u_H: regl.prop('u_H'),
+//     },
+//     primitive: 'triangle strip',
+//     offset: 0,
+//     count: 4
+// })
+
 // CPU Datastructures
 
 
 
 class Tile {
     constructor(x, y, z, testcase=false) {
+        console.log(x, y, z);
+
         this.x = x;
         this.y = y;
         this.z = z;
@@ -817,7 +835,7 @@ class Tile {
 
                 const target = [this.x + 0.5, 0.0, this.y + 0.5];
 
-                const camera_position = [this.x + 0.85, 0.065, this.y + 0.85];
+                const camera_position = [this.x + 0.85, 0.1, this.y + 0.85];
 
                 const front = vec3.subtract([], target, camera_position);
                 const right = vec3.cross([], front, [0.0, -1.0, 0.0]);
@@ -828,6 +846,11 @@ class Tile {
 
                 const PV = mat4.multiply([], P, V);
 
+                calculate_N_normals({
+                    target: this.N.buffer,
+                    a_uv: this.uvs,
+                    u_H: this.H.front,
+                });
 
                 render_domain({
                     u_basepoint: [this.x, 0.0, this.y],
@@ -845,6 +868,10 @@ class Tile {
                     u_N: this.N.buffer,
                     u_view_pos: camera_position
                 });
+
+                // render_point({
+                //     u_basepoint: [this.x, 0.0, this.y]
+                // })
 
             } else {
                 // 2D RENDERING STEPS:

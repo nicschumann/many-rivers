@@ -1,6 +1,6 @@
 precision highp float;
 
-#define FILTER_RANGE 2
+#define FILTER_RANGE 0
 
 attribute vec3 a_position;
 attribute vec2 a_uv;
@@ -60,6 +60,8 @@ void main() {
     v_S = S;
 
     vec4 view_position = u_transform * vec4(position, 1.0);
+
+    if (W == 0.) { view_position / W; } // discard vertex if there's no water...
 
     gl_Position = view_position;
 

@@ -12,10 +12,14 @@ void main() {
     // Sample the terrain-rgb tile at the current fragment location.
     vec3 e = vec3(1.0 / (u_resolution / 2.0) , 0.0);
 
-    float S = texture2D(u_H, v_uv).g;
+    vec4 H = texture2D(u_H, v_uv);
 
-    float Sx = texture2D(u_H, v_uv + e.xz).g;
-    float Sy = texture2D(u_H, v_uv + e.zy).g;
+    vec4 Hx = texture2D(u_H, v_uv + e.xz);
+    vec4 Hy = texture2D(u_H, v_uv + e.zy);
+
+    float S = H.g + H.b;
+    float Sx = Hx.g + Hx.b;
+    float Sy = Hy.g + Hy.b;
 
     vec3 dx = vec3(e.x, Sx - S, 0.0);
     vec3 dy = vec3(0.0, Sy - S, e.y);

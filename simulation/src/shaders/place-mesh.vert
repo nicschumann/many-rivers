@@ -1,6 +1,6 @@
 precision highp float;
 
-#define FILTER_RANGE 2
+#define FILTER_RANGE 0
 
 attribute vec3 a_position;
 attribute vec2 a_uv;
