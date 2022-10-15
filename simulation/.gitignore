@@ -19,6 +19,3 @@ node_modules
 
 # macOS-specific ignores
 .DS_Store
-
-# python cpu simulations
-tools
