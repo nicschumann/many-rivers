@@ -1,0 +1,7 @@
+# python stuff
+__pycache__
+.env
+
+# image outputs
+*.png
+*.tif
