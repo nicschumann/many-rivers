@@ -38,9 +38,11 @@ void main() {
             }
         }
         
+        const float bias = 0.002;
+        // controls the bias towards erosion overall.
         const float k_max_mag = 3.0;
         float v = min(max(k / count, -k_max_mag), k_max_mag); // clamp the max curvature for the boundaries
-        gl_FragColor = vec4(vec3(v), 1.0);
+        gl_FragColor = vec4(vec3(v + bias), 1.0);
 
     } else {
         gl_FragColor = vec4(0.); 

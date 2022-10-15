@@ -29,13 +29,15 @@ void main() {
     // Sample the terrain-rgb tile at the current fragment location.
     vec2 uv = v_uv;
 
-    float BH = 1.0 * (1.0 - uv.x); // 1.0m over 2.5km
+    float BH = 1.0; // 1.0m over 2.5km
 
-    float SH = sediment_height(v_uv) * 0.2;
+    float SH = max(sediment_height(v_uv), 6.0) * 1.0;
+    // 6.0 is a floor constant taken from the Matamoros DEM histogram.
     
-    float WH = 0.01;
+    float WH = 0.0;
     float mask = texture2D(u_boundary, uv).a;
-    if (mask > 0.0) { WH = 0.3 * (1.0 - uv.x); }
+    // if (mask > 0.0) { WH = 0.3 * (1.0 - uv.x); }
+    if (mask > 0.0) { WH = 6.0; }
 
 
     #ifdef INCOMPLETE_RIVER

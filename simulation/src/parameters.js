@@ -14,19 +14,19 @@ export default {
     p1: [0.0, 0.5],
     p2: [1.0, 0.5],
 
-    non_erosive_timesteps: 150,
+    non_erosive_timesteps: 500,
     smoothing_iterations: 40,
     flux_averaging_steps: 0,
     updates_per_frame: 50,
 
-    k_erosion: 0.00004, // 4x faster than accretion in this mode.
-    k_accretion: 0.00001, 
+    k_erosion: 0.0001, // 4x faster than accretion in this mode.
+    k_accretion: 0.000005, 
     // accretion_upper_bound: 0.014,
-    accretion_upper_bound: 0.0005,
-    erosion_lower_bound: 0.02,
+    accretion_upper_bound: 0.01,
+    erosion_lower_bound: 0.03,
     min_failure_slope: 100.0,
 
     // 
-    flux_magnitude_scale: 30,
+    flux_magnitude_scale: 10,
     saturation_point: 0.0
 };

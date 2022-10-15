@@ -48,7 +48,7 @@ void main() {
     float E = 0.;
     float A = 0.;
 
-    const float collapse_height = 0.5;
+    const float collapse_height = 6.0;
     const float u_k_collapse = 0.2;
 
     for (int i = -FILTER_RANGE; i < FILTER_RANGE + 1; i++) {
@@ -82,7 +82,7 @@ void main() {
     }
 
     S = S + (A - E);
-    W = W - (A - E);
+    W = W - (A - E); // HACK to make rendering look smoother.
 
     if (A - E > 0.0) {
 

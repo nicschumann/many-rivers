@@ -29,9 +29,9 @@ void main() {
     vec2 target_uv = (1.0 - a) * p_min + a * p_max;
     vec4 H = texture2D(u_H, target_uv);
     
-    float h_sf = 1.0 / 10.0;
+    float h_sf = 1.0 / 20.0;
     float SH_norm = ((H.x + H.y) * h_sf);
-    float WH_norm = H.z * h_sf;
+    float WH_norm = H.z  * h_sf;
 
     // check if we're outside of domain...
     if (target_uv.y < 0.0) { discard; }
@@ -39,9 +39,10 @@ void main() {
 
     if (uv.y <= SH_norm) {
         
+        vec3 color = vec3(0.38, 0.31, 0.25);
         float gradient_sf = 1.3;
         float a = 1.0 - ((gradient_sf * (SH_norm + WH_norm) - uv.y) / (SH_norm + WH_norm));
-        gl_FragColor = vec4(a * vec3(0.65, 0.2, 0.), 1. );
+        gl_FragColor = vec4(a * color, 1. );
 
 
     } else if (uv.y <= SH_norm + 0.0015) {

@@ -18,7 +18,7 @@ void main() {
     vec4 water = vec4(0., 0.75, 0.9, w);
 
     vec4 terrain = vec4(0.38, 0.31, 0.25, 1.0 - w);
-    vec3 h = vec3( b + s );
+    float h = b + s;
 
     /**
     * NOTE(Nic): I've added a minimum render depth for the water.
@@ -42,7 +42,7 @@ void main() {
         vec3 min_color = vec3(0.02, 0.02, 0.02);
         vec3 max_color = vec3(1.0, 0., 0.);
         float fract_w = fract(w * sf);
-        float b = 0.2 ;
+        float b = 2.0;
 
 
         if (w < b + 0.1) {
@@ -76,6 +76,7 @@ void main() {
 
     } else {
         vec3 color = vec3(0.38, 0.31, 0.25);
-        gl_FragColor = vec4(h * color, 1.0);
+        float t = (h - 6.0) / 8.0;
+        gl_FragColor = vec4(t * color, 1.0);
     }    
 }

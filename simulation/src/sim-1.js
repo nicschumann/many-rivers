@@ -14,7 +14,7 @@ const regl = require('regl')({
     ]
 });
 
-const RENDER_3D = true;
+const RENDER_3D = false;
 const RENDER_SCALE = 2.0;
 const TILE_SIZE = [384, 384];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
@@ -511,7 +511,7 @@ const render_crosssection = regl({
 });
 
 // 3D RENDER CALLS
-let DOMAIN_MESH = new DomainMesh(regl, [384, 384]);
+let DOMAIN_MESH = new DomainMesh(regl, [512, 512]);
 
 
 const render_domain = regl({
@@ -822,7 +822,7 @@ class Tile {
                 }
                 let e = performance.now();
                 let avg_update_time = (e - s) / parameters.updates_per_frame
-                console.log(`${resources.t} ${parameters.updates_per_frame} updates: ${e - s}ms (${avg_update_time.toFixed(3)}ms / step)`);
+                // console.log(`${resources.t} ${parameters.updates_per_frame} updates: ${e - s}ms (${avg_update_time.toFixed(3)}ms / step)`);
             }
 
             
@@ -832,10 +832,11 @@ class Tile {
                 // console.log('render');
                 regl.clear({depth: 1.0});
 
+                let camera = resources.camera;
+                // console.log(camera);
 
-                const target = [this.x + 0.5, 0.0, this.y + 0.5];
-
-                const camera_position = [this.x + 0.85, 0.1, this.y + 0.85];
+                const target = camera.target;
+                const camera_position = camera.position;
 
                 const front = vec3.subtract([], target, camera_position);
                 const right = vec3.cross([], front, [0.0, -1.0, 0.0]);
@@ -1054,6 +1055,17 @@ class CrossSection {
 }
 
 // TileProvider
+class Camera {
+    constructor (position, target) {
+        this.position = position;
+        this.target = target;
+    }
+
+    get_matrix () {
+
+    }
+}
+
 class TileProvider {
     constructor () {
 
@@ -1061,12 +1073,15 @@ class TileProvider {
         this.tiles = [
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
             // new Tile(0, 1, 13, true), // TC 1 dead end
-            new Tile(0, 3, 13, true), // TC 3 simple sine
+            // new Tile(0, 3, 13, true), // TC 3 simple sine
             // new Tile(0, 6, 13, true), // TC 3 flipped simple sine
             // new Tile(0, 2, 13, true), // TC 2 short circuit
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
             // new Tile(0, 7, 13, true), // TC 7 Parabola
+
+            // Real DEM Stuff
+            new Tile(0, 0, 14),
 
             new CrossSection(true)
         ];
@@ -1075,7 +1090,13 @@ class TileProvider {
         this.tiles[1].set_parent( this.tiles[0] );
 
         this.tile_map = {};
-        this.resources = { t: 0.0 };
+        this.resources = { 
+            t: 0.0,
+            camera: new Camera(
+                [this.tiles[0].x + 0.85, 0.25, this.tiles[0].y + 0.85],
+                [this.tiles[0].x + 0.5, 0.0, this.tiles[0].y + 0.5]
+            )
+        };
 
         // this.tile_center = [ 1878.5, 3483.5 ]
         this.tile_center = [ this.tiles[0].x + 1.0, this.tiles[0].y + 0.5]
@@ -1380,7 +1401,7 @@ async function main () {
     })
 
     window.addEventListener('mousemove', e => {
-
+        
         if (mouse_is_down && !shift_key_is_down) {
 
             let [dx, dy] = [e.clientX - last_coords[0], e.clientY - last_coords[1]];
@@ -1452,6 +1473,7 @@ async function main () {
 
             }
         }
+        
     });
 
     window.addEventListener('mouseup', () => {
@@ -1464,68 +1486,71 @@ async function main () {
 
     window.addEventListener('keydown', e => {
         console.log(e.key)
-        if (e.key == 'Shift') {
-            shift_key_is_down = true;
-        }
 
-        if (e.key == ' ') {
-            parameters.running = !parameters.running;
-            document.getElementById('running').checked = parameters.running;
-        }
 
-        if (e.key == 'f') {
-            parameters.render_flux = !parameters.render_flux;
-            parameters.render_slope = false;
-            parameters.render_flux_magnitude = false;
-            document.getElementById('render_flux').checked = parameters.render_flux;
-            parameters.render_curvature = false;
-            parameters.render_erosion_accretion = false;
-        }
-
-        if (e.key == 'm') {
-            parameters.render_flux_magnitude = !parameters.render_flux_magnitude;
-            parameters.render_flux = false;
-            parameters.render_slope = false;
-            document.getElementById('render_flux').checked = parameters.render_flux;
-            parameters.render_curvature = false;
-            parameters.render_erosion_accretion = false;
-        }
-
-        if (e.key == 'c') {
-            parameters.render_flux = false;
-            parameters.render_flux_magnitude = false;
-            parameters.render_slope = false;
-            parameters.render_curvature = !parameters.render_curvature;
-            document.getElementById('render_curvature').checked = parameters.render_curvature;
-            parameters.render_erosion_accretion = false;
-        }
-
-        if (e.key == 'e') {
-            parameters.render_flux = false;
-            parameters.render_flux_magnitude = false;
-            parameters.render_slope = false;
-            parameters.render_curvature = false;
-            parameters.render_erosion_accretion = !parameters.render_erosion_accretion;
-            document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
-        }
-
-        if (e.key == 's') {
-            parameters.render_flux = false;
-            parameters.render_flux_magnitude = false;
-            parameters.render_curvature = false;
-            parameters.render_slope = !parameters.render_slope;
-            parameters.render_erosion_accretion = false;
-            document.getElementById('render_slope').checked = parameters.render_slope;
-        }
-
-        if (e.key == 'ArrowRight') {
-            regl.clear({color: [0, 0, 0, 1]});
-            let running = parameters.running;
-            parameters.running = true;
-            provider.setup_transform();
-            provider.render_tiles();
-            parameters.running = running;
-        }
+            if (e.key == 'Shift') {
+                shift_key_is_down = true;
+            }
+    
+            if (e.key == ' ') {
+                parameters.running = !parameters.running;
+                document.getElementById('running').checked = parameters.running;
+            }
+    
+            if (e.key == 'f') {
+                parameters.render_flux = !parameters.render_flux;
+                parameters.render_slope = false;
+                parameters.render_flux_magnitude = false;
+                document.getElementById('render_flux').checked = parameters.render_flux;
+                parameters.render_curvature = false;
+                parameters.render_erosion_accretion = false;
+            }
+    
+            if (e.key == 'm') {
+                parameters.render_flux_magnitude = !parameters.render_flux_magnitude;
+                parameters.render_flux = false;
+                parameters.render_slope = false;
+                document.getElementById('render_flux').checked = parameters.render_flux;
+                parameters.render_curvature = false;
+                parameters.render_erosion_accretion = false;
+            }
+    
+            if (e.key == 'c') {
+                parameters.render_flux = false;
+                parameters.render_flux_magnitude = false;
+                parameters.render_slope = false;
+                parameters.render_curvature = !parameters.render_curvature;
+                document.getElementById('render_curvature').checked = parameters.render_curvature;
+                parameters.render_erosion_accretion = false;
+            }
+    
+            if (e.key == 'e') {
+                parameters.render_flux = false;
+                parameters.render_flux_magnitude = false;
+                parameters.render_slope = false;
+                parameters.render_curvature = false;
+                parameters.render_erosion_accretion = !parameters.render_erosion_accretion;
+                document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
+            }
+    
+            if (e.key == 's') {
+                parameters.render_flux = false;
+                parameters.render_flux_magnitude = false;
+                parameters.render_curvature = false;
+                parameters.render_slope = !parameters.render_slope;
+                parameters.render_erosion_accretion = false;
+                document.getElementById('render_slope').checked = parameters.render_slope;
+            }
+    
+            if (e.key == 'ArrowRight') {
+                regl.clear({color: [0, 0, 0, 1]});
+                let running = parameters.running;
+                parameters.running = true;
+                provider.setup_transform();
+                provider.render_tiles();
+                parameters.running = running;
+            }
+        
     })
 
     window.addEventListener('keyup', e => {

@@ -121,11 +121,16 @@ void main() {
     float dS = -E + A;
     
     S = S + dS;
+    
+    // NOTE(Lukas): This is a hack that slows accretion significantly
+    // if you turn it on, consider turning down accretion knob, and 
+    // increasing erosion knob.
+    // W = W - A;
 
     gl_FragColor = vec4(
         H.r,
         max(S, 0.),
-        W,
+        max(W, 0.),
         dS
     );
 }

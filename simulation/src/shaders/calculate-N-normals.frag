@@ -17,9 +17,9 @@ void main() {
     vec4 Hx = texture2D(u_H, v_uv + e.xz);
     vec4 Hy = texture2D(u_H, v_uv + e.zy);
 
-    float S = H.g + H.b;
-    float Sx = Hx.g + Hx.b;
-    float Sy = Hy.g + Hy.b;
+    float S = H.r + H.g + H.b;
+    float Sx = Hx.r + Hx.g + Hx.b;
+    float Sy = Hy.r + Hy.g + Hy.b;
 
     vec3 dx = vec3(e.x, Sx - S, 0.0);
     vec3 dy = vec3(0.0, Sy - S, e.y);
