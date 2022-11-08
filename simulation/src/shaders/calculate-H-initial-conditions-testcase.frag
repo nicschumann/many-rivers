@@ -18,13 +18,13 @@ void main() {
     float mask = texture2D(u_elevation, uv).a;
 
     if (mask == 1.0) {
-        SH = 0.5;
+        SH = 6.0;
     } else {
-        SH = 1.1;
+        SH = 10.0;
     }
 
     if (mask == 1.0) { 
-        WH = 0.5;
+        WH = 3.7;
     }
 
     gl_FragColor = vec4(

@@ -6,7 +6,6 @@ uniform sampler2D u_H;
 uniform vec2 u_resolution;
 
 const float u_saturation_point = 0.0;
-const float eps = 0.05;
 
 void main() {
     vec2 uv = v_uv;

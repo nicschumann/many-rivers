@@ -21,7 +21,7 @@ vec3 ambient_light_color = vec3(0.55, -0.1, 1.0);
 vec3 diffuse_light_position = vec3(0.0, 0.1 , 0.0) + u_basepoint;
 vec3 diffuse_light_color = vec3(0.8, 0.7, 0.7);
 
-const float scale = 0.01;
+const float scale = 0.001;
 
 
 float beer_lambert_law(float absorption, float step_size)
@@ -97,7 +97,7 @@ void main() {
     float alpha = 1.0;
 
     gl_FragColor = vec4(
-       volumetric_color + specular,
+        volumetric_color + specular,
 
         // vec3(0.3 - length(p_curr - p_start) * 2.) * vec3(0.2, 0.4, 0.5),
         // vec3(spec) * diffuse_light_color + scattering,

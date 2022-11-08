@@ -18,7 +18,7 @@ float BS(vec2 xy) {
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
-    float k_vel = 0.1; // max 1. on this regime.
+    float k_vel = 0.001; // max 1. on this regime.
     vec2 d = 1.0 / u_resolution;
     
     vec2 uv = v_uv;
@@ -32,15 +32,15 @@ void main() {
             max(H(uv), H(uv + e.xz)) - max(BS(uv), BS(uv + e.xz)),
             max(H(uv), H(uv + e.zy)) - max(BS(uv), BS(uv + e.zy))
     );
-
-    const vec2 min_flow_depth = vec2(0.045, 0.045);
+    
+    const vec2 min_flow_depth = vec2(0.15, 0.15);
 
     if (W > 0.0) { // enforce a min flow depth for wet cells.
         flow_depth = max(flow_depth, min_flow_depth);
     }
 
 
-    float k = 0.01;
+    float k = k_vel;
     float n = 0.2;
 
     // vec2 flux = -k_vel * slope * flow_depth;

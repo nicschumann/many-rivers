@@ -144,6 +144,40 @@ const calculate_edges = regl({
     count: 4
 });
 
+const calculate_edge_normalization_pass_one = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-K-edge-normalization-1.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_E: regl.prop('u_E'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
+const calculate_edge_normalization_pass_two = regl({
+    framebuffer: regl.prop('target'),
+    vert: require('./shaders/pass-through.vert'),
+    frag: require('./shaders/calculate-K-edge-normalization-2.frag'),
+    attributes: {
+        a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_H: regl.prop('u_H'),
+        u_E: regl.prop('u_E'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
 const calculate_curvature = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
@@ -319,13 +353,14 @@ const calculate_H_boundary_conditions = regl({
 const calculate_Q_boundary_conditions = regl({
     framebuffer: regl.prop('target'),
     vert: require('./shaders/pass-through.vert'),
-    frag: require('./shaders/calculate-Q-boundary-conditions.frag'),
+    frag: require('./shaders/calculate-Q-boundary-conditions-2.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
         a_uv: regl.prop('a_uv')
     },
     uniforms: {
         u_Q: regl.prop('u_Q'),
+        u_boundary: regl.prop('u_boundary'),
         u_upper_bank: regl.prop('u_upper_bank'),
         u_lower_bank: regl.prop('u_lower_bank'),
         u_bank_width: regl.prop('u_bank_width'),
@@ -440,6 +475,7 @@ const render_curvature = regl({
         u_H: regl.prop('u_H'),
         u_Q: regl.prop('u_Q'),
         u_K: regl.prop('u_K'),
+        u_E: regl.prop('u_E'),
         u_scalefactor: regl.prop('u_scalefactor'),
         u_resolution: TILE_SIZE
     },
@@ -616,9 +652,13 @@ class Tile {
     async get_resources() {
         // console.log(DOMAIN_MESH);
 
-        const terrain_url = `/data/${this.z}-${this.x}-${this.y}-terrain.png`;
+        const terrain_url = (this.is_testcase)
+            ? `/data/${this.z}-${this.x}-${this.y}-testcase.png`
+            : `/data/${this.z}-${this.x}-${this.y}-terrain.png`;
+        
+        
         const boundary_url = (this.is_testcase)
-            ? `/data/${this.z}-${this.x}-${this.y}-terrain.png`
+            ? `/data/${this.z}-${this.x}-${this.y}-testcase.png`
             : `/data/${this.z}-${this.x}-${this.y}-boundary-all.png`;
 
         let textures = await Promise.all([ 
@@ -629,10 +669,11 @@ class Tile {
         this.elevation = regl.texture({ data: textures[0], mag: DEFAULT_INTERPOLATION, min: DEFAULT_INTERPOLATION });
         this.boundary = regl.texture({ data: textures[1], mag: DEFAULT_INTERPOLATION, min: DEFAULT_INTERPOLATION });
 
+        const curvature_scale_factor = 1.0;
         // these buffers are aligned to the H grid
         this.H = new DoubleFramebuffer(regl, TILE_SIZE); // height map
-        this.K = new DoubleFramebuffer(regl, TILE_SIZE); // curvature buffer
-        this.E = new SingleFramebuffer(regl, TILE_SIZE); // Edge Map
+        this.K = new DoubleFramebuffer(regl, [TILE_SIZE[0] / curvature_scale_factor, TILE_SIZE[1] / curvature_scale_factor]); // curvature buffer
+        this.E = new DoubleFramebuffer(regl, [TILE_SIZE[0] / curvature_scale_factor, TILE_SIZE[1] / curvature_scale_factor]); // Edge Map
         this.S = new SingleFramebuffer(regl, TILE_SIZE); // slope buffer
         this.N = new SingleFramebuffer(regl, TILE_SIZE);
 
@@ -698,24 +739,42 @@ class Tile {
                         });
                         this.Q.swap();
                     }
+
+                    
                     
 
                     // this averaging system is appropriate with 
                     // stream-averaging-2, which iteratively solved 
                     // a laplace equation across the river domain.
-                    if (i % parameters.smoothing_iterations == 0) {
+                    let render_iterations_per_smoothing = 50
+                    if (i % parameters.smoothing_iterations == 0 && resources.t % render_iterations_per_smoothing == 0) {
                         // update edges
                         calculate_edges({
-                            target: this.E.buffer,
+                            target: this.E.back,
                             u_H: this.H.front,
                             a_uv: this.uvs
                         })
+                        this.E.swap();
+
+                        // calculate_edge_normalization_pass_one({
+                        //     target: this.E.back,
+                        //     u_E: this.E.front,
+                        //     a_uv: this.uvs
+                        // });
+                        // this.E.swap();
+
+                        // calculate_edge_normalization_pass_two({
+                        //     target: this.E.back,
+                        //     u_E: this.E.front,
+                        //     a_uv: this.uvs
+                        // });
+                        // this.E.swap();
 
                         // update Kappa
                         calculate_curvature({
                             target: this.K.back,
                             u_H: this.H.front,
-                            u_E: this.E.buffer,
+                            u_E: this.E.front,
                             a_uv: this.uvs
                         })
                         this.K.swap();
@@ -726,7 +785,7 @@ class Tile {
                             calculate_edge_averaging({
                                 target: this.K.back,
                                 u_K: this.K.front,
-                                u_E: this.E.buffer,
+                                u_E: this.E.front,
                                 u_H: this.H.front,
                                 a_uv: this.uvs
                             })
@@ -738,7 +797,7 @@ class Tile {
                             calculate_stream_averaging({
                                 target: this.K.back,
                                 u_K: this.K.front,
-                                u_E: this.E.buffer,
+                                u_E: this.E.front,
                                 u_H: this.H.front,
                                 a_uv: this.uvs
                             })
@@ -747,7 +806,11 @@ class Tile {
                     }
                     
                     // calculate erosion and collapse.
-                    if (parameters.run_erosion && resources.t > parameters.non_erosive_timesteps) {
+                    if (
+                        parameters.run_erosion && 
+                        resources.t > parameters.non_erosive_timesteps &&
+                        i % parameters.water_updates_per_iteration == 0
+                        ) {
                         calculate_erosion_accretion({
                             target: this.H.back,
                             u_Q: this.Q.front,
@@ -781,7 +844,6 @@ class Tile {
                     }
   
 
-                    
                     // update H
                     advance_water_depth({
                         target: this.H.back,
@@ -794,6 +856,7 @@ class Tile {
 
                     this.H.swap();
 
+                    
                     // enforce boundary conditions
                     // calculate_H_boundary_conditions({
                     //     target: this.H.back,
@@ -811,6 +874,7 @@ class Tile {
                     calculate_Q_boundary_conditions({
                         target: this.Q.back,
                         u_Q: this.Q.front,
+                        u_boundary: this.boundary,
                         u_upper_bank: parameters.upper_bank,
                         u_lower_bank: parameters.lower_bank,
                         u_bank_width: parameters.bank_width,
@@ -937,6 +1001,7 @@ class Tile {
                     render_curvature({
                         u_H: this.H.front,
                         u_K: this.K.front,
+                        u_E: this.E.front,
                         u_scalefactor: 4.0,
         
                         a_position: this.positions,
@@ -1079,6 +1144,7 @@ class TileProvider {
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
             // new Tile(0, 7, 13, true), // TC 7 Parabola
+            // new Tile(0, 0, 14, true), // TC 8 DEM Pattern Minus DEM
 
             // Real DEM Stuff
             new Tile(0, 0, 14),
@@ -1093,7 +1159,7 @@ class TileProvider {
         this.resources = { 
             t: 0.0,
             camera: new Camera(
-                [this.tiles[0].x + 0.85, 0.25, this.tiles[0].y + 0.85],
+                [this.tiles[0].x + 0.0, 0.25, this.tiles[0].y + 0.0],
                 [this.tiles[0].x + 0.5, 0.0, this.tiles[0].y + 0.5]
             )
         };
