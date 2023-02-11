@@ -1,10 +1,12 @@
 import "./style/main.css";
-import { vec2, vec3, mat3, mat4, vec4 } from "gl-matrix";
+import { vec2, vec3, mat3, mat4 } from "gl-matrix";
 import { DoubleFramebuffer, SingleFramebuffer, DEFAULT_INTERPOLATION } from "./buffer";
 import { DomainMesh } from "./mesh";
 import parameters from './parameters';
 
-const regl = require('regl')({
+// assigning regl as a global
+// so that we have access to it in all modules.
+window.regl = require('regl')({
     extensions: [
         'OES_texture_float',
         'OES_texture_float_linear',
@@ -15,7 +17,7 @@ const regl = require('regl')({
 });
 
 const RENDER_3D = false;
-const RENDER_SCALE = 2.0;
+const RENDER_SCALE = 1.0;
 const TILE_SIZE = [384, 384];
 const TERRAIN_SIZE = [TILE_SIZE[0] * RENDER_SCALE, TILE_SIZE[1] * RENDER_SCALE];
 
@@ -740,7 +742,13 @@ class Tile {
                         this.Q.swap();
                     }
 
-                    
+
+                    // Snippet fro reading piexles from a given framebuffer
+                    // const data = new Float32Array(TILE_SIZE.reduce((a,b) => a*b) * 4.0);
+                    // this.H.front.use(() => {
+                    //     regl.read({ data });
+                    //     // data now contains all of the framebuffer values.
+                    // });
                     
 
                     // this averaging system is appropriate with 
@@ -818,8 +826,8 @@ class Tile {
                             u_K: this.K.front,
                             u_S: this.S.buffer,
 
-                            u_k_erosion: parameters.k_erosion,
-                            u_k_accretion: parameters.k_accretion,
+                            u_k_erosion: parameters.erosion_speed,
+                            u_k_accretion: parameters.accretion_speed,
                             u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
                             u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
                             a_uv: this.uvs,
@@ -833,8 +841,8 @@ class Tile {
                             u_K: this.K.front,
                             u_S: this.S.buffer,
 
-                            u_k_erosion: parameters.k_erosion,
-                            u_k_accretion: parameters.k_accretion,
+                            u_k_erosion: parameters.erosion_speed,
+                            u_k_accretion: parameters.accretion_speed,
                             u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
                             u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
                             u_min_failure_slope: parameters.min_failure_slope,
@@ -1019,8 +1027,8 @@ class Tile {
                         u_Q: this.Q.front,
                         u_S: this.S.buffer,
 
-                        u_k_erosion: parameters.k_erosion,
-                        u_k_accretion: parameters.k_accretion,
+                        u_k_erosion: parameters.erosion_speed,
+                        u_k_accretion: parameters.accretion_speed,
                         u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
                         u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
                         
@@ -1144,10 +1152,12 @@ class TileProvider {
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
             // new Tile(0, 7, 13, true), // TC 7 Parabola
-            // new Tile(0, 0, 14, true), // TC 8 DEM Pattern Minus DEM
+            new Tile(0, 8, 13, true), // TC 8 Bend
+
+            // new Tile(0, 0, 14, true), // TC 0 DEM Pattern Minus DEM
 
             // Real DEM Stuff
-            new Tile(0, 0, 14),
+            // new Tile(0, 0, 14),
 
             new CrossSection(true)
         ];

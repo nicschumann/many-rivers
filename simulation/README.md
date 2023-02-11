@@ -1,6 +1,7 @@
 # Many Rivers Simulation
 
 See notes [here](https://docs.google.com/document/d/12PQ0wF_xWlWM-RUFgz8H5vhUfOcaQMElsj9E-nqdxzM/edit).
+See parameters and data overview [here](https://docs.google.com/document/d/1iB5RIkZLDeMv-5rSvzoV2wJ_OsHZMr0B6UDHJGvZYRQ/edit#).
 
 ## Installation
 
