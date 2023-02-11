@@ -710,194 +710,408 @@ class Tile {
         this.loaded = true
     }
 
-    render (transform, resources) {
-        if (this.loaded) {
-            if (parameters.running) { 
-                console.log('step tiles');
+    simulate (transform, resources) {
+        if (parameters.running) { 
+            console.log('step tiles');
 
-                let s = performance.now()
-                for (let i = 0; i < parameters.updates_per_frame; i++) {
-                    // update Q
-                    calculate_slope_field({
-                        target: this.S.buffer,
-                        u_H: this.H.front,
-                        a_uv: this.uvs
-                    })
+            let s = performance.now()
+            for (let i = 0; i < parameters.updates_per_frame; i++) {
+                // update Q
+                calculate_slope_field({
+                    target: this.S.buffer,
+                    u_H: this.H.front,
+                    a_uv: this.uvs
+                })
 
-                    calculate_flow_field({
+                calculate_flow_field({
+                    target: this.Q.back,
+                    u_H: this.H.front,
+                    u_S: this.S.buffer,
+                    a_uv: this.uvs
+                })
+                this.Q.swap();
+
+                // single averaging step
+                for (let i = 0; i < parameters.flux_averaging_steps; i++) {
+                    calculate_flow_field_averaging({
                         target: this.Q.back,
+                        u_Q: this.Q.front,
+                        a_uv: this.uvs 
+                    });
+                    this.Q.swap();
+                }
+
+
+                // Snippet fro reading piexles from a given framebuffer
+                // const data = new Float32Array(TILE_SIZE.reduce((a,b) => a*b) * 4.0);
+                // this.H.front.use(() => {
+                //     regl.read({ data });
+                //     // data now contains all of the framebuffer values.
+                // });
+                
+
+                // this averaging system is appropriate with 
+                // stream-averaging-2, which iteratively solved 
+                // a laplace equation across the river domain.
+                let render_iterations_per_smoothing = 50
+                if (i % parameters.smoothing_iterations == 0 && resources.t % render_iterations_per_smoothing == 0) {
+                    // update edges
+                    calculate_edges({
+                        target: this.E.back,
                         u_H: this.H.front,
-                        u_S: this.S.buffer,
                         a_uv: this.uvs
                     })
-                    this.Q.swap();
+                    this.E.swap();
 
-                    // single averaging step
-                    for (let i = 0; i < parameters.flux_averaging_steps; i++) {
-                        calculate_flow_field_averaging({
-                            target: this.Q.back,
-                            u_Q: this.Q.front,
-                            a_uv: this.uvs 
-                        });
-                        this.Q.swap();
-                    }
-
-
-                    // Snippet fro reading piexles from a given framebuffer
-                    // const data = new Float32Array(TILE_SIZE.reduce((a,b) => a*b) * 4.0);
-                    // this.H.front.use(() => {
-                    //     regl.read({ data });
-                    //     // data now contains all of the framebuffer values.
+                    // calculate_edge_normalization_pass_one({
+                    //     target: this.E.back,
+                    //     u_E: this.E.front,
+                    //     a_uv: this.uvs
                     // });
+                    // this.E.swap();
+
+                    // calculate_edge_normalization_pass_two({
+                    //     target: this.E.back,
+                    //     u_E: this.E.front,
+                    //     a_uv: this.uvs
+                    // });
+                    // this.E.swap();
+
+                    // update Kappa
+                    calculate_curvature({
+                        target: this.K.back,
+                        u_H: this.H.front,
+                        u_E: this.E.front,
+                        a_uv: this.uvs
+                    })
+                    this.K.swap();
+
+                    // averaging passes.
                     
-
-                    // this averaging system is appropriate with 
-                    // stream-averaging-2, which iteratively solved 
-                    // a laplace equation across the river domain.
-                    let render_iterations_per_smoothing = 50
-                    if (i % parameters.smoothing_iterations == 0 && resources.t % render_iterations_per_smoothing == 0) {
-                        // update edges
-                        calculate_edges({
-                            target: this.E.back,
-                            u_H: this.H.front,
-                            a_uv: this.uvs
-                        })
-                        this.E.swap();
-
-                        // calculate_edge_normalization_pass_one({
-                        //     target: this.E.back,
-                        //     u_E: this.E.front,
-                        //     a_uv: this.uvs
-                        // });
-                        // this.E.swap();
-
-                        // calculate_edge_normalization_pass_two({
-                        //     target: this.E.back,
-                        //     u_E: this.E.front,
-                        //     a_uv: this.uvs
-                        // });
-                        // this.E.swap();
-
-                        // update Kappa
-                        calculate_curvature({
+                    for (let i = 0; i < parameters.smoothing_iterations; i++) {
+                        calculate_edge_averaging({
                             target: this.K.back,
-                            u_H: this.H.front,
+                            u_K: this.K.front,
                             u_E: this.E.front,
+                            u_H: this.H.front,
                             a_uv: this.uvs
                         })
                         this.K.swap();
-
-                        // averaging passes.
-                        
-                        for (let i = 0; i < parameters.smoothing_iterations; i++) {
-                            calculate_edge_averaging({
-                                target: this.K.back,
-                                u_K: this.K.front,
-                                u_E: this.E.front,
-                                u_H: this.H.front,
-                                a_uv: this.uvs
-                            })
-                            this.K.swap();
-                        }
-
-                    
-                        for (let j = 0; j < parameters.smoothing_iterations; j++) {
-                            calculate_stream_averaging({
-                                target: this.K.back,
-                                u_K: this.K.front,
-                                u_E: this.E.front,
-                                u_H: this.H.front,
-                                a_uv: this.uvs
-                            })
-                            this.K.swap();
-                        }
                     }
-                    
-                    // calculate erosion and collapse.
-                    if (
-                        parameters.run_erosion && 
-                        resources.t > parameters.non_erosive_timesteps &&
-                        i % parameters.water_updates_per_iteration == 0
-                        ) {
-                        calculate_erosion_accretion({
-                            target: this.H.back,
-                            u_Q: this.Q.front,
-                            u_H: this.H.front,
+
+                
+                    for (let j = 0; j < parameters.smoothing_iterations; j++) {
+                        calculate_stream_averaging({
+                            target: this.K.back,
                             u_K: this.K.front,
-                            u_S: this.S.buffer,
-
-                            u_k_erosion: parameters.erosion_speed,
-                            u_k_accretion: parameters.accretion_speed,
-                            u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
-                            u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
-                            a_uv: this.uvs,
-                        })
-                        this.H.swap();
-
-                        calculate_collapse({
-                            target: this.H.back,
-                            u_Q: this.Q.front,
+                            u_E: this.E.front,
                             u_H: this.H.front,
-                            u_K: this.K.front,
-                            u_S: this.S.buffer,
-
-                            u_k_erosion: parameters.erosion_speed,
-                            u_k_accretion: parameters.accretion_speed,
-                            u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
-                            u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
-                            u_min_failure_slope: parameters.min_failure_slope,
-                            a_uv: this.uvs,
+                            a_uv: this.uvs
                         })
-                        this.H.swap();
+                        this.K.swap();
                     }
-  
-
-                    // update H
-                    advance_water_depth({
+                }
+                
+                // calculate erosion and collapse.
+                if (
+                    parameters.run_erosion && 
+                    resources.t > parameters.non_erosive_timesteps &&
+                    i % parameters.water_updates_per_iteration == 0
+                    ) {
+                    calculate_erosion_accretion({
                         target: this.H.back,
                         u_Q: this.Q.front,
                         u_H: this.H.front,
                         u_K: this.K.front,
-                        u_clamp_water: (resources.t + i) % 50 == 0, 
-                        a_uv: this.uvs,
-                    });
+                        u_S: this.S.buffer,
 
-                    this.H.swap();
-
-                    
-                    // enforce boundary conditions
-                    // calculate_H_boundary_conditions({
-                    //     target: this.H.back,
-                    //     u_boundary: (this.is_testcase) ? this.elevation : this.boundary,
-                    //     u_H: this.H.front,
-                    //     u_upper_bank: parameters.upper_bank,
-                    //     u_lower_bank: parameters.lower_bank,
-                    //     u_bank_width: parameters.bank_width,
-                    //     u_sediment_height_max: parameters.sediment_height_max,
-                    //     u_sediment_height_min: parameters.sediment_height_min,
-                    //     a_uv: this.uvs,
-                    // })
-                    // this.H.swap();
-
-                    calculate_Q_boundary_conditions({
-                        target: this.Q.back,
-                        u_Q: this.Q.front,
-                        u_boundary: this.boundary,
-                        u_upper_bank: parameters.upper_bank,
-                        u_lower_bank: parameters.lower_bank,
-                        u_bank_width: parameters.bank_width,
-                        u_sediment_height_max: parameters.sediment_height_max,
-                        u_sediment_height_min: parameters.sediment_height_min,
+                        u_k_erosion: parameters.erosion_speed,
+                        u_k_accretion: parameters.accretion_speed,
+                        u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
+                        u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
                         a_uv: this.uvs,
                     })
-                    this.Q.swap();
-                }
-                let e = performance.now();
-                let avg_update_time = (e - s) / parameters.updates_per_frame
-                // console.log(`${resources.t} ${parameters.updates_per_frame} updates: ${e - s}ms (${avg_update_time.toFixed(3)}ms / step)`);
-            }
+                    this.H.swap();
 
-            
+                    calculate_collapse({
+                        target: this.H.back,
+                        u_Q: this.Q.front,
+                        u_H: this.H.front,
+                        u_K: this.K.front,
+                        u_S: this.S.buffer,
+
+                        u_k_erosion: parameters.erosion_speed,
+                        u_k_accretion: parameters.accretion_speed,
+                        u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
+                        u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                        u_min_failure_slope: parameters.min_failure_slope,
+                        a_uv: this.uvs,
+                    })
+                    this.H.swap();
+                }
+
+
+                // update H
+                advance_water_depth({
+                    target: this.H.back,
+                    u_Q: this.Q.front,
+                    u_H: this.H.front,
+                    u_K: this.K.front,
+                    u_clamp_water: (resources.t + i) % 50 == 0, 
+                    a_uv: this.uvs,
+                });
+
+                this.H.swap();
+
+                
+                // enforce boundary conditions
+                // calculate_H_boundary_conditions({
+                //     target: this.H.back,
+                //     u_boundary: (this.is_testcase) ? this.elevation : this.boundary,
+                //     u_H: this.H.front,
+                //     u_upper_bank: parameters.upper_bank,
+                //     u_lower_bank: parameters.lower_bank,
+                //     u_bank_width: parameters.bank_width,
+                //     u_sediment_height_max: parameters.sediment_height_max,
+                //     u_sediment_height_min: parameters.sediment_height_min,
+                //     a_uv: this.uvs,
+                // })
+                // this.H.swap();
+
+                calculate_Q_boundary_conditions({
+                    target: this.Q.back,
+                    u_Q: this.Q.front,
+                    u_boundary: this.boundary,
+                    u_upper_bank: parameters.upper_bank,
+                    u_lower_bank: parameters.lower_bank,
+                    u_bank_width: parameters.bank_width,
+                    u_sediment_height_max: parameters.sediment_height_max,
+                    u_sediment_height_min: parameters.sediment_height_min,
+                    a_uv: this.uvs,
+                })
+                this.Q.swap();
+            }
+            let e = performance.now();
+            let avg_update_time = (e - s) / parameters.updates_per_frame
+            // console.log(`${resources.t} ${parameters.updates_per_frame} updates: ${e - s}ms (${avg_update_time.toFixed(3)}ms / step)`);
+        }
+    }
+
+    render (transform, resources) {
+        // if (this.loaded) {
+        //     // 3D RENDERING STEPS
+        //     if (RENDER_3D) {
+
+        //         // console.log('render');
+        //         regl.clear({depth: 1.0});
+
+        //         let camera = resources.camera;
+        //         // console.log(camera);
+
+        //         const target = camera.target;
+        //         const camera_position = camera.position;
+
+        //         const front = vec3.subtract([], target, camera_position);
+        //         const right = vec3.cross([], front, [0.0, -1.0, 0.0]);
+        //         const up = vec3.cross([], front, right);
+
+        //         const V = mat4.lookAt([], camera_position, target, up);
+        //         const P = mat4.perspective([], Math.PI / 4.0, window.innerWidth / window.innerHeight, 0.001, 100.0);
+
+        //         const PV = mat4.multiply([], P, V);
+
+        //         calculate_N_normals({
+        //             target: this.N.buffer,
+        //             a_uv: this.uvs,
+        //             u_H: this.H.front,
+        //         });
+
+        //         render_domain({
+        //             u_basepoint: [this.x, 0.0, this.y],
+        //             u_transform: PV,
+
+        //             u_H: this.H.front,
+        //             u_N: this.N.buffer
+        //         });
+
+        //         render_river({
+        //             u_basepoint: [this.x, 0.0, this.y],
+        //             u_transform: PV,
+
+        //             u_H: this.H.front,
+        //             u_N: this.N.buffer,
+        //             u_view_pos: camera_position
+        //         });
+
+        //         // render_point({
+        //         //     u_basepoint: [this.x, 0.0, this.y]
+        //         // })
+
+        //     } else {
+        //         // 2D RENDERING STEPS:
+
+        //         regl.clear({depth: 1.0});
+        //         render_terrain_height({
+        //             u_H: this.H.front,
+        //             u_scalefactor: 0.5,
+        //             u_saturation_point: parameters.saturation_point,
+
+        //             a_position: this.positions,
+        //             a_uv: this.uvs,
+        //             u_transform: transform,
+        //         });
+
+        //         if (parameters.render_flux)
+        //         {
+        //             regl.clear({depth: 1.0});
+        //             render_flux({
+        //                 u_Q: this.Q.front,
+        //                 u_H: this.H.front,
+        //                 u_scalefactor: 0.5,
+        
+        //                 a_position: this.positions,
+        //                 a_uv: this.uvs,
+        //                 u_transform: transform,
+        //             })
+        //         }
+
+        //         if (parameters.render_flux_magnitude)
+        //         {
+        //             regl.clear({depth: 1.0});
+        //             render_flux_magnitude({
+        //                 u_Q: this.Q.front,
+        //                 u_H: this.H.front,
+        //                 u_scalefactor: 0.5,
+        //                 u_flux_magnitude_scale: parameters.flux_magnitude_scale,
+        
+        //                 a_position: this.positions,
+        //                 a_uv: this.uvs,
+        //                 u_transform: transform,
+        //             })
+        //         }
+
+        //         if (parameters.render_slope)
+        //         {
+        //             regl.clear({depth: 1.0});
+        //             render_slope({
+        //                 u_S: this.S.buffer,
+        //                 u_K: this.K.front,
+        //                 u_scalefactor: 4.0,
+        
+        //                 a_position: this.positions,
+        //                 a_uv: this.uvs,
+        //                 u_transform: transform,
+        //             })
+        //         }
+                
+        //         if (parameters.render_curvature)
+        //         {
+        //             regl.clear({depth: 1.0});
+        //             render_curvature({
+        //                 u_H: this.H.front,
+        //                 u_K: this.K.front,
+        //                 u_E: this.E.front,
+        //                 u_scalefactor: 4.0,
+        
+        //                 a_position: this.positions,
+        //                 a_uv: this.uvs,
+        //                 u_transform: transform,
+        //             })
+        //         }
+
+        //         if (parameters.render_erosion_accretion)
+        //         {
+        //             regl.clear({depth: 1.0});
+        //             render_erosion_accretion({
+        //                 u_H: this.H.front,
+        //                 u_K: this.K.front,
+        //                 u_Q: this.Q.front,
+        //                 u_S: this.S.buffer,
+
+        //                 u_k_erosion: parameters.erosion_speed,
+        //                 u_k_accretion: parameters.accretion_speed,
+        //                 u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
+        //                 u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                        
+        //                 u_scalefactor: 4.0,
+        
+        //                 a_position: this.positions,
+        //                 a_uv: this.uvs,
+        //                 u_transform: transform,
+        //             })
+        //         } 
+
+        //         regl.clear({depth: 1.0});
+        //         render_section_line({
+        //             u_p1: parameters.p1,
+        //             u_p2: parameters.p2,
+        //             u_color: [0.65, 0.2, 0.0],
+        //             a_position: this.positions,
+        //             a_uv: this.uvs,
+        //             u_transform: transform,
+        //         })
+
+        //     }
+
+        // } else {
+        //     console.log('still loading!');
+        //     // If we're still waiting for textures...
+        //     render_tile_as_color({
+        //         a_position: this.positions,
+        //         a_uv: this.uvs,
+        //         u_transform: transform,
+        //         u_color: this.loading_color
+        //     });
+
+        // }        
+    }
+
+    destroy () {
+    }
+}
+
+
+class View2D {
+    constructor(testcase=False) {
+        this.is_testcase = testcase
+
+        this.positions = [
+            [this.x, this.y], [this.x + 1, this.y],
+            [this.x, this.y + 1], [this.x + 1, this.y + 1]
+        ]
+
+        this.uvs = [
+            [0, 0], [1, 0],
+            [0, 1], [1, 1]
+        ]
+
+        this.parent = null
+        this.loaded = false
+        this.loading_color = [0/255, 74/255, 74/255];
+    }
+
+    get_resources() {
+    }
+
+    update_positions () {
+        this.positions = [
+            [this.x, this.y], [this.x + 1, this.y],
+            [this.x, this.y + 1], [this.x + 1, this.y + 1]
+        ]
+    }
+
+    set_parent(parent) {
+        this.parent = parent;
+        this.x = parent.x;
+        this.y = parent.y;
+        this.z = parent.z;
+        this.update_positions();
+    }
+
+    simulate () {}
+
+    render(transform, resources) {
+        if (this.parent.loaded) {
             // 3D RENDERING STEPS
             if (RENDER_3D) {
 
@@ -920,25 +1134,25 @@ class Tile {
                 const PV = mat4.multiply([], P, V);
 
                 calculate_N_normals({
-                    target: this.N.buffer,
-                    a_uv: this.uvs,
-                    u_H: this.H.front,
+                    target: this.parent.N.buffer,
+                    a_uv: this.parent.uvs,
+                    u_H: this.parent.H.front,
                 });
 
                 render_domain({
                     u_basepoint: [this.x, 0.0, this.y],
                     u_transform: PV,
 
-                    u_H: this.H.front,
-                    u_N: this.N.buffer
+                    u_H: this.parent.H.front,
+                    u_N: this.parent.N.buffer
                 });
 
                 render_river({
                     u_basepoint: [this.x, 0.0, this.y],
                     u_transform: PV,
 
-                    u_H: this.H.front,
-                    u_N: this.N.buffer,
+                    u_H: this.parent.H.front,
+                    u_N: this.parent.N.buffer,
                     u_view_pos: camera_position
                 });
 
@@ -951,7 +1165,7 @@ class Tile {
 
                 regl.clear({depth: 1.0});
                 render_terrain_height({
-                    u_H: this.H.front,
+                    u_H: this.parent.H.front,
                     u_scalefactor: 0.5,
                     u_saturation_point: parameters.saturation_point,
 
@@ -964,8 +1178,8 @@ class Tile {
                 {
                     regl.clear({depth: 1.0});
                     render_flux({
-                        u_Q: this.Q.front,
-                        u_H: this.H.front,
+                        u_Q: this.parent.Q.front,
+                        u_H: this.parent.H.front,
                         u_scalefactor: 0.5,
         
                         a_position: this.positions,
@@ -978,8 +1192,8 @@ class Tile {
                 {
                     regl.clear({depth: 1.0});
                     render_flux_magnitude({
-                        u_Q: this.Q.front,
-                        u_H: this.H.front,
+                        u_Q: this.parent.Q.front,
+                        u_H: this.parent.H.front,
                         u_scalefactor: 0.5,
                         u_flux_magnitude_scale: parameters.flux_magnitude_scale,
         
@@ -993,8 +1207,8 @@ class Tile {
                 {
                     regl.clear({depth: 1.0});
                     render_slope({
-                        u_S: this.S.buffer,
-                        u_K: this.K.front,
+                        u_S: this.parent.S.buffer,
+                        u_K: this.parent.K.front,
                         u_scalefactor: 4.0,
         
                         a_position: this.positions,
@@ -1007,9 +1221,9 @@ class Tile {
                 {
                     regl.clear({depth: 1.0});
                     render_curvature({
-                        u_H: this.H.front,
-                        u_K: this.K.front,
-                        u_E: this.E.front,
+                        u_H: this.parent.H.front,
+                        u_K: this.parent.K.front,
+                        u_E: this.parent.E.front,
                         u_scalefactor: 4.0,
         
                         a_position: this.positions,
@@ -1022,10 +1236,10 @@ class Tile {
                 {
                     regl.clear({depth: 1.0});
                     render_erosion_accretion({
-                        u_H: this.H.front,
-                        u_K: this.K.front,
-                        u_Q: this.Q.front,
-                        u_S: this.S.buffer,
+                        u_H: this.parent.H.front,
+                        u_K: this.parent.K.front,
+                        u_Q: this.parent.Q.front,
+                        u_S: this.parent.S.buffer,
 
                         u_k_erosion: parameters.erosion_speed,
                         u_k_accretion: parameters.accretion_speed,
@@ -1062,10 +1276,7 @@ class Tile {
                 u_color: this.loading_color
             });
 
-        }        
-    }
-
-    destroy () {
+        }
     }
 }
 
@@ -1090,8 +1301,7 @@ class CrossSection {
         this.loaded = false
     }
 
-    get_resources() {
-    }
+    get_resources() {}
 
     update_positions () {
         this.positions = [
@@ -1107,6 +1317,8 @@ class CrossSection {
         this.z = parent.z;
         this.update_positions();
     }
+
+    simulate () {}
 
     render(transform, resources) {
         if (this.parent == null || !this.parent.loaded) { return; }
@@ -1158,12 +1370,13 @@ class TileProvider {
 
             // Real DEM Stuff
             // new Tile(0, 0, 14),
-
+            new View2D(true),
             new CrossSection(true)
         ];
 
         // hook up the cross section renderer
         this.tiles[1].set_parent( this.tiles[0] );
+        this.tiles[2].set_parent( this.tiles[0] );
 
         this.tile_map = {};
         this.resources = { 
@@ -1203,7 +1416,10 @@ class TileProvider {
         let s = performance.now();
 
         // regl.clear({color: [0, 0, 0, 1]});
-        this.tiles.forEach((tile, i) => { tile.render(this.transform, this.resources); });
+        this.tiles.forEach((tile, i) => { 
+            tile.simulate(this.transform, this.resources);
+            tile.render(this.transform, this.resources); 
+        });
         this.resources.t += (parameters.running) ? 1 : 0;
 
         let e = performance.now();
@@ -1214,156 +1430,7 @@ class TileProvider {
         this.tile_center[0] += d_x;
         this.tile_center[1] += d_y;
     }
-
-    // update_tiles () {        
-    //     this.tile_map = reset_tile_view_state(this.tile_map); // set everything to out of view;
-
-    //     let viewport_margin = 1.0;
-    //     let viewport = [
-    //         viewport_margin * window.innerWidth, 
-    //         viewport_margin * window.innerHeight
-    //     ];
-
-    //     let current_gids = [
-    //         Math.floor(this.tile_center[0]), 
-    //         Math.floor(this.tile_center[1])
-    //     ];
-
-    //     let current_px = [
-    //         viewport[0] / 2 - ((this.tile_center[0] % 1) * TILE_SIZE[0]),
-    //         viewport[1] / 2 - ((this.tile_center[1] % 1) * TILE_SIZE[1])
-    //     ];
-
-    //     populate_tiles_in_viewport(
-    //         this.tiles,
-    //         this.tile_map, 
-
-    //         current_px, 
-    //         current_gids, 
-    //         viewport, 
-
-    //         [-1, -1],
-    //         this.map_zoom
-    //     );
-
-    //     current_gids[0] += 1;
-    //     current_px[0] += TILE_SIZE[0];
-
-    //     populate_tiles_in_viewport(
-    //         this.tiles, 
-    //         this.tile_map,
-
-    //         current_px, 
-    //         current_gids, 
-    //         viewport, 
-
-    //         [1, 1],
-    //         this.map_zoom
-    //     );
-
-    //     this.tiles = remove_unneeded_tiles(this.tiles, this.tile_map);
-    //     console.log(`tile count: ${this.tiles.length}`);
-    // }
-
-    // update_center ([d_lng, d_lat]) {
-    //     this.map_center[0] += d_lng;
-    //     this.map_center[1] += d_lat;
-
-    //     this.tile_center = [
-    //         lng_to_tile(this.map_center[0], this.map_zoom),
-    //         lat_to_tile(this.map_center[1], this.map_zoom),
-    //     ]
-    // }
 }
-
-
-// NOTE(Nic): this stuff might all be unneccesary, because we're not 
-// paging stuff in infintely at all... Keeping it here, but will revisit.
-
-// const make_tile_key = (z, lng, lat) => `${z}-${lng}-${lat}`;
-// const in_tile_map = (key, tile_map) => typeof tile_map[key] !== 'undefined';
-
-
-// const reset_tile_view_state = (tile_map) =>{
-//     Object.keys(tile_map).forEach(key => {
-//         tile_map[key].in_view = false;
-//     });
-
-//     return tile_map;
-// }
-
-// const remove_unneeded_tiles = (tiles, tile_map) => {
-//     tiles = tiles.filter(tile => {
-//         key = make_tile_key(tile.z, tile.tlng, tile.tlat);
-//         if (!tile_map[key].in_view) {
-            
-//             /**
-//              * We should really reuse the tiles in memory, rather than
-//              * continuing to fragment the heap. This requires a better allocation
-//              * strategy, though. Look into this!
-//              */
-
-//             // tile_map[key].destroy(); // actually destroying the resources takes a long time, not good.
-//             delete tile_map[key];
-//             return false;
-
-//         } else {
-
-//             return true;
-            
-//         }
-//     })
-
-//     return tiles;
-// }
-
-// // this adds fresh tiles to the map
-// // around the centerpoint.
-// const populate_tiles_in_viewport = (
-//         tiles, 
-//         tile_map,
-//         [current_x_px, current_y_px], 
-//         [current_tlng, current_tlat], 
-//         [width_px, height_px], 
-//         [dx, dy],
-//         z
-//     ) => {
-
-//         while (
-//             current_x_px + TILE_SIZE[0] > 0 &&
-//             current_y_px + TILE_SIZE[1] > 0 &&
-//             current_x_px < width_px &&
-//             current_y_px < height_px
-//         ) {
-//             // if our y dir is increasing, we want to add
-//             // the tiles to the end of our list.
-//             let key = make_tile_key(z, current_tlng, current_tlat);
-//             if (!in_tile_map(key, tile_map)) {
-//                 let tile = new Tile(current_tlng, current_tlat, z);
-//                 tile.get_resources();
-//                 tile_map[key] = {in_view: true};
-//                 tiles.push(tile);
-//             } else {
-//                 tile_map[key].in_view = true;
-//             }
-
-//             current_x_px += dx * TILE_SIZE[0];
-//             current_tlng += dx
-
-//             if (current_x_px + TILE_SIZE[0] < 0 || current_x_px > width_px) { 
-//                 // step up a row
-//                 current_y_px += dy * TILE_SIZE[1]; 
-//                 current_tlat += dy;
-                
-//                 // replace the overshot tile.
-//                 dx *= -1;
-//                 current_x_px += dx * TILE_SIZE[0]
-//                 current_tlng += dx;
-
-//                 // console.log('row', [current_x_px, current_y_px]);
-//             }
-//         }
-// };
 
 
 
