@@ -248,12 +248,7 @@ class View2D extends View {
         } else if (!this.parent.loaded) {
             console.log('still loading!');
             // If we're still waiting for textures...
-            render_tile_as_color({
-                a_position: this.positions,
-                a_uv: this.uvs,
-                u_transform: transform,
-                u_color: this.loading_color
-            });
+            super.render(transform, resources, parameters);
 
         }
     }

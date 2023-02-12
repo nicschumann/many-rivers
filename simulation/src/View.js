@@ -1,3 +1,21 @@
+import { TILE_SIZE } from './constants';
+
+const render_tile_as_color = regl({
+    vert: require('./shaders/place-tile.vert'),
+    frag: require('./shaders/render-color.frag'),
+    attributes: {
+        a_position: regl.prop('a_position'),
+        a_uv: regl.prop('a_uv')
+    },
+    uniforms: {
+        u_transform: regl.prop('u_transform'),
+        u_color: regl.prop('u_color'),
+        u_resolution: TILE_SIZE
+    },
+    primitive: "triangle strip",
+    count: 4
+});
+
 class View {
     constructor(testcase=False) {
         this.is_testcase = testcase
@@ -38,7 +56,14 @@ class View {
 
     simulate (transform, resources, parameters) {}
 
-    render (transform, resources, parameters) {}
+    render (transform, resources, parameters) {
+        render_tile_as_color({
+            a_position: this.positions,
+            a_uv: this.uvs,
+            u_transform: transform,
+            u_color: this.loading_color
+        });
+    }
 }
 
 export { View };

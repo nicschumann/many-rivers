@@ -81,7 +81,7 @@ const render_river = window.regl({
 });
 
 class View3D extends View {
-    render(transform, resources) {
+    render(transform, resources, parameters) {
         if (this.parent.loaded && RENDER_3D) {
             // 3D RENDERING STEPS
             // console.log('render');
@@ -133,12 +133,7 @@ class View3D extends View {
         } else if (!this.parent.loaded)  {
             console.log('still loading!');
             // If we're still waiting for textures...
-            render_tile_as_color({
-                a_position: this.positions,
-                a_uv: this.uvs,
-                u_transform: transform,
-                u_color: this.loading_color
-            });
+            super.render(transform, resources, parameters);
 
         }
     }
