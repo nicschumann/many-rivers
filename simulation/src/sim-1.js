@@ -37,6 +37,8 @@ class Camera {
 class TileProvider {
     constructor () {
 
+        this.simulation = new Tile('bend-testcase.png', 'bend-testcase.png', true), // TC 8 Bend
+
         // specify the map you want...
         this.tiles = [
             // new Tile(1878, 3483, 13), // matamoros/brownsville data
@@ -47,23 +49,22 @@ class TileProvider {
             // new Tile(0, 4, 13, true), // TC 4 narrowing path
             // new Tile(0, 5, 13, true), // TC 5 lake
             // new Tile(0, 7, 13, true), // TC 7 Parabola
-            new Tile(0, 8, 13, true), // TC 8 Bend
 
             // new Tile(0, 0, 14, true), // TC 0 DEM Pattern Minus DEM
 
             // Real DEM Stuff
             // new Tile(0, 0, 14),
-            new View2D(true),
-            new View3D(true),
-            new CrossSection(true)
+            new View2D(0, 0, 0, true),
+            new CrossSection(1, 0, 0, true),
+
+            new View3D(0, 0, 0, true)
         ];
 
         // hook up the cross section renderer
-        this.tiles[1].set_parent( this.tiles[0] );
-        this.tiles[2].set_parent( this.tiles[0] );
-        this.tiles[3].set_parent( this.tiles[0] );
+        this.tiles.forEach(t => t.set_parent(this.simulation) );
 
         this.tile_map = {};
+
         this.resources = { 
             t: 0.0,
             camera: new Camera(
@@ -72,10 +73,10 @@ class TileProvider {
             )
         };
 
-        // this.tile_center = [ 1878.5, 3483.5 ]
         this.tile_center = [ this.tiles[0].x + 1.0, this.tiles[0].y + 0.5]
 
         this.setup_transform();
+        this.simulation.get_resources();
         this.tiles.forEach(t => t.get_resources() );
     }
 
@@ -98,16 +99,17 @@ class TileProvider {
     }
 
     render_tiles () {
-        let s = performance.now();
+        // let s = performance.now();
 
-        // regl.clear({color: [0, 0, 0, 1]});
+        this.simulation.simulate(this.transform, this.resources, parameters);
+
         this.tiles.forEach((tile) => { 
-            tile.simulate(this.transform, this.resources, parameters);
             tile.render(this.transform, this.resources, parameters); 
         });
-        this.resources.t += (parameters.running) ? 1 : 0;
 
-        let e = performance.now();
+        this.resources.t += (parameters.running) ? 1 : 0;
+        
+        // let e = performance.now();
         // console.log(`total render: ${e - s}ms`);
     }
 

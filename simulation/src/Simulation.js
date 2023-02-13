@@ -23,7 +23,7 @@ const calculate_initial_conditions = regl({
     frag: require('./shaders/calculate-H-initial-conditions-with-elevation.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_elevation: regl.prop('u_elevation'),
@@ -46,7 +46,7 @@ const calculate_testcase_initial_conditions = regl({
     frag: require('./shaders/calculate-H-initial-conditions-testcase.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_elevation: regl.prop('u_elevation'),
@@ -66,7 +66,7 @@ const calculate_slope_field = regl({
     frag: require('./shaders/calculate-S-field.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -82,7 +82,7 @@ const calculate_flow_field = regl({
     frag: require('./shaders/calculate-Q-field.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -99,7 +99,7 @@ const calculate_flow_field_averaging = regl({
     frag: require('./shaders/calculate-Q-averaging.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_Q: regl.prop('u_Q'),
@@ -118,7 +118,7 @@ const calculate_edges = regl({
     frag: require('./shaders/calculate-K-edge-field.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -134,7 +134,7 @@ const calculate_edge_normalization_pass_one = regl({
     frag: require('./shaders/calculate-K-edge-normalization-1.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -151,7 +151,7 @@ const calculate_edge_normalization_pass_two = regl({
     frag: require('./shaders/calculate-K-edge-normalization-2.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -168,7 +168,7 @@ const calculate_curvature = regl({
     frag: require('./shaders/calculate-K-curvature-field.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -185,7 +185,7 @@ const calculate_edge_averaging = regl({
     frag: require('./shaders/calculate-K-edge-averaging.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_K: regl.prop('u_K'),
@@ -203,7 +203,7 @@ const calculate_stream_averaging = regl({
     frag: require('./shaders/calculate-K-stream-averaging-2.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_K: regl.prop('u_K'),
@@ -225,7 +225,7 @@ const calculate_erosion_accretion = regl({
     frag: require('./shaders/calculate-H-erosion-accretion-5.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_K: regl.prop('u_K'),
@@ -250,7 +250,7 @@ const calculate_collapse = regl({
     frag: require('./shaders/calculate-H-collapse-2.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_K: regl.prop('u_K'),
@@ -280,7 +280,7 @@ const advance_water_depth = regl({
     frag: require('./shaders/calculate-H-depth-update.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -301,7 +301,7 @@ const calculate_H_boundary_conditions = regl({
     frag: require('./shaders/calculate-H-boundary-conditions-with-elevation.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_H: regl.prop('u_H'),
@@ -323,7 +323,7 @@ const calculate_Q_boundary_conditions = regl({
     frag: require('./shaders/calculate-Q-boundary-conditions-2.frag'),
     attributes: {
         a_position: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-        a_uv: regl.prop('a_uv')
+        a_uv: [[0, 0], [1, 0], [0, 1], [1, 1]]
     },
     uniforms: {
         u_Q: regl.prop('u_Q'),
@@ -341,42 +341,20 @@ const calculate_Q_boundary_conditions = regl({
 
 
 class Tile {
-    constructor(x, y, z, testcase=false) {
-        console.log(x, y, z);
+    constructor(terrain_url, boundary_url, testcase=false) {
 
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.terrain_url = terrain_url;
+        this.boundary_url = boundary_url
         this.is_testcase = testcase
 
-        this.positions = [
-            [x, y], [x + 1, y],
-            [x, y + 1], [x + 1, y + 1]
-        ]
-
-        this.uvs = [
-            [0, 0], [1, 0],
-            [0, 1], [1, 1]
-        ]
-
-        this.loading_color = [0/255, 74/255, 74/255]; // just a fun baseline
         this.loaded = false;
         this.t = 0.0
     }
 
     async get_resources() {
-        const terrain_url = (this.is_testcase)
-            ? `/data/${this.z}-${this.x}-${this.y}-testcase.png`
-            : `/data/${this.z}-${this.x}-${this.y}-terrain.png`;
-        
-        
-        const boundary_url = (this.is_testcase)
-            ? `/data/${this.z}-${this.x}-${this.y}-testcase.png`
-            : `/data/${this.z}-${this.x}-${this.y}-boundary-all.png`;
-
         let textures = await Promise.all([ 
-            load_image(terrain_url), 
-            load_image(boundary_url), 
+            load_image(`/data/${this.terrain_url}`), 
+            load_image(`/data/${this.boundary_url}`), 
         ]);
 
         this.elevation = regl.texture({ data: textures[0], mag: DEFAULT_INTERPOLATION, min: DEFAULT_INTERPOLATION });
@@ -431,14 +409,12 @@ class Tile {
                 calculate_slope_field({
                     target: this.S.buffer,
                     u_H: this.H.front,
-                    a_uv: this.uvs
                 })
 
                 calculate_flow_field({
                     target: this.Q.back,
                     u_H: this.H.front,
                     u_S: this.S.buffer,
-                    a_uv: this.uvs
                 })
                 this.Q.swap();
 
@@ -447,7 +423,6 @@ class Tile {
                     calculate_flow_field_averaging({
                         target: this.Q.back,
                         u_Q: this.Q.front,
-                        a_uv: this.uvs 
                     });
                     this.Q.swap();
                 }
@@ -470,7 +445,6 @@ class Tile {
                     calculate_edges({
                         target: this.E.back,
                         u_H: this.H.front,
-                        a_uv: this.uvs
                     })
                     this.E.swap();
 
@@ -493,7 +467,6 @@ class Tile {
                         target: this.K.back,
                         u_H: this.H.front,
                         u_E: this.E.front,
-                        a_uv: this.uvs
                     })
                     this.K.swap();
 
@@ -505,7 +478,6 @@ class Tile {
                             u_K: this.K.front,
                             u_E: this.E.front,
                             u_H: this.H.front,
-                            a_uv: this.uvs
                         })
                         this.K.swap();
                     }
@@ -517,7 +489,6 @@ class Tile {
                             u_K: this.K.front,
                             u_E: this.E.front,
                             u_H: this.H.front,
-                            a_uv: this.uvs
                         })
                         this.K.swap();
                     }
@@ -540,7 +511,6 @@ class Tile {
                         u_k_accretion: parameters.accretion_speed,
                         u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
                         u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
-                        a_uv: this.uvs,
                     })
                     this.H.swap();
 
@@ -556,7 +526,6 @@ class Tile {
                         u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
                         u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
                         u_min_failure_slope: parameters.min_failure_slope,
-                        a_uv: this.uvs,
                     })
                     this.H.swap();
                 }
@@ -569,7 +538,6 @@ class Tile {
                     u_H: this.H.front,
                     u_K: this.K.front,
                     u_clamp_water: (resources.t + i) % 50 == 0, 
-                    a_uv: this.uvs,
                 });
 
                 this.H.swap();
@@ -598,7 +566,6 @@ class Tile {
                     u_bank_width: parameters.bank_width,
                     u_sediment_height_max: parameters.sediment_height_max,
                     u_sediment_height_min: parameters.sediment_height_min,
-                    a_uv: this.uvs,
                 })
                 this.Q.swap();
             }

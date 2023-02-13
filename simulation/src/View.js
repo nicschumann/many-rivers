@@ -17,8 +17,12 @@ const render_tile_as_color = regl({
 });
 
 class View {
-    constructor(testcase=False) {
+    constructor(x, y, z, testcase=False) {
         this.is_testcase = testcase
+
+        this.x = x;
+        this.y = y;
+        this.z = z;
 
         this.positions = [
             [this.x, this.y], [this.x + 1, this.y],
@@ -32,6 +36,7 @@ class View {
 
         this.parent = null
         this.loaded = false
+        
         this.loading_color = [0/255, 74/255, 74/255];
     }
 
@@ -46,10 +51,10 @@ class View {
 
     set_parent(parent) {
         this.parent = parent;
-        this.x = parent.x;
-        this.y = parent.y;
-        this.z = parent.z;
-        this.update_positions();
+        // this.x = parent.x;
+        // this.y = parent.y;
+        // this.z = parent.z;
+        // this.update_positions();
     }
 
     get_resources() {}

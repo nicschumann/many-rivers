@@ -22,13 +22,6 @@ const render_crosssection = regl({
 
 
 class CrossSection extends View {
-    set_parent(parent) {
-        this.parent = parent;
-        this.x = parent.x + 1.0;
-        this.y = parent.y + 0.0;
-        this.z = parent.z;
-        this.update_positions();
-    }
 
     render(transform, resources, parameters) {
         if (this.parent == null || !this.parent.loaded) { return; }
