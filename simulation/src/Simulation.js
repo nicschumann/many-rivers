@@ -374,14 +374,12 @@ class Tile {
         if (this.is_testcase) {
             calculate_testcase_initial_conditions({
                 target: this.H.front,
-                a_uv: this.uvs,    
                 u_elevation: this.elevation,
             })
 
         } else {
             calculate_initial_conditions({
                 target: this.H.front,
-                a_uv: this.uvs,
     
                 u_elevation: this.elevation,
                 u_boundary: this.boundary,
@@ -575,12 +573,9 @@ class Tile {
         }
     }
 
-    render (transform, resources) {
-              
-    }
+    render (transform, resources) {}
 
-    destroy () {
-    }
+    destroy () {}
 }
 
 export { Tile };

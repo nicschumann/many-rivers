@@ -24,13 +24,31 @@ const {Tile} = require('./Simulation.js');
 
 // TileProvider
 class Camera {
+    world_up = [0., -1., 0.]
+
     constructor (position, target) {
         this.position = position;
         this.target = target;
+
+        this.front = []
+        this.right = []
+        this.up = []
+
+        this.V = []
+        this.P = []
     }
 
     get_matrix () {
+        vec3.subtract(this.front, this.target, this.position);
+        vec3.cross(this.right, this.front, this.world_up);
+        vec3.cross(this.up, this.front, this.right);
 
+        mat4.lookAt(this.V, this.position, this.target, this.up);
+        mat4.perspective(this.P, Math.PI / 4.0, window.innerWidth / window.innerHeight, 0.001, 100.0);
+
+        const PV = mat4.multiply([],this.P, this.V);
+        
+        return PV;
     }
 }
 
@@ -315,7 +333,7 @@ async function main () {
     })
 
     window.addEventListener('keydown', e => {
-        console.log(e.key)
+            console.log(e.key)
 
 
             if (e.key == 'Shift') {
@@ -325,6 +343,40 @@ async function main () {
             if (e.key == ' ') {
                 parameters.running = !parameters.running;
                 document.getElementById('running').checked = parameters.running;
+            }
+
+            if (e.key == 'ArrowUp') {
+                let c = provider.resources.camera;
+                let diff = vec3.sub([], c.target, c.position);
+                vec3.normalize(diff, diff);
+                vec3.scale(diff, diff, 0.01);
+                vec3.add(c.position, c.position, diff);
+            }
+
+            if (e.key == 'ArrowDown') {
+                let c = provider.resources.camera;
+                let diff = vec3.sub([], c.target, c.position);
+                vec3.normalize(diff, diff);
+                vec3.scale(diff, diff, -0.01);
+                vec3.add(c.position, c.position, diff);
+            }
+
+            if (e.key == 'ArrowLeft') {
+                let c = provider.resources.camera;
+                let diff = vec3.sub([], c.target, c.position);
+                vec3.normalize(diff, diff);
+                vec3.cross(diff, c.up, diff);
+                vec3.scale(diff, diff, 0.01);
+                vec3.add(c.position, c.position, diff);
+            }
+
+            if (e.key == 'ArrowRight') {
+                let c = provider.resources.camera;
+                let diff = vec3.sub([], c.target, c.position);
+                vec3.normalize(diff, diff);
+                vec3.cross(diff, c.up, diff);
+                vec3.scale(diff, diff, -0.01);
+                vec3.add(c.position, c.position, diff);
             }
     
             if (e.key == 'f') {

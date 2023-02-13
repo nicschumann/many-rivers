@@ -12,7 +12,7 @@ uniform sampler2D u_N;
 
 vec3 ambient_light_color = vec3(0.55, 0.6, 1.0);
 
-vec3 diffuse_light_position = vec3(0.5, 2.0, 0.5);
+vec3 diffuse_light_position = vec3(0.0, 0.25, 0.5);
 vec3 diffuse_light_color = vec3(0.6, 0.3, 0.2);
 
 

@@ -87,24 +87,11 @@ class View3D extends View {
             // console.log('render');
             regl.clear({depth: 1.0});
 
-            let camera = resources.camera;
-            // console.log(camera);
-
-            const target = camera.target;
-            const camera_position = camera.position;
-
-            const front = vec3.subtract([], target, camera_position);
-            const right = vec3.cross([], front, [0.0, -1.0, 0.0]);
-            const up = vec3.cross([], front, right);
-
-            const V = mat4.lookAt([], camera_position, target, up);
-            const P = mat4.perspective([], Math.PI / 4.0, window.innerWidth / window.innerHeight, 0.001, 100.0);
-
-            const PV = mat4.multiply([], P, V);
+            let PV = resources.camera.get_matrix();
 
             calculate_N_normals({
                 target: this.parent.N.buffer,
-                a_uv: this.parent.uvs,
+                a_uv: this.uvs,
                 u_H: this.parent.H.front,
             });
 
@@ -116,14 +103,14 @@ class View3D extends View {
                 u_N: this.parent.N.buffer
             });
 
-            render_river({
-                u_basepoint: [this.x, 0.0, this.y],
-                u_transform: PV,
+            // render_river({
+            //     u_basepoint: [this.x, 0.0, this.y],
+            //     u_transform: PV,
 
-                u_H: this.parent.H.front,
-                u_N: this.parent.N.buffer,
-                u_view_pos: camera_position
-            });
+            //     u_H: this.parent.H.front,
+            //     u_N: this.parent.N.buffer,
+            //     u_view_pos: camera_position
+            // });
 
             // render_point({
             //     u_basepoint: [this.x, 0.0, this.y]
