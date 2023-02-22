@@ -352,6 +352,9 @@ class Tile {
     }
 
     async get_resources() {
+        // NOTE(Nic): Factor this so that it just wants Float32Array of the right length?
+        // NOTE(Nic): Pull out TILE_SIZE as a parameter to this module?
+        
         let textures = await Promise.all([ 
             load_image(`/data/${this.terrain_url}`), 
             load_image(`/data/${this.boundary_url}`), 

@@ -2,7 +2,8 @@ import { TILE_SIZE, RENDER_3D } from './constants';
 import { DomainMesh } from './mesh';
 import { View } from "./View.js";
 
-let DOMAIN_MESH = new DomainMesh(window.regl, [512,512]);
+let DOMAIN_MESH = new DomainMesh(window.regl, [32,32]);
+let RIVER_MESH = new DomainMesh(window.regl, [512,512]);
 
 // DRAW CALLS
 
@@ -27,7 +28,7 @@ const calculate_N_normals = window.regl({
 const render_domain = window.regl({
     framebuffer: null,
     vert: require('./shaders/place-mesh.vert'),
-    frag: require('./shaders/render-domain.frag'),
+    frag: require('./shaders/render-domain-wireframe.frag'),
     attributes: {
         a_position: DOMAIN_MESH.vertices,
         a_uv: DOMAIN_MESH.uvs,
@@ -42,7 +43,7 @@ const render_domain = window.regl({
         u_H: regl.prop('u_H'),
         u_N: regl.prop('u_N')
     },
-    primitive: 'triangles',
+    primitive: 'lines',
     offset: 0,
     count: DOMAIN_MESH.indices.length * 3.0
 });
@@ -53,32 +54,32 @@ const render_river = window.regl({
     vert: require('./shaders/place-river.vert'),
     frag: require('./shaders/render-river.frag'),
     attributes: {
-        a_position: DOMAIN_MESH.vertices,
-        a_uv: DOMAIN_MESH.uvs,
-        a_id: DOMAIN_MESH.ids
+        a_position: RIVER_MESH.vertices,
+        a_uv: RIVER_MESH.uvs,
+        a_id: RIVER_MESH.ids
     },
-    elements: DOMAIN_MESH.indices,
+    elements: RIVER_MESH.indices,
     uniforms: {
         u_transform: regl.prop('u_transform'),
         u_basepoint: regl.prop('u_basepoint'),
-        u_resolution: DOMAIN_MESH.cells,
+        u_resolution: RIVER_MESH.cells,
         u_tex_resolution: TILE_SIZE,
 
         u_H: regl.prop('u_H'),
         u_N: regl.prop('u_N'),
         u_view_pos: regl.prop('u_view_pos')
     },
-    primitive: 'triangles',
+    primitive: 'lines',
     offset: 0,
     depth: { func: 'lequal' },
     blend: {
         enable: true,
         func: {src: 'src alpha', dst: 'one minus src alpha'}
     },
-    count: DOMAIN_MESH.indices.length * 3.0
+    count: RIVER_MESH.indices.length * 3.0
 });
 
-class View3D extends View {
+class View3DWireframe extends View {
     render(transform, resources, parameters) {
         if (this.parent.loaded && RENDER_3D) {
             // 3D RENDERING STEPS
@@ -110,11 +111,6 @@ class View3D extends View {
                 u_view_pos: resources.camera.position
             });
 
-            // render_point({
-            //     u_basepoint: [this.x, 0.0, this.y]
-            // })
-
-
         } else if (!this.parent.loaded)  {
             console.log('still loading!');
             // If we're still waiting for textures...
@@ -124,4 +120,4 @@ class View3D extends View {
     }
 }
 
-export { View3D };
+export { View3DWireframe };

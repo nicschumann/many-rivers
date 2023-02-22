@@ -33,7 +33,7 @@ float beer_lambert_law(float absorption, float step_size)
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
-    if (v_W <= 1.0) { discard; }
+    if (v_W <= 0.0) { discard; }
     vec3 e = vec3(1.0 / u_tex_resolution, 0.);
 
     // basic params

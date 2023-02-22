@@ -1,9 +1,7 @@
-import "./style/main.css";
 import { vec2, vec3, mat3, mat4 } from "gl-matrix";
-import { DoubleFramebuffer, SingleFramebuffer, DEFAULT_INTERPOLATION } from "./buffer";
 import parameters from './parameters';
 
-import { RENDER_3D, TILE_SIZE, TERRAIN_SIZE } from "./constants";
+import { TERRAIN_SIZE } from "./constants";
 
 // assigning regl as a global
 // so that we have access to it in all modules.
@@ -18,6 +16,7 @@ window.regl = require('regl')({
 });
 
 const {View3D} = require('./View3d.js');
+const {View3DWireframe} = require('./View3dWireframe.js');
 const {View2D} = require('./View2d.js');
 const {CrossSection} = require('./CrossSection.js');
 const {Tile} = require('./Simulation.js');
@@ -55,7 +54,11 @@ class Camera {
 class TileProvider {
     constructor () {
 
-        this.simulation = new Tile('narrowing-path-testcase.png', 'narrowing-path-testcase.png', true), // TC 8 Bend
+        this.simulation = new Tile(
+            'simple-sine-testcase.png', // terrain map
+            'simple-sine-testcase.png', // boundary map
+            true // is this a testcase?
+        ); // TC 8 Bend
 
         // specify the map you want...
         this.tiles = [
@@ -75,7 +78,8 @@ class TileProvider {
             new View2D(0, 0, 0, true),
             new CrossSection(1, 0, 0, true),
 
-            new View3D(0, 0, 0, true)
+            // new View3D(0, 0, 0, true),
+            new View3DWireframe(0, 0, 0, true),
         ];
 
         // hook up the cross section renderer
@@ -96,6 +100,16 @@ class TileProvider {
         this.setup_transform();
         this.simulation.get_resources();
         this.tiles.forEach(t => t.get_resources() );
+    }
+
+    reset(tile=null) {
+        if (tile !== null) { this.simulation = tile; }
+
+        this.setup_transform();
+        this.simulation.get_resources();
+        this.tiles.forEach(t => t.set_parent(this.simulation) );
+        this.tiles.forEach(t => t.get_resources() );
+        this.resources.t = 0;
     }
 
     setup_transform() {
@@ -334,6 +348,18 @@ async function main () {
 
     window.addEventListener('keydown', e => {
             console.log(e.key)
+
+            if (e.key == 'r') {
+                // NOTE(Nic): Why doesn't this reset resources.t?
+
+                const new_tile = new Tile(
+                    'parabola-testcase.png',
+                    'parabola-testcase.png',
+                    true
+                );
+
+                provider.reset(new_tile);
+            }
 
 
             if (e.key == 'Shift') {

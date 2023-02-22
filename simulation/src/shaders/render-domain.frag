@@ -12,8 +12,9 @@ uniform sampler2D u_N;
 
 vec3 ambient_light_color = vec3(0.55, 0.6, 1.0);
 
-vec3 diffuse_light_position = vec3(1.5, 1.5, 1.5);
+vec3 diffuse_light_position = vec3(0.5, 2.0, 0.5);
 vec3 diffuse_light_color = vec3(0.6, 0.3, 0.2);
+
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
@@ -35,6 +36,11 @@ void main() {
 
 
     vec3 color = (ambient + diffuse) * terrain_color;
-    color = vec3(1.0, 0.2, 0.);
+
+    gl_FragColor = vec4(
+        color,
+        1.
+    );
+
     // gl_FragColor = vec4(v_uv, 0., 1.);
 }
