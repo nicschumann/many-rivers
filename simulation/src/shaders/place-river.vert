@@ -11,6 +11,7 @@ varying vec2 v_id;
 varying vec3 v_pos;
 varying float v_W;
 varying float v_S;
+varying float v_valid;
 
 uniform mat4 u_transform;
 uniform vec3 u_basepoint;

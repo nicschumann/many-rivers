@@ -3,6 +3,8 @@
 
 precision highp float;
 
+#define RAYMARCH_STEPS 5000
+
 varying float v_W;
 varying float v_S;
 varying vec2 v_uv;
@@ -16,10 +18,10 @@ uniform vec2 u_tex_resolution;
 uniform vec2 u_resolution;
 uniform vec3 u_basepoint;
 
-vec3 ambient_light_color = vec3(0.55, -0.1, 1.0);
+vec3 ambient_light_color = vec3(0.0, -0.1, 1.0);
 
 vec3 diffuse_light_position = vec3(0.0, 0.1 , 0.0) + u_basepoint;
-vec3 diffuse_light_color = vec3(0.8, 0.7, 0.7);
+vec3 diffuse_light_color = vec3(0.2, 0.4, 0.5);
 
 const float scale = 0.001;
 
@@ -31,7 +33,7 @@ float beer_lambert_law(float absorption, float step_size)
 
 void main() {
     // Sample the terrain-rgb tile at the current fragment location.
-    if (v_W <= 0.0) { discard; }
+    if (v_W <= 1.0) { discard; }
     vec3 e = vec3(1.0 / u_tex_resolution, 0.);
 
     // basic params
@@ -60,7 +62,7 @@ void main() {
 
     
 
-    for (int i = 0; i < 5000; i += 1) {
+    for (int i = 0; i < RAYMARCH_STEPS; i += 1) {
         p_curr = p_start + t * step_dir;
         h_curr = texture2D(u_H, p_curr.xz).g * scale;
         t += 1.0;
@@ -74,7 +76,7 @@ void main() {
         vec3 light_color = diffuse_light_color * light_attenuation;
 
         volumetric_color += absorption_at_step * light_color;
-        volumetric_color += absorption_at_step * vec3(0.2, 0.4, 0.5);
+        volumetric_color += absorption_at_step * vec3(0.2, 0.4, 0.4);
 
         if (h_curr > p_curr.y) { break; }
     }
@@ -90,19 +92,18 @@ void main() {
 
     // specular
     vec3 R = reflect(view_dir, normal);
-    float spec_coefficient = pow(dot(R, -light_dir), 80.4) * 0.2;
+    float spec_coefficient = pow(dot(R, -light_dir), 1.4) * 0.2;
     vec3 specular = vec3(0.8, 0.6, 0.5) * spec_coefficient;
     
     // transparency
     float alpha = 1.0;
 
     gl_FragColor = vec4(
-        volumetric_color + specular,
+        volumetric_color,
 
         // vec3(0.3 - length(p_curr - p_start) * 2.) * vec3(0.2, 0.4, 0.5),
         // vec3(spec) * diffuse_light_color + scattering,
         // normal * 0.5 + 0.5,
-        length(p_curr - p_start) / 0.02
+        length(p_curr - p_start) / 0.03
     );
-
 }

@@ -15,7 +15,7 @@ export default {
     p2: [1.0, 0.5],
 
     non_erosive_timesteps: 500,
-    water_updates_per_iteration: 10,
+    water_updates_per_iteration: 20,
     smoothing_iterations: 40,
     flux_averaging_steps: 0,
     updates_per_frame: 50,

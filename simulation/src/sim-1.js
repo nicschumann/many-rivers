@@ -46,7 +46,7 @@ class Camera {
         mat4.lookAt(this.V, this.position, this.target, this.up);
         mat4.perspective(this.P, Math.PI / 4.0, window.innerWidth / window.innerHeight, 0.001, 100.0);
 
-        const PV = mat4.multiply([],this.P, this.V);
+        const PV = mat4.multiply([], this.P, this.V);
         
         return PV;
     }
@@ -55,7 +55,7 @@ class Camera {
 class TileProvider {
     constructor () {
 
-        this.simulation = new Tile('bend-testcase.png', 'bend-testcase.png', true), // TC 8 Bend
+        this.simulation = new Tile('narrowing-path-testcase.png', 'narrowing-path-testcase.png', true), // TC 8 Bend
 
         // specify the map you want...
         this.tiles = [
