@@ -6,6 +6,7 @@ import { TERRAIN_SIZE } from "./constants";
 // assigning regl as a global
 // so that we have access to it in all modules.
 window.regl = require('regl')({
+    attributes: {preserveDrawingBuffer: true},
     extensions: [
         'OES_texture_float',
         'OES_texture_float_linear',
@@ -78,8 +79,8 @@ class TileProvider {
             new View2D(0, 0, 0, true),
             new CrossSection(1, 0, 0, true),
 
-            // new View3D(0, 0, 0, true),
-            new View3DWireframe(0, 0, 0, true),
+            new View3D(0, 0, 0, true),
+            // new View3DWireframe(0, 0, 0, true),
         ];
 
         // hook up the cross section renderer
@@ -224,7 +225,6 @@ async function main () {
     // TODO(Nic): replace with requestAnimationFrame
     // TODO(Nic): replace with manual canvas and resize canvas appropriately.
     
-    let i = 0;
     setInterval(() => {
         // TODO(Nic): Add window resize handler here, please...
 
@@ -233,9 +233,9 @@ async function main () {
         provider.render_tiles();
 
         if (parameters.running) { 
+            let i = provider.resources.t;
             counter_icon.innerText = 
                 `${i} (${i * parameters.updates_per_frame}) [${(i / 60).toFixed(2)}s]`;
-            i += 1
         }
         
     }, 1000 / 30);
@@ -350,8 +350,6 @@ async function main () {
             console.log(e.key)
 
             if (e.key == 'r') {
-                // NOTE(Nic): Why doesn't this reset resources.t?
-
                 const new_tile = new Tile(
                     'parabola-testcase.png',
                     'parabola-testcase.png',

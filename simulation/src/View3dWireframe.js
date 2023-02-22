@@ -86,6 +86,11 @@ class View3DWireframe extends View {
             // console.log('render');
             regl.clear({depth: 1.0});
 
+            // this.parent.Q.front.use(async () => {
+            //     let data = await regl.read();
+            //     console.log(data);
+            // });
+
             let PV = resources.camera.get_matrix();
 
             calculate_N_normals({

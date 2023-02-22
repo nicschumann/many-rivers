@@ -22,8 +22,8 @@ export default {
 
     // k_erosion: 0.0002, // try 0.0002 or 0.0003 at average depths of 3m
     // k_accretion: 0.00001, 
-    erosion_speed: 0.01, // try 0.0002 or 0.0003 at average depths of 3m
-    accretion_speed: 0.01, 
+    erosion_speed: 0.2, // try 0.0002 or 0.0003 at average depths of 3m
+    accretion_speed: 0.3, 
     // accretion_upper_bound: 0.014,
     accretion_upper_bound: 0.001,
     erosion_lower_bound: 0.05,
