@@ -2,8 +2,8 @@ import { TILE_SIZE, RENDER_3D } from './constants';
 import { DomainMesh } from './mesh';
 import { View } from "./View.js";
 
-let DOMAIN_MESH = new DomainMesh(window.regl, [32,32]);
-let RIVER_MESH = new DomainMesh(window.regl, [512,512]);
+let DOMAIN_MESH = new DomainMesh(window.regl, [40,40]);
+let RIVER_MESH = new DomainMesh(window.regl, [400,400]);
 
 // DRAW CALLS
 
@@ -44,8 +44,9 @@ const render_domain = window.regl({
         u_N: regl.prop('u_N')
     },
     primitive: 'lines',
+    lineWidth: 1,
     offset: 0,
-    count: DOMAIN_MESH.indices.length * 3.0
+    count: DOMAIN_MESH.indices.length * 3
 });
 
 
@@ -69,7 +70,7 @@ const render_river = window.regl({
         u_N: regl.prop('u_N'),
         u_view_pos: regl.prop('u_view_pos')
     },
-    primitive: 'lines',
+    primitive: 'triangles',
     offset: 0,
     depth: { func: 'lequal' },
     blend: {
@@ -99,14 +100,6 @@ class View3DWireframe extends View {
                 u_H: this.parent.H.front,
             });
 
-            render_domain({
-                u_basepoint: [this.x, 0.0, this.y],
-                u_transform: PV,
-
-                u_H: this.parent.H.front,
-                u_N: this.parent.N.buffer
-            });
-
             render_river({
                 u_basepoint: [this.x, 0.0, this.y],
                 u_transform: PV,
@@ -114,6 +107,14 @@ class View3DWireframe extends View {
                 u_H: this.parent.H.front,
                 u_N: this.parent.N.buffer,
                 u_view_pos: resources.camera.position
+            });
+
+            render_domain({
+                u_basepoint: [this.x, 0.0, this.y],
+                u_transform: PV,
+
+                u_H: this.parent.H.front,
+                u_N: this.parent.N.buffer
             });
 
         } else if (!this.parent.loaded)  {

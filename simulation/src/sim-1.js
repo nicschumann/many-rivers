@@ -79,8 +79,8 @@ class TileProvider {
             new View2D(0, 0, 0, true),
             new CrossSection(1, 0, 0, true),
 
-            new View3D(0, 0, 0, true),
-            // new View3DWireframe(0, 0, 0, true),
+            // new View3D(0, 0, 0, true),
+            new View3DWireframe(0, 0, 0, true),
         ];
 
         // hook up the cross section renderer

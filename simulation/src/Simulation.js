@@ -1,5 +1,4 @@
-import { DEFAULT_INTERPOLATION } from './buffer';
-import { TILE_SIZE } from './constants';
+import { TILE_SIZE, DEFAULT_INTERPOLATION } from './constants';
 import { DoubleFramebuffer, SingleFramebuffer } from './buffer';
 
 
