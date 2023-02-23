@@ -399,7 +399,7 @@ class Tile {
         this.loaded = true
     }
 
-    simulate (transform, resources, parameters) {
+    simulate (resources, parameters) {
         if (parameters.running) { 
             console.log('step tiles');
 

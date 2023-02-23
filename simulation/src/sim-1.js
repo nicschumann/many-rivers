@@ -63,24 +63,16 @@ class TileProvider {
 
         // specify the map you want...
         this.tiles = [
-            // new Tile(1878, 3483, 13), // matamoros/brownsville data
-            // new Tile(0, 1, 13, true), // TC 1 dead end
-            // new Tile(0, 3, 13, true), // TC 3 simple sine
-            // new Tile(0, 6, 13, true), // TC 3 flipped simple sine
-            // new Tile(0, 2, 13, true), // TC 2 short circuit
-            // new Tile(0, 4, 13, true), // TC 4 narrowing path
-            // new Tile(0, 5, 13, true), // TC 5 lake
-            // new Tile(0, 7, 13, true), // TC 7 Parabola
+            
+            
 
-            // new Tile(0, 0, 14, true), // TC 0 DEM Pattern Minus DEM
+            new View3D(0, 0, 0, true),
+            
+            // new View3DWireframe(0, 0, 0, true),
 
-            // Real DEM Stuff
-            // new Tile(0, 0, 14),
-            new View2D(0, 0, 0, true),
-            new CrossSection(1, 0, 0, true),
-
-            // new View3D(0, 0, 0, true),
-            new View3DWireframe(0, 0, 0, true),
+            new View2D(-1., 1, 0, true),
+            
+            new CrossSection(0.0, 1, 0, true),
         ];
 
         // hook up the cross section renderer
@@ -93,7 +85,8 @@ class TileProvider {
             camera: new Camera(
                 [this.tiles[0].x + 0.0, 0.25, this.tiles[0].y + 0.0],
                 [this.tiles[0].x + 0.5, 0.0, this.tiles[0].y + 0.5]
-            )
+            ),
+            transform_2d: []
         };
 
         this.tile_center = [ this.tiles[0].x + 1.0, this.tiles[0].y + 0.5]
@@ -128,16 +121,17 @@ class TileProvider {
 
         let T_scale = mat3.fromScaling([], scalefactors);
         
-        this.transform = mat3.multiply([], T_scale, T_trans);
+        this.resources.transform_2d = mat3.multiply([], T_scale, T_trans);
     }
 
     render_tiles () {
         // let s = performance.now();
 
-        this.simulation.simulate(this.transform, this.resources, parameters);
+        this.simulation.simulate(this.resources, parameters);
 
-        this.tiles.forEach((tile) => { 
-            tile.render(this.transform, this.resources, parameters); 
+        this.tiles.forEach((tile) => {
+            regl.clear({depth: 1.0});
+            tile.render(this.resources, parameters); 
         });
 
         this.resources.t += (parameters.running) ? 1 : 0;
@@ -280,15 +274,19 @@ async function main () {
 
             let tile = provider.tiles[0] // anchor tile for now
             // NOTE(Nic): we don't need to invert this every click...
-            let T_inv = mat3.invert([], provider.transform);
+            let T_inv = mat3.invert([], provider.resources.transform_2d);
 
             let pos_s = [2.0 * e.clientX/window.innerWidth - 1, 2.0 * (1.0 - e.clientY/window.innerHeight) - 1.0]
             let pos_c = vec2.transformMat3([], pos_s, T_inv);
             
+            // TODO(Nic): refactor this to actually work, now 
+            // that we have multiple simultaneous rendering available.
             if (
                 pos_c[0] >= tile.x && pos_c[0] < tile.x + 1 &&
                 pos_c[1] >= tile.y && pos_c[1] < tile.y + 1
             ) {
+
+                console.log('in range')
                 
                 let get_slope_intercept = (p1, p2) => {
                     let m = (p2[1] - p1[1]) / (p2[0] - p1[0]);

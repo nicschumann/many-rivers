@@ -1,4 +1,4 @@
-import { TILE_SIZE, RENDER_3D } from './constants';
+import { TILE_SIZE } from './constants';
 import { View } from './View.js';
 
 const render_crosssection = regl({
@@ -23,9 +23,10 @@ const render_crosssection = regl({
 
 class CrossSection extends View {
 
-    render(transform, resources, parameters) {
+    render(resources, parameters) {
         if (this.parent == null || !this.parent.loaded) { return; }
-        if (RENDER_3D) { return; }
+
+        let transform = resources.transform_2d;
 
         regl.clear({depth: 1.0});
         render_crosssection({

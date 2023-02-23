@@ -1,4 +1,4 @@
-import { RENDER_3D, TILE_SIZE } from './constants'
+import { TILE_SIZE } from './constants'
 import { View } from './View'
 
 const render_terrain_height = regl({
@@ -139,10 +139,11 @@ const render_section_line = regl({
 });
 
 class View2D extends View {
-    render(transform, resources, parameters) {
-        if (this.parent.loaded && !RENDER_3D) {
+    render(resources, parameters) {
+        if (this.parent.loaded) {
             
             // 2D RENDERING STEPS:
+            let transform = resources.transform_2d;
 
             regl.clear({depth: 1.0});
             render_terrain_height({

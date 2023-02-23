@@ -59,9 +59,9 @@ class View {
 
     get_resources() {}
 
-    simulate (transform, resources, parameters) {}
+    simulate (resources, parameters) {}
 
-    render (transform, resources, parameters) {
+    render (resources, parameters) {
         render_tile_as_color({
             a_position: this.positions,
             a_uv: this.uvs,

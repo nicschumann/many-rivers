@@ -1,4 +1,4 @@
-import { TILE_SIZE, RENDER_3D } from './constants';
+import { TILE_SIZE } from './constants';
 import { DomainMesh } from './mesh';
 import { View } from "./View.js";
 
@@ -79,8 +79,8 @@ const render_river = window.regl({
 });
 
 class View3D extends View {
-    render(transform, resources, parameters) {
-        if (this.parent.loaded && RENDER_3D) {
+    render(resources, parameters) {
+        if (this.parent.loaded) {
             // 3D RENDERING STEPS
             // console.log('render');
             regl.clear({depth: 1.0});
