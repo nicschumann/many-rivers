@@ -18,7 +18,7 @@ vec3 hsl2rgb( in vec3 c ){
 void main() {
     vec2 uv = v_uv;
     
-    vec2 slope = texture2D(u_S, uv).rg;
+    vec2 slope = texture2D(u_S, uv).ba;
     vec2 slope_norm = normalize(slope);
     
     float mag = length(slope);

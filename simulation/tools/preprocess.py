@@ -3,7 +3,7 @@ import numpy as np
 import imageio
 import matplotlib.pyplot as plt
 
-DOMAIN_SIZE = 2048
+DOMAIN_SIZE = 1800
 RIVER_MAX_HEIGHT = 7.10
 
 

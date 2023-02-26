@@ -25,6 +25,7 @@ void main() {
     vec4 slope = texture2D(u_S, uv);
 
     float flux_rep = length(Q.ba);
+    float vel_rep = length(Q.ba / Q.rg);
     float curv_rep = K.r;
 
     
@@ -46,11 +47,13 @@ void main() {
 
             if (curv_rep > erode_min_curvature) { // Outer Bank Positive Curvature 
                 
-                E = u_k_erosion * abs(curv_rep);
+                // E = u_k_erosion * abs(curv_rep);
+                E = u_k_erosion * vel_rep;
 
             } else if ( curv_rep > accrete_max_curvature ) { // straight bank, zero-ish
 
-                E = u_k_erosion * abs(curv_rep);
+                // E = u_k_erosion * abs(curv_rep);
+                E = u_k_erosion * vel_rep;
 
             } else { // Inner Bank Neg Curvature 
 
@@ -63,7 +66,8 @@ void main() {
             if (curv_rep > erode_min_curvature) { // Outer Bank Positive Curvature 
                 
                 A = 0.0;
-                E = u_k_erosion * abs(curv_rep) * 0.1;
+                // E = u_k_erosion * abs(curv_rep) * 0.1;
+                E = u_k_erosion * vel_rep;
 
             } else if ( curv_rep > accrete_max_curvature ) { // straight bank, zero-ish
 
@@ -71,7 +75,8 @@ void main() {
 
             } else { // Inner Bank Neg Curvature 
 
-                A = u_k_accretion * abs(curv_rep); // adding in flux rep to control accretion.
+                // A = u_k_accretion * abs(curv_rep); // adding in flux rep to control accretion.
+                A = u_k_accretion * vel_rep; // adding in flux rep to control accretion.
                 
             }
         
@@ -83,11 +88,13 @@ void main() {
 
             } else if ( curv_rep > accrete_max_curvature ) { // straight bank, zero-ish
 
-                A = u_k_accretion * abs(curv_rep) * 1.0; // accretion speed factor...
+                // A = u_k_accretion * abs(curv_rep) * 1.0; // accretion speed factor...
+                A = u_k_accretion * vel_rep; // accretion speed factor...
 
             } else { // Inner Bank Neg Curvature 
 
-                A = u_k_accretion * abs(curv_rep) * 1.0; // accretion speed factor...
+                // A = u_k_accretion * abs(curv_rep) * 1.0; // accretion speed factor...
+                A = u_k_accretion * vel_rep; // accretion speed factor...
                 
             }
         

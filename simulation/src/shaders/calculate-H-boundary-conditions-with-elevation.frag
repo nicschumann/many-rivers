@@ -30,7 +30,7 @@ void main() {
     vec2 d = 1.0 / u_resolution;
 
     vec4 H = texture2D(u_H, uv);
-    float mask = texture2D(u_boundary, uv).a;
+    vec4 mask = texture2D(u_boundary, uv);
 
     // the amount of water to pump through the system.
     float incoming_water = 0.2; // smarter way to set this, pls.
@@ -38,7 +38,7 @@ void main() {
     if ((uv.x >= 1.0 - d.x ||
         uv.x <= d.x ||
         uv.y >= 1.0 - d.y ||
-        uv.y <= d.y) && mask > 0.) { // add inflow where the channel is.
+        uv.y <= d.y) && mask.a > 0.) { // add inflow where the channel is.
         
         if (uv.y >= 1.0 - d.y || uv.x >= 1.0 - d.x) { // this should be an outflow
             
@@ -59,7 +59,7 @@ void main() {
         uv.x <= d.x ||
         uv.y >= 1.0 - d.y ||
         uv.y <= d.y) && // we're on an edge
-        mask == 0. // it's not a source
+        mask.a == 0. // it's not a source
     )  { // add outflows at edges.
         
         // incoming_water = 0.0;

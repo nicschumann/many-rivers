@@ -11,6 +11,7 @@ varying vec2 v_id;
 varying vec3 v_pos;
 varying float v_W;
 varying float v_S;
+varying float v_valid;
 
 uniform mat4 u_transform;
 uniform vec3 u_basepoint;
@@ -18,7 +19,7 @@ uniform vec2 u_resolution;
 
 uniform sampler2D u_H;
 
-const float scale = 0.01;
+const float scale = 0.001;
 
 void main() {
     vec3 e = vec3(1.0 / u_resolution, 0.);

@@ -48,7 +48,7 @@ void main() {
     float E = 0.;
     float A = 0.;
 
-    const float collapse_height = 6.0;
+    const float collapse_height = 3.0;
     const float u_k_collapse = 0.2;
 
     for (int i = -FILTER_RANGE; i < FILTER_RANGE + 1; i++) {
@@ -65,15 +65,19 @@ void main() {
 
 
             if (
-                n_H - c_H > collapse_height && 
-                flux_rep > u_Q_erosion_lower_bound
+                n_H - c_H > collapse_height 
+                && 
+                // flux_rep > u_Q_erosion_lower_bound
+                flux_rep > 0.0
             ) {
                 A += (n_H - c_H) * u_k_collapse;
             }
             
             if (
-                c_H - n_H > collapse_height && 
-                n_flux_rep > u_Q_erosion_lower_bound
+                c_H - n_H > collapse_height 
+                && 
+                // n_flux_rep > u_Q_erosion_lower_bound
+                n_flux_rep > 0.0
             ) {
                 E += (c_H - n_H) * u_k_collapse;
             }
@@ -82,7 +86,7 @@ void main() {
     }
 
     S = S + (A - E);
-    W = W - (A - E); // HACK to make rendering look smoother.
+    // W = W - (A - E); // HACK to make rendering look smoother.
 
     if (A - E > 0.0) {
 
