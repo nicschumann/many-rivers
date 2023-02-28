@@ -2,7 +2,7 @@ import { vec2, vec3, mat3, mat4 } from "gl-matrix";
 import parameters from './parameters';
 import * as input from './inputs.js';
 
-import { TERRAIN_SIZE } from "./constants";
+import { TERRAIN_SIZE, RENDER_SCALE } from "./constants";
 
 // assigning regl as a global
 // so that we have access to it in all modules.
@@ -208,12 +208,34 @@ async function main () {
     let provider = new TileProvider();
     let counter_icon = document.getElementById('timestep-container');
 
+    // handle drag events.
+    // internal state for the drag events...
+    let mouse_is_down = false;
+    let last_coords = [0, 0];
+    let current_p_update = 0;
+    let shift_key_is_down = false;
+
     // game loop
     // TODO(Nic): replace with requestAnimationFrame
     // TODO(Nic): replace with manual canvas and resize canvas appropriately.
     
     setInterval(() => {
         // TODO(Nic): Add window resize handler here, please...
+        // refactored to per-frame input...
+        if (input.mouse_is_down() && !input.key_is_down('Shift') ) {
+
+            let [x, y] = input.mouse_pos();
+            let [old_x, old_y] = last_coords;
+            // let [dx, dy] = [x - old_x, y - old_y];
+            // let [dx, dy] = input.mouse_delta()
+            
+            last_coords = [x, y];
+
+            provider.update_center([
+                -dx / window.innerWidth * 2.0 * (1 / RENDER_SCALE), 
+                -dy / window.innerHeight * 2.0 * (1 / RENDER_SCALE)
+            ]);
+        }
 
         regl.clear({color: [0, 0, 0, 1]});
         provider.setup_transform();
@@ -225,16 +247,11 @@ async function main () {
                 `${i} (${i * parameters.updates_per_frame}) [${(i / 60).toFixed(2)}s]`;
         }
 
-        // console.log(`m down?: ${input.is_mouse_down()}, k down?: ${input.is_key_down("Shift")}`);
+        
         
     }, 1000 / 30);
 
-    // handle drag events.
-    // internal state for the drag events...
-    let mouse_is_down = false;
-    let last_coords = [0, 0];
-    let current_p_update = 0;
-    let shift_key_is_down = false;
+    
 
     window.addEventListener('resize', () => {
         let canvas = document.getElementsByTagName('canvas');
@@ -255,19 +272,7 @@ async function main () {
 
     window.addEventListener('mousemove', e => {
         
-        if (mouse_is_down && !shift_key_is_down) {
-
-            let [dx, dy] = [e.clientX - last_coords[0], e.clientY - last_coords[1]];
-            last_coords = [e.clientX, e.clientY];
-
-            provider.update_center([
-                -dx / window.innerWidth * 2.0, 
-                -dy / window.innerHeight * 2.0
-            ]);
-
-            // NOTE(Nic): turned off tile updating to debug shadow shading.
-            // provider.update_tiles();
-        } else if (mouse_is_down && shift_key_is_down) {
+        if (mouse_is_down && shift_key_is_down) {
 
             let tile = provider.tiles[0] // anchor tile for now
             // NOTE(Nic): we don't need to invert this every click...

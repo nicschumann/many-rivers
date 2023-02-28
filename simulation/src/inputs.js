@@ -70,7 +70,7 @@ const set_handled = (type, selector) => {
  * @param {number?} selector the index of the mouse button we want to check the state of
  * @returns {boolean} true if the mouse is currently down, false otherwise.
  */
-export const is_mouse_down = (selector = 0) => {
+export const mouse_is_down = (selector = 0) => {
     return is_down(InputTypeEnum.MOUSE, selector);
 }
 
@@ -81,7 +81,7 @@ export const is_mouse_down = (selector = 0) => {
  * @param {number?} selector the index of the mouse button we want to check the state of
  * @returns {boolean} true if the last mouse action has been handled or not.
  */
-export const is_mouse_handled = (selector = 0) => {
+export const mouse_is_handled = (selector = 0) => {
     return is_handled(InputTypeEnum.MOUSE, selector);
 }
 
@@ -101,7 +101,7 @@ export const set_mouse_handled = (selector = 0) => {
  * @param {string} selector the name of the key we want to check the state of
  * @returns {boolean} true if the key is currently down, false otherwise.
  */
-export const is_key_down = (selector) => {
+export const key_is_down = (selector) => {
     return is_down(InputTypeEnum.KEYS, selector);
 }
 
@@ -111,7 +111,7 @@ export const is_key_down = (selector) => {
  * @param {string} selector the name of the key we want to check the state of
  * @returns {boolean} true if the key is currently down, false otherwise.
  */
-export const is_key_handled = (selector) => {
+export const key_is_handled = (selector) => {
     return is_handled(InputTypeEnum.KEYS, selector);
 }
 
@@ -128,7 +128,7 @@ export const set_key_handled = (selector) => {
 /**
  * @returns {[number, number]} get the current position of the mouse.
  */
-export const get_mouse_pos = () => {
+export const mouse_pos = () => {
     return input_state[MOUSE_POS];
 }
 
@@ -138,7 +138,7 @@ export const get_mouse_pos = () => {
  * 
  * @returns {[number, number]} the current x and y delta of the mouse
  */
-export const get_mouse_delta = () => {
+export const mouse_delta = () => {
     return input_state[MOUSE_DELTA];
 }
 
