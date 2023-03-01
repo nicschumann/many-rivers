@@ -1,5 +1,6 @@
 import { vec2, vec3, mat3, mat4 } from "gl-matrix";
 import parameters from './parameters';
+import * as input from './inputs.js';
 
 import { TERRAIN_SIZE } from "./constants";
 
@@ -21,8 +22,6 @@ const {View3DWireframe} = require('./View3dWireframe.js');
 const {View2D} = require('./View2d.js');
 const {CrossSection} = require('./CrossSection.js');
 const {Tile} = require('./Simulation.js');
-
-// TileProvider
 class Camera {
     world_up = [0., -1., 0.]
 
@@ -59,16 +58,15 @@ class TileProvider {
             'simple-sine-testcase.png', // terrain map
             'simple-sine-testcase.png', // boundary map
             true // is this a testcase?
-        ); // TC 8 Bend
+        );
 
-        // specify the map you want...
         this.tiles = [
             
             
 
-            new View3D(0, 0, 0, true),
+            // new View3D(0, 0, 0, true),
             
-            // new View3DWireframe(0, 0, 0, true),
+            new View3DWireframe(0, 0, 0, true),
 
             new View2D(-1., 1, 0, true),
             
@@ -206,11 +204,6 @@ function setup_controls()
     })
 }
 
-
-function setup_resize() {
-    
-}
-
 async function main () {
     let provider = new TileProvider();
     let counter_icon = document.getElementById('timestep-container');
@@ -231,6 +224,8 @@ async function main () {
             counter_icon.innerText = 
                 `${i} (${i * parameters.updates_per_frame}) [${(i / 60).toFixed(2)}s]`;
         }
+
+        // console.log(`m down?: ${input.is_mouse_down()}, k down?: ${input.is_key_down("Shift")}`);
         
     }, 1000 / 30);
 
@@ -252,6 +247,8 @@ async function main () {
     });
 
     window.addEventListener('mousedown', e => {
+
+        console.log(e);
         mouse_is_down = true
         last_coords = [e.clientX, e.clientY];
     })
@@ -285,8 +282,6 @@ async function main () {
                 pos_c[0] >= tile.x && pos_c[0] < tile.x + 1 &&
                 pos_c[1] >= tile.y && pos_c[1] < tile.y + 1
             ) {
-
-                console.log('in range')
                 
                 let get_slope_intercept = (p1, p2) => {
                     let m = (p2[1] - p1[1]) / (p2[0] - p1[0]);
@@ -465,6 +460,6 @@ async function main () {
     })
 }
 
+input.setup_input_handlers();
 setup_controls()
 main();
-setup_resize();
