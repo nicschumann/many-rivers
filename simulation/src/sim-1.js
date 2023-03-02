@@ -254,8 +254,6 @@ async function main () {
     });
 
     window.addEventListener('mousedown', e => {
-
-        console.log(e);
         mouse_is_down = true
         last_coords = [e.clientX, e.clientY];
     })

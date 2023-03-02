@@ -10,10 +10,14 @@ const InputTypeEnum = {
     KEYS: "keys",
 }
 
+const INITIALIZED = 'initialized';
 const MOUSE_DELTA = 'mouse_delta'
 const MOUSE_POS = 'mouse_pos'
+const POINTER_LOCK = 'pointer_lock'
 
 const input_state = {
+    [INITIALIZED]: false,
+    [POINTER_LOCK]: false,
     [MOUSE_DELTA]: [0, 0],
     [MOUSE_POS]: [0, 0],
     [InputTypeEnum.MOUSE]: {}, // int => bool
@@ -150,8 +154,17 @@ export const reset_mouse_delta = () => {
     input_state[MOUSE_DELTA] = [0, 0];
 }
 
+/**
+ * @returns {boolean} true if the pointer is currently locked.
+ */
+export const pointer_is_locked = () => {
+    return document.pointerLockElement !== null
+}
 
-export const setup_input_handlers = () => {
+
+export const setup_input_handlers = (pointer_lock_key = 'Enter') => {
+    if (input_state[INITIALIZED]) { return; }
+
     window.addEventListener('mousedown', e => {
         const type = InputTypeEnum.MOUSE;
         const selection = e.button;
@@ -161,9 +174,8 @@ export const setup_input_handlers = () => {
     window.addEventListener('mousemove', e => {
         let [dx, dy] = [e.movementX, e.movementY]
         let [mx, my] = [e.clientX, e.clientY]
-        let [x, y] = input_state[MOUSE_DELTA]
 
-        input_state[MOUSE_DELTA] = [x + dx, y + dy]
+        input_state[MOUSE_DELTA] = [dx, dy]
         input_state[MOUSE_POS] = [mx, my]
     })
 
@@ -174,6 +186,8 @@ export const setup_input_handlers = () => {
     })
 
     window.addEventListener('keydown', e => {
+        
+
         const type = InputTypeEnum.KEYS;
         const selection = e.key;
         set_input_down_bit(type, selection);
@@ -184,4 +198,18 @@ export const setup_input_handlers = () => {
         const selection = e.key;
         reset_input_down_bit(type, selection);
     })
+
+    let button = document.getElementById('pointer-toggle');
+
+    let c = document.getElementsByTagName('canvas');
+    if (c.length !== 1) { throw new Error(`PointerLock: Didn't find the right number of canvases: found ${c.length}, needed 1.`) }
+    c = c[0];
+
+    button.addEventListener('click', e => {
+        if (pointer_is_locked()) { document.exitPointerLock(); }
+        else { c.requestPointerLock(); }
+        // should only be one canvas on the page...
+    })
+
+    input_state[INITIALIZED] = true;
 };
