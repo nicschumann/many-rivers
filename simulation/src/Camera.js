@@ -4,7 +4,7 @@ export class Camera {
     world_up = [0., -1., 0.]
 
     constructor (position, target) {
-        this.force = vec3.zero([])
+        this.input_forces = [];
         this.acceleration = vec3.zero([]);
         this.velocity = vec3.zero([]);
         // verlet state variables.
@@ -26,40 +26,38 @@ export class Camera {
     }
 
     handle_input(input) {
+        this.get_vectors();
+
         if (input.key_is_down("ArrowUp")) {
-            let diff = vec3.sub([], this.target, this.position);
-            vec3.normalize(diff, diff);
-            vec3.add(this.force, this.force, diff);
-            // this should be a force that goes into acceleration, 
-            // not acceleration itself.
-            // this.acceleration = diff;
+            this.input_forces.push(this.front);
+        }
+
+        if (input.key_is_down("ArrowDown")) {
+            let dir = vec3.negate([], this.front);
+            this.input_forces.push(dir);
+        }
+
+        if (input.key_is_down('ArrowLeft')) {
+            let dir = this.right;
+            this.input_forces.push(dir);
+        }
+
+        if (input.key_is_down('ArrowRight')) {
+            let dir = vec3.negate([], this.right);
+            this.input_forces.push(dir);
         }
     }
 
     step(resources, parameters) {
         let { dt } = resources;
 
-        // NOTE(Nic): Position only version
-        // const old_pos = vec3.copy([], this.position);
-        // const new_pos = vec3.zero([]);
-        
-        // // 2.0 * pos - prev_pos + acc * dt^2
-        // vec3.scaleAndAdd(new_pos, vec3.scale([], this.previous_position, -1.0), this.position, 2.0);
-        // vec3.scaleAndAdd(new_pos, new_pos, this.acceleration, dt * dt);
-
-        // vec3.scale(this.acceleration, this.acceleration, 0.5);
-        // if (vec3.length(this.acceleration) < 0.001) { 
-        //     vec3.zero(this.acceleration);
-        // }
-
-        // this.previous_position = old_pos;
-        // this.position = new_pos;
-
         // NOTE(Nic): velocity version, useful for applying forces, but larger error term.
         const new_pos = vec3.zero([])
         const new_vel = vec3.zero([])
-        const new_acc = vec3.zero([])
+        const new_acc = vec3.zero([]);
+        const new_force = vec3.zero([]);
         const drag_force = vec3.zero([]);
+        const target_distance = vec3.sub([], this.target, this.position);
 
         // position
         vec3.scaleAndAdd(new_pos, this.position, this.velocity, dt);
@@ -67,8 +65,14 @@ export class Camera {
 
         // acceleration
 
-        if (vec3.length(this.force) > 0) {
-            vec3.scale(this.force, vec3.normalize([], this.force), this.force_scale)
+        if (this.input_forces.length > 0) {
+            
+            this.input_forces.forEach(force => {
+                vec3.add(new_force, new_force, force);
+            })
+            vec3.normalize(new_force, new_force);
+            vec3.scale(new_force, new_force, this.force_scale);
+
         } else {
             vec3.scale(drag_force, vec3.negate([], this.velocity), 7.5);
         }
@@ -76,7 +80,7 @@ export class Camera {
         
         // vec3.scale(drag_force, vec3.multiply(drag_force, this.velocity, this.velocity), 0.5 * drag_coeff);
         // vec3.scale(drag_force, drag_force, 1.0 / this.mass);
-        vec3.add(new_acc, this.force, drag_force);
+        vec3.add(new_acc, new_force, drag_force);
 
         // velocity
         vec3.scaleAndAdd(new_vel, this.velocity, vec3.add([], this.acceleration, new_acc), dt * 0.5);
@@ -87,17 +91,26 @@ export class Camera {
         if (vec3.length(new_vel) < 0.0001) { vec3.zero(new_vel);}
 
         this.position = new_pos;
+        this.target = vec3.add(this.target, new_pos, target_distance);
         this.velocity = new_vel;
         this.acceleration = new_acc;
 
-        vec3.zero(this.force);
+        this.input_forces = [];
     }
 
-    get_matrix () {
+    get_vectors() {
         vec3.subtract(this.front, this.target, this.position);
-        vec3.cross(this.right, this.front, this.world_up);
-        vec3.cross(this.up, this.front, this.right);
+        vec3.normalize(this.front, this.front);
 
+        vec3.cross(this.right, this.front, this.world_up);
+        vec3.normalize(this.right, this.right);
+
+        vec3.cross(this.up, this.front, this.right);
+        vec3.normalize(this.up, this.up);
+    }
+
+    get_matrix() {
+        this.get_vectors();
         mat4.lookAt(this.V, this.position, this.target, this.up);
         mat4.perspective(this.P, Math.PI / 4.0, window.innerWidth / window.innerHeight, 0.001, 100.0);
 
