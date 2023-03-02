@@ -1,5 +1,6 @@
 import { TILE_SIZE } from './constants';
 import { View } from './View.js';
+import { vec3 } from 'gl-matrix';
 
 const render_crosssection = regl({
     vert: require('./shaders/place-tile.vert'),
@@ -27,6 +28,13 @@ class CrossSection extends View {
         if (this.parent == null || !this.parent.loaded) { return; }
 
         let transform = resources.transform_2d;
+
+        // let p1 = resources.camera.position;
+        // let p2 = vec3.scale([], resources.camera.target, 0.25);
+        // p1 = [p1[0], p1[2]];
+        // p2 = [p2[0], p2[2]]
+        // parameters.p1 = p1;
+        // parameters.p2 = p2;
 
         regl.clear({depth: 1.0});
         render_crosssection({

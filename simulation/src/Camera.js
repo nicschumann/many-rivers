@@ -3,7 +3,7 @@ import { vec2, vec3, mat4 } from "gl-matrix";
 export class Camera {
     world_up = [0., -1., 0.]
     min_velocity_magnitude = 0.0001
-    sensitivity = 5.0
+    sensitivity = 10.0
 
     constructor (position, target) {
         // free look variables
@@ -42,7 +42,6 @@ export class Camera {
         this.mouse_pos = input.mouse_pos();
 
         if (input.pointer_is_locked()) {
-            console.log('freelook is on.');
             let [dx, dy] = input.mouse_delta();
             let theta = -this.sensitivity * dx * Math.PI / 180.0;
             let phi = -this.sensitivity * dy * Math.PI / 180.0;
@@ -96,10 +95,13 @@ export class Camera {
         vec3.scale(up_prime, this.up, Math.sin(phi * dt));
         vec3.add(front_prime, front_prime, up_prime);
         // check to make sure front is not too close to the world_up vector.
-        vec3.copy(this.front, front_prime);
-        vec3.copy(this.up, up_prime);
-        vec3.add(this.target, this.position, front_prime);
+        let gimbal_risk = vec3.dot(this.world_up, front_prime)
 
+        if (gimbal_risk < .95 && gimbal_risk > -.95 ) {
+            vec3.copy(this.front, front_prime);
+            vec3.copy(this.up, up_prime);
+            vec3.add(this.target, this.position, front_prime);
+        }
 
     }
 
@@ -148,6 +150,10 @@ export class Camera {
 
         this.input_forces = [];
 
+        // update the points for the cross-section if you want...
+        // parameters.p1 = [this.position[0], this.position[2]];
+        // parameters.p2 = vec2.normalize([], [this.target[0], this.target[2]]);
+
         this.apply_rotation(resources, parameters);
     }
 
@@ -160,6 +166,8 @@ export class Camera {
 
         vec3.cross(this.up, this.front, this.right);
         vec3.normalize(this.up, this.up);
+
+        vec3.add(this.target, this.position, this.front);
     }
 
     get_matrix() {

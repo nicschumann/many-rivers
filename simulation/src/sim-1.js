@@ -45,9 +45,9 @@ class TileProvider {
             
             new View3DWireframe(0, 0, 0, true),
 
-            new View2D(-1., 1, 0, true),
+            new View2D(-1.75, 1.25, 0, true),
             
-            new CrossSection(0.0, 1, 0, true),
+            new CrossSection(-0.75, 1.25, 0, true),
         ];
 
         // hook up the cross section renderer
@@ -425,7 +425,7 @@ async function main () {
                 document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
             }
     
-            if (e.key == 's') {
+            if (e.key == 'q') {
                 parameters.render_flux = false;
                 parameters.render_flux_magnitude = false;
                 parameters.render_curvature = false;
