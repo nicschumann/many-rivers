@@ -41,9 +41,9 @@ class TileProvider {
             
             
 
-            // new View3D(0, 0, 0, true),
+            new View3D(0, 0, 0, true),
             
-            new View3DWireframe(0, 0, 0, true),
+            // new View3DWireframe(0, 0, 0, true),
 
             new View2D(-1.75, 1.25, 0, true),
             
