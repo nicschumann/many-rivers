@@ -48,3 +48,5 @@ This will compile and push the public folder to a gh-pages branch, in case you q
 - [Create your Own Lattice Boltzmann Simulation (with Python)](https://medium.com/swlh/create-your-own-lattice-boltzmann-simulation-with-python-8759e8b53b1c). Super good intro to how the LBM equation is discretized for free flow / flat bed situations. Has a python implementation.
 
 - [A 1D–2D Coupled Lattice Boltzmann Modelfor Shallow Water Flows in Large ScaleRiver-Lake Systems](https://www.researchgate.net/publication/338120174_A_1D-2D_Coupled_Lattice_Boltzmann_Model_for_Shallow_Water_Flows_in_Large_Scale_River-Lake_Systems)
+
+- [Verlet Integration](https://www.algorithm-archive.org/contents/verlet_integration/verlet_integration.html). For camera movement.

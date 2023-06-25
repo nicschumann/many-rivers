@@ -2,7 +2,7 @@ import { vec2, vec3, mat3, mat4 } from "gl-matrix";
 import parameters from './parameters';
 import * as input from './inputs.js';
 
-import { TERRAIN_SIZE } from "./constants";
+import { TERRAIN_SIZE, RENDER_SCALE, TARGET_FRAMETIME } from "./constants";
 
 // assigning regl as a global
 // so that we have access to it in all modules.
@@ -17,39 +17,16 @@ window.regl = require('regl')({
     ]
 });
 
+// these need to be imported dynamically,
+// because they assume regl is defined globally.
+// they all need to be able to access the same regl instance.
+
 const {View3D} = require('./View3d.js');
 const {View3DWireframe} = require('./View3dWireframe.js');
 const {View2D} = require('./View2d.js');
 const {CrossSection} = require('./CrossSection.js');
 const {Tile} = require('./Simulation.js');
-class Camera {
-    world_up = [0., -1., 0.]
-
-    constructor (position, target) {
-        this.position = position;
-        this.target = target;
-
-        this.front = []
-        this.right = []
-        this.up = []
-
-        this.V = []
-        this.P = []
-    }
-
-    get_matrix () {
-        vec3.subtract(this.front, this.target, this.position);
-        vec3.cross(this.right, this.front, this.world_up);
-        vec3.cross(this.up, this.front, this.right);
-
-        mat4.lookAt(this.V, this.position, this.target, this.up);
-        mat4.perspective(this.P, Math.PI / 4.0, window.innerWidth / window.innerHeight, 0.001, 100.0);
-
-        const PV = mat4.multiply([], this.P, this.V);
-        
-        return PV;
-    }
-}
+const {Camera} = require('./Camera.js');
 
 class TileProvider {
     constructor () {
@@ -64,13 +41,13 @@ class TileProvider {
             
             
 
-            // new View3D(0, 0, 0, true),
+            new View3D(0, 0, 0, true),
             
-            new View3DWireframe(0, 0, 0, true),
+            // new View3DWireframe(0, 0, 0, true),
 
-            new View2D(-1., 1, 0, true),
+            new View2D(-1.75, 1.25, 0, true),
             
-            new CrossSection(0.0, 1, 0, true),
+            new CrossSection(-0.75, 1.25, 0, true),
         ];
 
         // hook up the cross section renderer
@@ -79,6 +56,8 @@ class TileProvider {
         this.tile_map = {};
 
         this.resources = { 
+            last_mouse_coords: [0,0],
+            dt: TARGET_FRAMETIME,
             t: 0.0,
             camera: new Camera(
                 [this.tiles[0].x + 0.0, 0.25, this.tiles[0].y + 0.0],
@@ -92,6 +71,25 @@ class TileProvider {
         this.setup_transform();
         this.simulation.get_resources();
         this.tiles.forEach(t => t.get_resources() );
+    }
+
+    handle_input(input) {
+        let [x, y] = input.mouse_pos();
+
+        if (input.mouse_is_down() && !input.key_is_down('Shift') ) {
+            let [old_x, old_y] = this.resources.last_mouse_coords;
+            let [dx, dy] = [x - old_x, y - old_y];
+            console.log(dx, dy);            
+
+            this.update_center([
+                -dx / window.innerWidth * 2.0 * (1 / RENDER_SCALE), 
+                -dy / window.innerHeight * 2.0 * (1 / RENDER_SCALE)
+            ]);
+        }
+
+        this.resources.last_mouse_coords = [x, y];
+
+        this.resources.camera.handle_input(input);
     }
 
     reset(tile=null) {
@@ -123,9 +121,10 @@ class TileProvider {
     }
 
     render_tiles () {
-        // let s = performance.now();
+        let s = performance.now();
 
         this.simulation.simulate(this.resources, parameters);
+        this.resources.camera.step(this.resources, parameters);
 
         this.tiles.forEach((tile) => {
             regl.clear({depth: 1.0});
@@ -208,12 +207,23 @@ async function main () {
     let provider = new TileProvider();
     let counter_icon = document.getElementById('timestep-container');
 
+    // handle drag events.
+    // internal state for the drag events...
+    let mouse_is_down = false;
+    let last_coords = [0, 0];
+    let current_p_update = 0;
+    let shift_key_is_down = false;
+
     // game loop
     // TODO(Nic): replace with requestAnimationFrame
     // TODO(Nic): replace with manual canvas and resize canvas appropriately.
     
+    let t_minus_1 = performance.now();
+
     setInterval(() => {
+        
         // TODO(Nic): Add window resize handler here, please...
+        provider.handle_input(input);
 
         regl.clear({color: [0, 0, 0, 1]});
         provider.setup_transform();
@@ -225,16 +235,13 @@ async function main () {
                 `${i} (${i * parameters.updates_per_frame}) [${(i / 60).toFixed(2)}s]`;
         }
 
-        // console.log(`m down?: ${input.is_mouse_down()}, k down?: ${input.is_key_down("Shift")}`);
-        
-    }, 1000 / 30);
+        let t = performance.now()
+        provider.resources.dt = (t - t_minus_1) / 1000; // convert ms to s.
+        t_minus_1 = t;
 
-    // handle drag events.
-    // internal state for the drag events...
-    let mouse_is_down = false;
-    let last_coords = [0, 0];
-    let current_p_update = 0;
-    let shift_key_is_down = false;
+    }, TARGET_FRAMETIME * 1000); // convert s to ms.
+
+    
 
     window.addEventListener('resize', () => {
         let canvas = document.getElementsByTagName('canvas');
@@ -247,27 +254,13 @@ async function main () {
     });
 
     window.addEventListener('mousedown', e => {
-
-        console.log(e);
         mouse_is_down = true
         last_coords = [e.clientX, e.clientY];
     })
 
     window.addEventListener('mousemove', e => {
         
-        if (mouse_is_down && !shift_key_is_down) {
-
-            let [dx, dy] = [e.clientX - last_coords[0], e.clientY - last_coords[1]];
-            last_coords = [e.clientX, e.clientY];
-
-            provider.update_center([
-                -dx / window.innerWidth * 2.0, 
-                -dy / window.innerHeight * 2.0
-            ]);
-
-            // NOTE(Nic): turned off tile updating to debug shadow shading.
-            // provider.update_tiles();
-        } else if (mouse_is_down && shift_key_is_down) {
+        if (mouse_is_down && shift_key_is_down) {
 
             let tile = provider.tiles[0] // anchor tile for now
             // NOTE(Nic): we don't need to invert this every click...
@@ -362,39 +355,39 @@ async function main () {
                 document.getElementById('running').checked = parameters.running;
             }
 
-            if (e.key == 'ArrowUp') {
-                let c = provider.resources.camera;
-                let diff = vec3.sub([], c.target, c.position);
-                vec3.normalize(diff, diff);
-                vec3.scale(diff, diff, 0.01);
-                vec3.add(c.position, c.position, diff);
-            }
+            // if (e.key == 'ArrowUp') {
+            //     let c = provider.resources.camera;
+            //     let diff = vec3.sub([], c.target, c.position);
+            //     vec3.normalize(diff, diff);
+            //     vec3.scale(diff, diff, 0.01);
+            //     vec3.add(c.position, c.position, diff);
+            // }
 
-            if (e.key == 'ArrowDown') {
-                let c = provider.resources.camera;
-                let diff = vec3.sub([], c.target, c.position);
-                vec3.normalize(diff, diff);
-                vec3.scale(diff, diff, -0.01);
-                vec3.add(c.position, c.position, diff);
-            }
+            // if (e.key == 'ArrowDown') {
+            //     let c = provider.resources.camera;
+            //     let diff = vec3.sub([], c.target, c.position);
+            //     vec3.normalize(diff, diff);
+            //     vec3.scale(diff, diff, -0.01);
+            //     vec3.add(c.position, c.position, diff);
+            // }
 
-            if (e.key == 'ArrowLeft') {
-                let c = provider.resources.camera;
-                let diff = vec3.sub([], c.target, c.position);
-                vec3.normalize(diff, diff);
-                vec3.cross(diff, c.up, diff);
-                vec3.scale(diff, diff, 0.01);
-                vec3.add(c.position, c.position, diff);
-            }
+            // if (e.key == 'ArrowLeft') {
+            //     let c = provider.resources.camera;
+            //     let diff = vec3.sub([], c.target, c.position);
+            //     vec3.normalize(diff, diff);
+            //     vec3.cross(diff, c.up, diff);
+            //     vec3.scale(diff, diff, 0.01);
+            //     vec3.add(c.position, c.position, diff);
+            // }
 
-            if (e.key == 'ArrowRight') {
-                let c = provider.resources.camera;
-                let diff = vec3.sub([], c.target, c.position);
-                vec3.normalize(diff, diff);
-                vec3.cross(diff, c.up, diff);
-                vec3.scale(diff, diff, -0.01);
-                vec3.add(c.position, c.position, diff);
-            }
+            // if (e.key == 'ArrowRight') {
+            //     let c = provider.resources.camera;
+            //     let diff = vec3.sub([], c.target, c.position);
+            //     vec3.normalize(diff, diff);
+            //     vec3.cross(diff, c.up, diff);
+            //     vec3.scale(diff, diff, -0.01);
+            //     vec3.add(c.position, c.position, diff);
+            // }
     
             if (e.key == 'f') {
                 parameters.render_flux = !parameters.render_flux;
@@ -432,7 +425,7 @@ async function main () {
                 document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
             }
     
-            if (e.key == 's') {
+            if (e.key == 'q') {
                 parameters.render_flux = false;
                 parameters.render_flux_magnitude = false;
                 parameters.render_curvature = false;

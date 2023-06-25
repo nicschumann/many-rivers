@@ -10,10 +10,14 @@ const InputTypeEnum = {
     KEYS: "keys",
 }
 
+const INITIALIZED = 'initialized';
 const MOUSE_DELTA = 'mouse_delta'
 const MOUSE_POS = 'mouse_pos'
+const POINTER_LOCK = 'pointer_lock'
 
 const input_state = {
+    [INITIALIZED]: false,
+    [POINTER_LOCK]: false,
     [MOUSE_DELTA]: [0, 0],
     [MOUSE_POS]: [0, 0],
     [InputTypeEnum.MOUSE]: {}, // int => bool
@@ -70,7 +74,7 @@ const set_handled = (type, selector) => {
  * @param {number?} selector the index of the mouse button we want to check the state of
  * @returns {boolean} true if the mouse is currently down, false otherwise.
  */
-export const is_mouse_down = (selector = 0) => {
+export const mouse_is_down = (selector = 0) => {
     return is_down(InputTypeEnum.MOUSE, selector);
 }
 
@@ -81,7 +85,7 @@ export const is_mouse_down = (selector = 0) => {
  * @param {number?} selector the index of the mouse button we want to check the state of
  * @returns {boolean} true if the last mouse action has been handled or not.
  */
-export const is_mouse_handled = (selector = 0) => {
+export const mouse_is_handled = (selector = 0) => {
     return is_handled(InputTypeEnum.MOUSE, selector);
 }
 
@@ -101,7 +105,7 @@ export const set_mouse_handled = (selector = 0) => {
  * @param {string} selector the name of the key we want to check the state of
  * @returns {boolean} true if the key is currently down, false otherwise.
  */
-export const is_key_down = (selector) => {
+export const key_is_down = (selector) => {
     return is_down(InputTypeEnum.KEYS, selector);
 }
 
@@ -111,7 +115,7 @@ export const is_key_down = (selector) => {
  * @param {string} selector the name of the key we want to check the state of
  * @returns {boolean} true if the key is currently down, false otherwise.
  */
-export const is_key_handled = (selector) => {
+export const key_is_handled = (selector) => {
     return is_handled(InputTypeEnum.KEYS, selector);
 }
 
@@ -128,7 +132,7 @@ export const set_key_handled = (selector) => {
 /**
  * @returns {[number, number]} get the current position of the mouse.
  */
-export const get_mouse_pos = () => {
+export const mouse_pos = () => {
     return input_state[MOUSE_POS];
 }
 
@@ -138,7 +142,7 @@ export const get_mouse_pos = () => {
  * 
  * @returns {[number, number]} the current x and y delta of the mouse
  */
-export const get_mouse_delta = () => {
+export const mouse_delta = () => {
     return input_state[MOUSE_DELTA];
 }
 
@@ -150,8 +154,17 @@ export const reset_mouse_delta = () => {
     input_state[MOUSE_DELTA] = [0, 0];
 }
 
+/**
+ * @returns {boolean} true if the pointer is currently locked.
+ */
+export const pointer_is_locked = () => {
+    return document.pointerLockElement !== null
+}
 
-export const setup_input_handlers = () => {
+
+export const setup_input_handlers = (pointer_lock_key = 'Enter') => {
+    if (input_state[INITIALIZED]) { return; }
+
     window.addEventListener('mousedown', e => {
         const type = InputTypeEnum.MOUSE;
         const selection = e.button;
@@ -161,9 +174,8 @@ export const setup_input_handlers = () => {
     window.addEventListener('mousemove', e => {
         let [dx, dy] = [e.movementX, e.movementY]
         let [mx, my] = [e.clientX, e.clientY]
-        let [x, y] = input_state[MOUSE_DELTA]
 
-        input_state[MOUSE_DELTA] = [x + dx, y + dy]
+        input_state[MOUSE_DELTA] = [dx, dy]
         input_state[MOUSE_POS] = [mx, my]
     })
 
@@ -174,6 +186,8 @@ export const setup_input_handlers = () => {
     })
 
     window.addEventListener('keydown', e => {
+        
+
         const type = InputTypeEnum.KEYS;
         const selection = e.key;
         set_input_down_bit(type, selection);
@@ -184,4 +198,18 @@ export const setup_input_handlers = () => {
         const selection = e.key;
         reset_input_down_bit(type, selection);
     })
+
+    let button = document.getElementById('pointer-toggle');
+
+    let c = document.getElementsByTagName('canvas');
+    if (c.length !== 1) { throw new Error(`PointerLock: Didn't find the right number of canvases: found ${c.length}, needed 1.`) }
+    c = c[0];
+
+    button.addEventListener('click', e => {
+        if (pointer_is_locked()) { document.exitPointerLock(); }
+        else { c.requestPointerLock(); }
+        // should only be one canvas on the page...
+    })
+
+    input_state[INITIALIZED] = true;
 };
