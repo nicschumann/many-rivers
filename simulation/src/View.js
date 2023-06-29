@@ -65,7 +65,7 @@ class View {
         render_tile_as_color({
             a_position: this.positions,
             a_uv: this.uvs,
-            u_transform: transform,
+            u_transform: resources.transform_2d,
             u_color: this.loading_color
         });
     }

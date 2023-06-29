@@ -31,10 +31,16 @@ const {Camera} = require('./Camera.js');
 class TileProvider {
     constructor () {
 
+        // this.simulation = new Tile(
+        //     'simple-sine-testcase.png', // terrain map
+        //     'simple-sine-testcase.png', // boundary map
+        //     true // is this a testcase?
+        // );
+
         this.simulation = new Tile(
-            'simple-sine-testcase.png', // terrain map
-            'simple-sine-testcase.png', // boundary map
-            true // is this a testcase?
+            '15-0-0-terrain.png', // terrain map
+            '15-0-0-boundary-all.png', // boundary map
+            false // is this a testcase?
         );
 
         this.tiles = [
@@ -69,8 +75,8 @@ class TileProvider {
         this.tile_center = [ this.tiles[0].x + 1.0, this.tiles[0].y + 0.5]
 
         this.setup_transform();
-        this.simulation.get_resources();
-        this.tiles.forEach(t => t.get_resources() );
+        this.simulation.get_resources(parameters);
+        this.tiles.forEach(t => t.get_resources(parameters) );
     }
 
     handle_input(input) {

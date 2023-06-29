@@ -249,7 +249,7 @@ class View2D extends View {
         } else if (!this.parent.loaded) {
             console.log('still loading!');
             // If we're still waiting for textures...
-            super.render(transform, resources, parameters);
+            super.render(resources, parameters);
 
         }
     }

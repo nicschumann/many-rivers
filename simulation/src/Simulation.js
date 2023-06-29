@@ -350,7 +350,7 @@ class Tile {
         this.t = 0.0
     }
 
-    async get_resources() {
+    async get_resources(parameters) {
         // NOTE(Nic): Factor this so that it just wants Float32Array of the right length?
         // NOTE(Nic): Pull out TILE_SIZE as a parameter to this module?
         
