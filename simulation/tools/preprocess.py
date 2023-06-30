@@ -1,15 +1,18 @@
-from matplotlib import image
+import os
 import numpy as np
 import imageio
-import matplotlib.pyplot as plt
 
-DOMAIN_SIZE = 1800
-RIVER_MAX_HEIGHT = 7.10
-
+RIVER_MAX_HEIGHT = 19.5
 
 def read_tif(filepath: str) -> np.ndarray:
-    im = imageio.imread(filepath)
+    im = imageio.v2.imread(filepath)
     return im
+
+
+def read_rgb(filepath: str) -> np.ndarray:
+    im = imageio.v2.imread(filepath)
+    return im
+
 
 def dem2rgb(dem: np.ndarray) -> np.ndarray:
     coeff_r = 256 ** 2
@@ -44,23 +47,34 @@ def rgb2dem(t: np.ndarray) -> np.ndarray:
     return dem
 
 
-if __name__ == '__main__':
-    
-    dem = read_tif('./tight_bend_clip.tif')
-
-    s_y, s_x = 2072, 1615
-    e_y, e_x = s_y + DOMAIN_SIZE, s_x + DOMAIN_SIZE
+def write_rgb(dem: np.ndarray, y: int, x: int, h: int, w: int, write: bool = True, name: str = 'terrain') -> np.ndarray:
+    s_y, s_x = y, x
+    e_y, e_x = s_y + h, s_x + w
     
     sub_dem = dem[s_y:e_y, s_x:e_x]
-
-    b = (sub_dem <= RIVER_MAX_HEIGHT).astype('float32')
-    boundary = np.zeros((b.shape[0], b.shape[1], 4))
-    boundary[:, :, :] = b.reshape(b.shape[0], b.shape[1], 1)
 
     rgb = dem2rgb(sub_dem).astype('uint8')
 
     # sub_dem_prime = rgb2dem(rgb)
 
+    if write: imageio.imwrite(f'{name}.png', rgb)
 
-    imageio.imwrite('14-0-0-terrain.png', rgb)
-    imageio.imwrite('14-0-0-boundary-all.png', boundary)
+    return rgb
+
+
+def write_boundary(dem: np.ndarray, max_height: float = RIVER_MAX_HEIGHT, write : bool = True, name: str = 'boundary') -> np.ndarray:
+    b = (dem <= max_height).astype('float32')
+    boundary = np.zeros((b.shape[0], b.shape[1], 4))
+    boundary[:, :, :] = b.reshape(b.shape[0], b.shape[1], 1)
+
+    if write: imageio.imwrite(f'{name}.png', boundary)
+
+    return boundary
+
+
+def split_name(filepath: str):
+    filename = os.path.basename(filepath)
+    data_name, data_params = filename.split('--')
+    s_y, s_x, h, w, river_z_cutoff = os.path.splitext(data_params)[0].split('-')
+
+    return data_name, int(s_y), int(s_x), int(h), int(w), float(river_z_cutoff)
