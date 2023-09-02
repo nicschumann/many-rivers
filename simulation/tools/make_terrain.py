@@ -16,5 +16,6 @@ if __name__ == '__main__':
 
     print('Reading .tif; for large files, this can take a while.')
     dem = read_tif(filepath)
+    print(f'tif size: {dem.shape}')
     
     write_rgb(dem,result[1], result[2], result[3], result[4], write=True, name=f'{result[0]}-terrain')

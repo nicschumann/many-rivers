@@ -1,9 +1,9 @@
 import os
 import argparse
 
+from preprocess import read_rgb, flood_fill_boundary
 
 
-from preprocess import split_name, read_rgb, rgb2dem, write_boundary
 
 if __name__ == '__main__':
 
@@ -12,14 +12,14 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('filepath', action='store', type=str, help='Path to the .png file containing the DEM in terrain rgb format.')
-    parser.add_argument('--z', action='store', type=float, required=True, help='DEM elevations below this level are considered underwater.')
+    parser.add_argument('--start', nargs=2, required=True, type=int, help='Starting point for flood filling and removing outliers below the specified elevation, but not part of the river.')
     args = parser.parse_args()
-    
     
     filepath = args.filepath
     filename = os.path.splitext(os.path.basename(filepath))[0]
 
-    rgb = read_rgb(filepath)
-    dem = rgb2dem(rgb)
+    boundary = read_rgb(filepath)[:, :, 3] # extract alpha channel
     
-    boundary = write_boundary(dem, args.z, write=True, name=f'{filename}-boundary')
+    x, y = tuple(args.start)
+    
+    flood_fill_boundary(boundary, (y, x), write=True, name=f'{filename}-simplified.png')

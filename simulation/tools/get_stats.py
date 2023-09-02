@@ -12,7 +12,6 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('filepath', action='store', type=str, help='Path to the .png file containing the DEM in terrain rgb format.')
-    parser.add_argument('--z', action='store', type=float, required=True, help='DEM elevations below this level are considered underwater.')
     args = parser.parse_args()
     
     
@@ -22,4 +21,4 @@ if __name__ == '__main__':
     rgb = read_rgb(filepath)
     dem = rgb2dem(rgb)
     
-    boundary = write_boundary(dem, args.z, write=True, name=f'{filename}-boundary')
+    print(f'max: {dem.max()}, min: {dem.min()}, mean: {dem.mean()}')

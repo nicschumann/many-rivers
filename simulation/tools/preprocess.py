@@ -2,6 +2,7 @@ import os
 import numpy as np
 import imageio
 
+
 RIVER_MAX_HEIGHT = 19.5
 
 def read_tif(filepath: str) -> np.ndarray:
@@ -64,13 +65,35 @@ def write_rgb(dem: np.ndarray, y: int, x: int, h: int, w: int, write: bool = Tru
 
 def write_boundary(dem: np.ndarray, max_height: float = RIVER_MAX_HEIGHT, write : bool = True, name: str = 'boundary') -> np.ndarray:
     b = (dem <= max_height).astype('float32')
-    boundary = np.zeros((b.shape[0], b.shape[1], 4))
+    boundary = np.zeros((b.shape[0], b.shape[1], 4), dtype=np.float32)
+
     boundary[:, :, :] = b.reshape(b.shape[0], b.shape[1], 1)
+    boundary *= 255.0
+    boundary = boundary.astype(np.uint8)
 
     if write: imageio.imwrite(f'{name}.png', boundary)
 
     return boundary
 
+
+def flood_fill_boundary(boundary: np.ndarray, start_point: tuple[int, int], write: bool = True, name: str = 'boundary-simplified.png') -> np.ndarray:
+    from skimage.segmentation import flood_fill
+    
+    flag = 2.0
+    simplified = flood_fill(boundary, start_point, flag)
+
+    simplified[simplified != flag] = 0.0
+    simplified[simplified == flag] = 1.0
+
+    output = np.zeros((simplified.shape[0], simplified.shape[1], 4))
+    output[:, :, :] = simplified.reshape((simplified.shape[0], simplified.shape[1], 1))
+
+    output *= 255.0
+    output = output.astype(np.uint8)
+
+    if write: imageio.imwrite(name, output)
+
+    return simplified
 
 def split_name(filepath: str):
     filename = os.path.basename(filepath)
