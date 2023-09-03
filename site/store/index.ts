@@ -47,6 +47,7 @@ type State = {
 
 type Actions = {
     setSimState: (stateUpdate: Partial<SimulationState>) => void
+    setSimParameters: (stateUpdate: Partial<SimulationParameters>) => void
 }
 
 export const useApplicationState = create(
@@ -94,6 +95,17 @@ export const useApplicationState = create(
                 }
 
                 state.sim.state = newState
+            })            
+        },
+
+        setSimParameters(stateUpdate: Partial<SimulationParameters>) {
+            set((state) => {
+                const newState = {
+                    ...state.sim.parameters,
+                    ...stateUpdate
+                }
+
+                state.sim.parameters = newState
             })            
         },
     }))

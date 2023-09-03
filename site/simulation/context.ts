@@ -12,6 +12,7 @@ import { Regl } from "regl";
 import { CompiledDrawCalls } from "./compile.js";
 import { View } from "./view.js";
 import { InputAPI } from "./inputs";
+import { River } from "./data/rivers";
 
 export type RenderResources = {
     last_mouse_coords: vec2
@@ -29,7 +30,7 @@ class RenderContext {
     resources: RenderResources
     tile_center: vec2
 
-    constructor (regl: Regl, shaders: CompiledDrawCalls) {
+    constructor (river: River, regl: Regl, shaders: CompiledDrawCalls) {
         if (typeof shaders == 'undefined') { console.error('No Shaders Supplied to RenderContext.') }
         if (typeof regl == 'undefined') { console.error('No Regl instance Supplied to RenderContext.') }
 
@@ -45,8 +46,8 @@ class RenderContext {
 
         // erosion speed: 0.02, accretion speed: 0.01
         this.simulation = new Simulation(
-            'usgs-el-horcon-terrain.png', // terrain map
-            'usgs-el-horcon-terrain-boundary-simplified-flows.png', // boundary map
+            river.terrain_url, // terrain map
+            river.boundary_url, // boundary map
             false, // is this a testcase?
             shaders,
             regl

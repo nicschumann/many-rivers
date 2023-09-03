@@ -12,15 +12,20 @@ import { TARGET_FRAMETIME } from "@/simulation/constants"
 import { Simulation } from "@/simulation/simulation"
 
 import { useApplicationState } from "@/store"
+import { River } from "@/simulation/data/rivers"
 
+interface SimulationRootProps {
+    river: River
+}
 
-export default function SimulationRoot() {
+export default function SimulationRoot({ river }: SimulationRootProps) {
     const baseCanvas = useRef<HTMLCanvasElement>(null)
     const [renderContext, setRenderContext] = useState<RenderContext | null>(null)
 
     const uiData = useApplicationState(state => state.ui)
     const simData = useApplicationState(state => state.sim)
     const setSimState = useApplicationState(state => state.setSimState)
+    const setSimParameters = useApplicationState(state => state.setSimParameters)
 
 
     /**
@@ -47,8 +52,9 @@ export default function SimulationRoot() {
         const shaders = compile_shaders(regl)
 
         // @ts-ignore
-        const localRenderContext = new RenderContext(regl, shaders)
+        const localRenderContext = new RenderContext(river, regl, shaders)
         setRenderContext(localRenderContext)
+        setSimParameters(river.parameters)
 
 
         // Resize Handler..
@@ -69,7 +75,7 @@ export default function SimulationRoot() {
         return () => { 
             window.removeEventListener('resize', resizeHandler);            
         }
-    }, [])
+    }, [river, setSimParameters])
 
 
     useEffect(() => {
@@ -207,7 +213,7 @@ export default function SimulationRoot() {
             window.removeEventListener('keyup', keyupHandler)
             input.deinit()
         }
-    }, [renderContext, simData, uiData])
+    }, [renderContext, simData, uiData, setSimState])
 
     return (
         <canvas ref={baseCanvas} className="h-screen w-screen" />

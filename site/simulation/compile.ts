@@ -3,7 +3,7 @@
 import type { Regl, DrawCommand } from 'regl'
 
 import { DomainMesh } from './mesh'
-import { TILE_SIZE } from './constants'
+import { TILE_SIZE, TERRAIN_SIZE } from './constants'
 
 export interface CompiledDrawCalls {
     calculate_initial_conditions: DrawCommand
@@ -41,7 +41,7 @@ export interface CompiledDrawCalls {
 
 export function compile_shaders(regl: Regl): CompiledDrawCalls {
 
-    let DOMAIN_MESH = new DomainMesh(regl, [512,512]);
+    let DOMAIN_MESH = new DomainMesh(regl, TERRAIN_SIZE);
 
     const v_passthrough = require('./shaders/pass-through.vert').default
 
