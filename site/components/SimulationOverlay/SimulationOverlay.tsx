@@ -18,6 +18,11 @@ export default function SimulationOverlay({ river }: SimulationOverlayProps) {
 
     const isLoaded = useApplicationState(s => s.sim.state.loaded)
     const isRunning = useApplicationState(s => s.sim.state.running)
+    const setRunning = useApplicationState(s => {
+        return (running: boolean) => {
+            s.setSimState({running})
+        }
+    })
 
     useEffect(() => {
         const otherRivers = Object.values(rivers).filter(r => r.slug !== river.slug)
@@ -46,7 +51,14 @@ export default function SimulationOverlay({ river }: SimulationOverlayProps) {
                     <div className="ml-auto flex">
                         {/* <div className="text-white mr-2">{isRunning ? 'running' : 'paused'}</div>
                         <div className="text-white mr-2">{isRunning ? 'running' : 'paused'}</div> */}
-                        <div className="ml-auto"><OverlayButton>{isRunning ? 'running' : 'paused'}</OverlayButton></div>
+                        <div onClick={() => setRunning(!isRunning)} className="ml-auto">
+                            <OverlayButton>{
+                                isRunning 
+                                    ? <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" /></svg>
+                                    : <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+                                }
+                            </OverlayButton>
+                        </div>
                         {/* <div className="text-white ml-2"></div> */}
                     </div>
                 </div>

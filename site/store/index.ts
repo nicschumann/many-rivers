@@ -68,7 +68,7 @@ export const useApplicationState = create(
         sim: {
             state: {
                 loaded: false,
-                running: false,
+                running: true,
                 eroding: true,
 
                 non_erosive_timesteps: 500,
