@@ -11,6 +11,7 @@ import { SimulationData, UIData } from "@/store/index.js";
 import { Regl } from "regl";
 import { CompiledDrawCalls } from "./compile.js";
 import { View } from "./view.js";
+import { InputAPI } from "./inputs";
 
 export type RenderResources = {
     last_mouse_coords: vec2
@@ -94,10 +95,12 @@ class RenderContext {
         this.views.forEach(t => t.get_resources() );
     }
 
-    handle_input(input: any) {
+    handle_input(input: InputAPI) {
         let pos = input.mouse_pos();
 
-        if (input.mouse_is_down() && !input.key_is_down('Shift') ) {
+        // console.log(pos)
+
+        if (input.mouse_is_down(0) && !input.key_is_down('Shift') ) {
             // @ts-ignore
             let [dx, dy] = vec2.sub([], pos, this.resources.last_mouse_coords)
 

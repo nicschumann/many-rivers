@@ -51,7 +51,6 @@ export class Camera {
         }
 
         if (input.key_is_down("w")) {
-            console.log('pushing forces...')
             this.input_forces.push(this.front);
         }
 

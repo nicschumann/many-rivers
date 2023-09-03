@@ -7,7 +7,7 @@ import { mat3, vec2 } from "gl-matrix"
 import parameters from '@/simulation/parameters'
 import { compile_shaders } from "@/simulation/compile"
 import { RenderContext } from "@/simulation/context"
-import * as input from "@/simulation/inputs.js"
+import { InputAPI } from "@/simulation/inputs"
 import { TARGET_FRAMETIME } from "@/simulation/constants"
 import { Simulation } from "@/simulation/simulation"
 
@@ -87,7 +87,8 @@ export default function SimulationRoot() {
 
         // setReglInstance(regl)
         // NOTE(Nic): this should move to the other event loop.
-        const remove_input_handlers = input.setup_input_handlers(window)
+        const input = new InputAPI(window)
+        input.init()
 
         const renderLoopID = setInterval(() => {
             renderContext.handle_input(input)
@@ -96,7 +97,6 @@ export default function SimulationRoot() {
                 console.log('simulation loaded')
                 setSimState({loaded: true})
             }
-
 
             renderContext.regl.clear({color: [0, 0, 0, 1]})
             renderContext.setup_transform()
@@ -109,9 +109,9 @@ export default function SimulationRoot() {
 
 
         const keydownHandler = (e: KeyboardEvent) => {
-            console.log(e.key)
-
             if (e.key == 'r') {
+                setSimState({loaded: false})
+
                 const new_tile = new Simulation(
                     'parabola-testcase.png',
                     'parabola-testcase.png',
@@ -205,7 +205,7 @@ export default function SimulationRoot() {
             clearInterval(renderLoopID)
             window.removeEventListener('keydown', keydownHandler)
             window.removeEventListener('keyup', keyupHandler)
-            remove_input_handlers()
+            input.deinit()
         }
     }, [renderContext, simData, uiData])
 
