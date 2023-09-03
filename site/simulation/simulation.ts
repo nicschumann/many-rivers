@@ -1,8 +1,12 @@
 import { TILE_SIZE, DEFAULT_INTERPOLATION } from './constants';
 import { DoubleFramebuffer, SingleFramebuffer } from './buffer';
+import { CompiledDrawCalls } from './compile';
+import { Regl, Texture2D } from 'regl';
+import { SimulationData } from '@/store';
+import { RenderResources } from './context';
 
 
-const load_image = (url) => {
+const load_image = (url: string) => {
     return new Promise((accept, reject) => {
         const img = new Image();
         img.onload = () => { 
@@ -16,11 +20,33 @@ const load_image = (url) => {
 }
 
 
+function assert_simulation_buffer(buffer: unknown) : asserts buffer {
+    if (typeof buffer == 'undefined') { throw new Error('Uninitialized Buffers; call get_resources.') }
+}
 
 class Simulation {
-    constructor(terrain_url, boundary_url, testcase=false, shaders=null, regl=null) {
-        if (shaders == null) { console.error('No Shaders Supplied to View.') }
-        if (regl == null) { console.error('No Regl instance Supplied to View.') }
+    terrain_url: string
+    boundary_url: string
+    is_testcase: boolean
+    loaded: boolean
+    t: number
+
+    shaders: CompiledDrawCalls
+    regl: Regl
+
+    elevation?: Texture2D
+    boundary?: Texture2D
+
+    H?: DoubleFramebuffer
+    K?: DoubleFramebuffer
+    E?: DoubleFramebuffer
+    S?: SingleFramebuffer
+    N?: SingleFramebuffer
+    Q?: DoubleFramebuffer
+
+    constructor(terrain_url: string, boundary_url: string, testcase=false, shaders:CompiledDrawCalls, regl: Regl) {
+        if (typeof shaders == 'undefined') { console.error('No Shaders Supplied to RenderContext.') }
+        if (typeof regl == 'undefined') { console.error('No Regl instance Supplied to RenderContext.') }
 
         this.shaders = shaders
         this.regl = regl
@@ -33,14 +59,14 @@ class Simulation {
         this.t = 0.0
     }
 
-    async get_resources(parameters) {
+    async get_resources() {
         // NOTE(Nic): Factor this so that it just wants Float32Array of the right length?
         // NOTE(Nic): Pull out TILE_SIZE as a parameter to this module?
         
         let textures = await Promise.all([ 
             load_image(`/${this.terrain_url}`), 
             load_image(`/${this.boundary_url}`), 
-        ]);
+        ]) as HTMLImageElement[];
 
         this.elevation = this.regl.texture({ data: textures[0], mag: DEFAULT_INTERPOLATION, min: DEFAULT_INTERPOLATION });
         this.boundary = this.regl.texture({ data: textures[1], mag: DEFAULT_INTERPOLATION, min: DEFAULT_INTERPOLATION });
@@ -67,25 +93,26 @@ class Simulation {
                 target: this.H.front,
     
                 u_elevation: this.elevation,
-                u_boundary: this.boundary,
-    
-                u_upper_bank: parameters.upper_bank,
-                u_lower_bank: parameters.lower_bank,
-                u_bank_width: parameters.bank_width,
-                u_sediment_height_max: parameters.sediment_height_max,
-                u_sediment_height_min: parameters.sediment_height_min,
+                u_boundary: this.boundary
             })
         }
 
         this.loaded = true
     }
 
-    simulate (resources, parameters) {
-        if (parameters.running) { 
+    simulate (resources: RenderResources, simdata: SimulationData) {
+        assert_simulation_buffer(this.H)
+        assert_simulation_buffer(this.K)
+        assert_simulation_buffer(this.E)
+        assert_simulation_buffer(this.S)
+        assert_simulation_buffer(this.N)
+        assert_simulation_buffer(this.Q)
+        
+        if (simdata.state.running) { 
             console.log('step tiles');
 
             let s = performance.now()
-            for (let i = 0; i < parameters.updates_per_frame; i++) {
+            for (let i = 0; i < simdata.state.updates_per_frame; i++) {
                 // update Q
                 this.shaders.calculate_slope_field({
                     target: this.S.buffer,
@@ -100,7 +127,7 @@ class Simulation {
                 this.Q.swap();
 
                 // single averaging step
-                for (let i = 0; i < parameters.flux_averaging_steps; i++) {
+                for (let i = 0; i < simdata.state.flux_averaging_steps; i++) {
                     this.shaders.calculate_flow_field_averaging({
                         target: this.Q.back,
                         u_Q: this.Q.front,
@@ -121,7 +148,7 @@ class Simulation {
                 // stream-averaging-2, which iteratively solved 
                 // a laplace equation across the river domain.
                 let render_iterations_per_smoothing = 50
-                if (i % parameters.smoothing_iterations == 0 && resources.t % render_iterations_per_smoothing == 0) {
+                if (i % simdata.state.smoothing_iterations == 0 && resources.t % render_iterations_per_smoothing == 0) {
                     // update edges
                     this.shaders.calculate_edges({
                         target: this.E.back,
@@ -153,7 +180,7 @@ class Simulation {
 
                     // averaging passes.
                     
-                    for (let i = 0; i < parameters.smoothing_iterations; i++) {
+                    for (let i = 0; i < simdata.state.smoothing_iterations; i++) {
                         this.shaders.calculate_edge_averaging({
                             target: this.K.back,
                             u_K: this.K.front,
@@ -164,7 +191,7 @@ class Simulation {
                     }
 
                 
-                    for (let j = 0; j < parameters.smoothing_iterations; j++) {
+                    for (let j = 0; j < simdata.state.smoothing_iterations; j++) {
                         this.shaders.calculate_stream_averaging({
                             target: this.K.back,
                             u_K: this.K.front,
@@ -177,9 +204,9 @@ class Simulation {
                 
                 // calculate erosion and collapse.
                 if (
-                    parameters.run_erosion && 
-                    resources.t > parameters.non_erosive_timesteps &&
-                    i % parameters.water_updates_per_iteration == 0
+                    simdata.state.eroding && 
+                    resources.t > simdata.state.non_erosive_timesteps &&
+                    i % simdata.state.water_updates_per_iteration == 0
                     ) {
                     this.shaders.calculate_erosion_accretion({
                         target: this.H.back,
@@ -188,10 +215,10 @@ class Simulation {
                         u_K: this.K.front,
                         u_S: this.S.buffer,
 
-                        u_k_erosion: parameters.erosion_speed,
-                        u_k_accretion: parameters.accretion_speed,
-                        u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
-                        u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
+                        u_k_erosion: simdata.parameters.erosion_speed,
+                        u_k_accretion: simdata.parameters.accretion_speed,
+                        u_Q_accretion_upper_bound: simdata.parameters.accretion_upper_bound,
+                        u_Q_erosion_lower_bound: simdata.parameters.erosion_lower_bound,
                     })
                     this.H.swap();
 
@@ -202,11 +229,11 @@ class Simulation {
                         u_K: this.K.front,
                         u_S: this.S.buffer,
 
-                        u_k_erosion: parameters.erosion_speed,
-                        u_k_accretion: parameters.accretion_speed,
-                        u_Q_accretion_upper_bound: parameters.accretion_upper_bound,
-                        u_Q_erosion_lower_bound: parameters.erosion_lower_bound,
-                        u_min_failure_slope: parameters.min_failure_slope,
+                        u_k_erosion: simdata.parameters.erosion_speed,
+                        u_k_accretion: simdata.parameters.accretion_speed,
+                        u_Q_accretion_upper_bound: simdata.parameters.accretion_upper_bound,
+                        u_Q_erosion_lower_bound: simdata.parameters.erosion_lower_bound,
+                        u_min_failure_slope: simdata.parameters.min_failure_slope,
                     })
                     this.H.swap();
                 }
@@ -241,24 +268,17 @@ class Simulation {
                 this.shaders.calculate_Q_boundary_conditions({
                     target: this.Q.back,
                     u_Q: this.Q.front,
-                    u_boundary: this.boundary,
-                    u_upper_bank: parameters.upper_bank,
-                    u_lower_bank: parameters.lower_bank,
-                    u_bank_width: parameters.bank_width,
-                    u_sediment_height_max: parameters.sediment_height_max,
-                    u_sediment_height_min: parameters.sediment_height_min,
+                    u_boundary: this.boundary
                 })
                 this.Q.swap();
             }
             let e = performance.now();
-            let avg_update_time = (e - s) / parameters.updates_per_frame
+            let avg_update_time = (e - s) / simdata.state.updates_per_frame
             // console.log(`${resources.t} ${parameters.updates_per_frame} updates: ${e - s}ms (${avg_update_time.toFixed(3)}ms / step)`);
         }
     }
 
-    render (transform, resources) {}
-
     destroy () {}
 }
 
-export { Simulation };
+export { Simulation, assert_simulation_buffer };

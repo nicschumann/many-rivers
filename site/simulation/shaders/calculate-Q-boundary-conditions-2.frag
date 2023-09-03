@@ -5,13 +5,6 @@ varying vec2 v_uv;
 uniform sampler2D u_Q;
 uniform sampler2D u_boundary;
 
-uniform float u_upper_bank;
-uniform float u_lower_bank;
-uniform float u_bank_width;
-
-uniform float u_sediment_height_max;
-uniform float u_sediment_height_min;
-
 uniform vec2 u_resolution;
 
 void main() {

@@ -1,9 +1,9 @@
-import { View } from './view.js';
+import { View } from './view';
 
 
 class CrossSection extends View {
 
-    render(resources, parameters) {
+    render(resources, simdata, uidata) {
         if (this.parent == null || !this.parent.loaded) { return; }
 
         let transform = resources.transform_2d;
@@ -17,8 +17,8 @@ class CrossSection extends View {
 
         this.regl.clear({depth: 1.0});
         this.shaders.render_crosssection({
-            u_p1: parameters.p1,
-            u_p2: parameters.p2,
+            u_p1: uidata.p1,
+            u_p2: uidata.p2,
             u_H: this.parent.H.front,
 
             a_position: this.positions,

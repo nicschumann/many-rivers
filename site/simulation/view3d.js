@@ -1,6 +1,6 @@
 import { TILE_SIZE } from './constants';
 import { DomainMesh } from './mesh';
-import { View } from './view.js'
+import { View } from './view'
 
 
 class View3D extends View {

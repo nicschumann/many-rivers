@@ -1,24 +1,39 @@
-import { mat3 } from "gl-matrix";
+import { mat3, vec2 } from "gl-matrix";
 
-
-
-// import {View3DWireframe} from './View3dWireframe.js'
-import {View2D} from './view2d.js'
+import {View2D} from './view2d'
 import {View3D} from './view3d.js'
 import {CrossSection} from './section.js'
-import {Simulation} from './simulation.js'
+import {Simulation} from './simulation'
 import {Camera} from './camera.js'
 
 import { TERRAIN_SIZE, RENDER_SCALE, TARGET_FRAMETIME } from "./constants";
+import { SimulationData, UIData } from "@/store/index.js";
+import { Regl } from "regl";
+import { CompiledDrawCalls } from "./compile.js";
+import { View } from "./view.js";
+
+export type RenderResources = {
+    last_mouse_coords: vec2
+    dt: number
+    t: number
+    camera: Camera
+    transform_2d: mat3
+}
 
 class RenderContext {
-    constructor (parameters, regl=null, shaders=null) {
-        if (shaders == null) { console.error('No Shaders Supplied to RenderContext.') }
-        if (regl == null) { console.error('No Regl instance Supplied to RenderContext.') }
+    regl: Regl
+    shaders: CompiledDrawCalls
+    simulation: Simulation
+    views: View[]
+    resources: RenderResources
+    tile_center: vec2
+
+    constructor (regl: Regl, shaders: CompiledDrawCalls) {
+        if (typeof shaders == 'undefined') { console.error('No Shaders Supplied to RenderContext.') }
+        if (typeof regl == 'undefined') { console.error('No Regl instance Supplied to RenderContext.') }
 
         this.regl = regl
         this.shaders = shaders
-        this.parameters = parameters
 
 
         // this.simulation = new Tile(
@@ -45,7 +60,7 @@ class RenderContext {
         // );
 
 
-        this.tiles = [
+        this.views = [
             
             
 
@@ -59,35 +74,32 @@ class RenderContext {
         ];
 
         // hook up the cross section renderer
-        this.tiles.forEach(t => t.set_parent(this.simulation) );
-
-        this.tile_map = {};
+        this.views.forEach(t => t.set_parent(this.simulation) );
 
         this.resources = { 
             last_mouse_coords: [0,0],
             dt: TARGET_FRAMETIME,
             t: 0.0,
             camera: new Camera(
-                [this.tiles[0].x + 0.0, 0.25, this.tiles[0].y + 0.0],
-                [this.tiles[0].x + 0.5, 0.0, this.tiles[0].y + 0.5]
+                [this.views[0].x + 0.0, 0.25, this.views[0].y + 0.0],
+                [this.views[0].x + 0.5, 0.0, this.views[0].y + 0.5]
             ),
-            transform_2d: []
+            transform_2d: mat3.create()
         };
 
-        this.tile_center = [ this.tiles[0].x + 1.0, this.tiles[0].y + 0.5]
+        this.tile_center = [this.views[0].x + 1.0, this.views[0].y + 0.5]
 
         this.setup_transform();
-        this.simulation.get_resources(parameters);
-        this.tiles.forEach(t => t.get_resources(parameters) );
+        this.simulation.get_resources();
+        this.views.forEach(t => t.get_resources() );
     }
 
-    handle_input(input) {
-        let [x, y] = input.mouse_pos();
+    handle_input(input: any) {
+        let pos = input.mouse_pos();
 
         if (input.mouse_is_down() && !input.key_is_down('Shift') ) {
-            let [old_x, old_y] = this.resources.last_mouse_coords;
-            let [dx, dy] = [x - old_x, y - old_y];
-            console.log(dx, dy);            
+            // @ts-ignore
+            let [dx, dy] = vec2.sub([], pos, this.resources.last_mouse_coords)
 
             this.update_center([
                 -dx / window.innerWidth * 2.0 * (1 / RENDER_SCALE), 
@@ -95,18 +107,18 @@ class RenderContext {
             ]);
         }
 
-        this.resources.last_mouse_coords = [x, y];
+        this.resources.last_mouse_coords = pos
 
         this.resources.camera.handle_input(input);
     }
 
-    reset(tile=null) {
+    reset(tile : Simulation | null = null) {
         if (tile !== null) { this.simulation = tile; }
 
         this.setup_transform();
         this.simulation.get_resources();
-        this.tiles.forEach(t => t.set_parent(this.simulation) );
-        this.tiles.forEach(t => t.get_resources() );
+        this.views.forEach(t => t.set_parent(this.simulation) );
+        this.views.forEach(t => t.get_resources() );
         this.resources.t = 0;
     }
 
@@ -118,34 +130,37 @@ class RenderContext {
             -2 * TERRAIN_SIZE[1] / viewport[1],
         ]
 
+        // @ts-ignore
         let T_trans = mat3.fromTranslation([], [
             -this.tile_center[0],
             -this.tile_center[1]
         ])
 
+        // @ts-ignore
         let T_scale = mat3.fromScaling([], scalefactors);
         
+        // @ts-ignore
         this.resources.transform_2d = mat3.multiply([], T_scale, T_trans);
     }
 
-    render_tiles () {
+    render_tiles (simdata: SimulationData, uidata: UIData) {
         let s = performance.now();
 
-        this.simulation.simulate(this.resources, this.parameters);
-        this.resources.camera.step(this.resources, this.parameters);
+        this.simulation.simulate(this.resources, simdata);
+        this.resources.camera.step(this.resources, simdata);
 
-        this.tiles.forEach((tile) => {
+        this.views.forEach((view) => {
             this.regl.clear({depth: 1.0});
-            tile.render(this.resources, this.parameters); 
+            view.render(this.resources, simdata, uidata); 
         });
 
-        this.resources.t += (this.parameters.running) ? 1 : 0;
+        this.resources.t += (simdata.state.running) ? 1 : 0;
         
         // let e = performance.now();
         // console.log(`total render: ${e - s}ms`);
     }
 
-    update_center ([d_x, d_y]) {
+    update_center ([d_x, d_y]: number[]) {
         this.tile_center[0] += d_x;
         this.tile_center[1] += d_y;
     }

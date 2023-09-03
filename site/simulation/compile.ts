@@ -39,9 +39,9 @@ export interface CompiledDrawCalls {
     render_river: DrawCommand
 }
 
-let DOMAIN_MESH = new DomainMesh(window.regl, [512,512]);
-
 export function compile_shaders(regl: Regl): CompiledDrawCalls {
+
+    let DOMAIN_MESH = new DomainMesh(regl, [512,512]);
 
     const v_passthrough = require('./shaders/pass-through.vert').default
 
