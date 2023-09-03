@@ -5,7 +5,7 @@ interface OverlayButtonProps {
 
 export default function OverlayButton({ children }: OverlayButtonProps) {
     return (
-        <button className="border lowercase border-white w-40 rounded-3xl bg-transparent p-2 text-white">
+        <button className="border lowercase w-40 rounded-3xl bg-transparent p-2">
             {children}
         </button>
     )
