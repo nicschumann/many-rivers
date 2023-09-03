@@ -161,43 +161,58 @@ export const pointer_is_locked = () => {
     return document.pointerLockElement !== null
 }
 
+/**
+ * Non-exporting Handlers
+ */
+const mousedown_handler = e => {
+    const type = InputTypeEnum.MOUSE;
+    const selection = e.button;
+    set_input_down_bit(type, selection);
+}
+
+const mousemove_handler = e => {
+    let [dx, dy] = [e.movementX, e.movementY]
+    let [mx, my] = [e.clientX, e.clientY]
+
+    input_state[MOUSE_DELTA] = [dx, dy]
+    input_state[MOUSE_POS] = [mx, my]
+}
+
+const mouseup_handler = e => {
+    const type = InputTypeEnum.MOUSE;
+    const selection = e.button;
+    reset_input_down_bit(type, selection)
+}
+
+const keydown_handler = e => {
+    const type = InputTypeEnum.KEYS;
+    const selection = e.key;
+    set_input_down_bit(type, selection);
+}
+
+const keyup_handler = e => {
+    const type = InputTypeEnum.KEYS;
+    const selection = e.key;
+    reset_input_down_bit(type, selection);
+}
 
 export const setup_input_handlers = (window, pointer_lock_key = 'Enter') => {
-    if (input_state[INITIALIZED]) { return; }
 
-    window.addEventListener('mousedown', e => {
-        const type = InputTypeEnum.MOUSE;
-        const selection = e.button;
-        set_input_down_bit(type, selection);
-    })
+    const remove_handlers = () => {
+        window.removeEventListener('mousedown', mousedown_handler)
+        window.removeEventListener('mousemove', mousemove_handler)
+        window.removeEventListener('mouseup', mouseup_handler)
+        window.removeEventListener('keydown', keydown_handler)
+        window.removeEventListener('keyup', keyup_handler)
+    }
 
-    window.addEventListener('mousemove', e => {
-        let [dx, dy] = [e.movementX, e.movementY]
-        let [mx, my] = [e.clientX, e.clientY]
+    if (input_state[INITIALIZED]) { return remove_handlers }
 
-        input_state[MOUSE_DELTA] = [dx, dy]
-        input_state[MOUSE_POS] = [mx, my]
-    })
-
-    window.addEventListener('mouseup', e => {
-        const type = InputTypeEnum.MOUSE;
-        const selection = e.button;
-        reset_input_down_bit(type, selection)
-    })
-
-    window.addEventListener('keydown', e => {
-        
-
-        const type = InputTypeEnum.KEYS;
-        const selection = e.key;
-        set_input_down_bit(type, selection);
-    })
-
-    window.addEventListener('keyup', e => {
-        const type = InputTypeEnum.KEYS;
-        const selection = e.key;
-        reset_input_down_bit(type, selection);
-    })
+    window.addEventListener('mousedown', mousedown_handler)
+    window.addEventListener('mousemove', mousemove_handler)
+    window.addEventListener('mouseup', mouseup_handler)
+    window.addEventListener('keydown', keydown_handler)
+    window.addEventListener('keyup', keyup_handler)
 
     // let button = document.getElementById('pointer-toggle');
 
@@ -212,4 +227,6 @@ export const setup_input_handlers = (window, pointer_lock_key = 'Enter') => {
     // })
 
     input_state[INITIALIZED] = true;
-};
+
+    return remove_handlers
+}

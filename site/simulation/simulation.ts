@@ -101,16 +101,15 @@ class Simulation {
     }
 
     simulate (resources: RenderResources, simdata: SimulationData) {
-        assert_simulation_buffer(this.H)
-        assert_simulation_buffer(this.K)
-        assert_simulation_buffer(this.E)
-        assert_simulation_buffer(this.S)
-        assert_simulation_buffer(this.N)
-        assert_simulation_buffer(this.Q)
-        
-        if (simdata.state.running) { 
-            console.log('step tiles');
+        if (simdata.state.running && this.loaded) { 
 
+            assert_simulation_buffer(this.H)
+            assert_simulation_buffer(this.K)
+            assert_simulation_buffer(this.E)
+            assert_simulation_buffer(this.S)
+            assert_simulation_buffer(this.N)
+            assert_simulation_buffer(this.Q)
+            
             let s = performance.now()
             for (let i = 0; i < simdata.state.updates_per_frame; i++) {
                 // update Q

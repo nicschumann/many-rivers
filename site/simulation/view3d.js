@@ -41,9 +41,8 @@ class View3D extends View {
 
 
         } else if (!this.parent.loaded)  {
-            console.log('still loading!');
             // If we're still waiting for textures...
-            super.render(resources, parameters);
+            // super.render(resources, parameters);
 
         }
     }

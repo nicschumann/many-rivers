@@ -16,6 +16,7 @@ export type UIData = {
 }
 
 export type SimulationState = {
+    loaded: boolean
     running: boolean
     eroding: boolean
     
@@ -45,7 +46,7 @@ type State = {
 }
 
 type Actions = {
-    setSimState: (state: SimulationState) => void
+    setSimState: (stateUpdate: Partial<SimulationState>) => void
 }
 
 export const useApplicationState = create(
@@ -65,6 +66,7 @@ export const useApplicationState = create(
         },
         sim: {
             state: {
+                loaded: false,
                 running: false,
                 eroding: true,
 
@@ -84,14 +86,12 @@ export const useApplicationState = create(
             }  
         },
 
-        setSimState(newSimulationState: SimulationState) {
+        setSimState(stateUpdate: Partial<SimulationState>) {
             set((state) => {
                 const newState = {
                     ...state.sim.state,
-                    ...newSimulationState
+                    ...stateUpdate
                 }
-
-                console.log(newState)
 
                 state.sim.state = newState
             })            

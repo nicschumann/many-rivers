@@ -87,10 +87,16 @@ export default function SimulationRoot() {
 
         // setReglInstance(regl)
         // NOTE(Nic): this should move to the other event loop.
-        input.setup_input_handlers(window)
+        const remove_input_handlers = input.setup_input_handlers(window)
 
-        const intervalID = setInterval(() => {
+        const renderLoopID = setInterval(() => {
             renderContext.handle_input(input)
+            
+            if (renderContext.simulation.loaded && !simData.state.loaded) {
+                console.log('simulation loaded')
+                setSimState({loaded: true})
+            }
+
 
             renderContext.regl.clear({color: [0, 0, 0, 1]})
             renderContext.setup_transform()
@@ -196,13 +202,14 @@ export default function SimulationRoot() {
         window.addEventListener('keyup', keyupHandler)
 
         return () => {
-            clearInterval(intervalID)
+            clearInterval(renderLoopID)
             window.removeEventListener('keydown', keydownHandler)
-            window.removeEventListener('keyup', keyupHandler);
+            window.removeEventListener('keyup', keyupHandler)
+            remove_input_handlers()
         }
     }, [renderContext, simData, uiData])
 
     return (
-        <canvas ref={baseCanvas} className="h-screen w-screen border" />
+        <canvas ref={baseCanvas} className="h-screen w-screen" />
     )
 }

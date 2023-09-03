@@ -1,10 +1,10 @@
 import type { Regl } from "regl";
 
-const xy2i = (x, y, cells) => {
+const xy2i = (x: number, y: number, cells: [number, number]) => {
     return y * (cells[1] + 1) + x;
 }
 
-const make_data = ( cells ) => {
+const make_data = ( cells: [number, number] ) => {
     const dx = 1.0 / cells[0];
     const dy = 1.0 / cells[1];
 
@@ -57,11 +57,18 @@ const make_data = ( cells ) => {
 
 
 export class DomainMesh {
-    constructor (regl: Regl, cells) {
-        this.regl = regl;
-        this.cells = cells;
+    regl: Regl
+    cells: [number, number]
+    vertices: number[][]
+    indices: number[][]
+    uvs: number[][]
+    ids: number[][]
 
-        let [verts, inds, uvs, ids] = make_data(cells);
+    constructor (regl: Regl, dimensions: [number, number]) {
+        this.regl = regl;
+        this.cells = dimensions;
+
+        let [verts, inds, uvs, ids] = make_data(dimensions);
 
         this.vertices = verts
         this.indices = inds
