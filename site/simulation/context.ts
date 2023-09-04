@@ -59,6 +59,7 @@ class RenderContext {
             // new CrossSection(1.87, 0.8, 0, true, shaders, regl),
         ];
 
+        this.views[0].active = true
         this.views.forEach(t => t.set_parent(this.simulation) );
 
         this.resources = { 

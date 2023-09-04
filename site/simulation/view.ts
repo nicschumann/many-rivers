@@ -10,6 +10,7 @@ function assert_parent(parent: unknown): asserts parent {
 
 class View {
     is_testcase: boolean
+    active: boolean = false
     
     shaders: CompiledDrawCalls
     regl: Regl
