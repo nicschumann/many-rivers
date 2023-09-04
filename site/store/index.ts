@@ -1,7 +1,16 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
+export enum UIOverlayState {
+    DroneView = 0,
+    GroundView = 1,
+    SimTools = 2,
+    None = 3
+}
+
 export type UIData = {
+    active_overlay: UIOverlayState
+
     render_flux: boolean
     render_flux_magnitude: boolean
     render_curvature: boolean
@@ -46,6 +55,7 @@ type State = {
 }
 
 type Actions = {
+    setUIState: (stateUpdate: Partial<UIData>) => void
     setSimState: (stateUpdate: Partial<SimulationState>) => void
     setSimParameters: (stateUpdate: Partial<SimulationParameters>) => void
 }
@@ -53,6 +63,8 @@ type Actions = {
 export const useApplicationState = create(
     immer<State & Actions>((set, get) => ({
         ui: {
+            active_overlay: UIOverlayState.SimTools,
+
             render_flux: false,
             render_flux_magnitude: false,
             render_curvature: false,
@@ -85,6 +97,17 @@ export const useApplicationState = create(
                 erosion_lower_bound: 0.05,
                 min_failure_slope: 80.0,
             }  
+        },
+
+        setUIState(stateUpdate: Partial<UIData>) {
+            set((state) => {
+                const newState = {
+                    ...state.ui,
+                    ...stateUpdate
+                }
+
+                state.ui = newState
+            })            
         },
 
         setSimState(stateUpdate: Partial<SimulationState>) {

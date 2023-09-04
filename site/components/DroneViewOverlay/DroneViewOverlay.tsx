@@ -1,20 +1,19 @@
 'use client'
 
-import { useApplicationState } from "@/store";
+import { UIOverlayState, useApplicationState } from "@/store";
 import OverlayButton from "../OverlayButton/OverlayButton";
 import { classNames } from "@/utils";
-import { useEffect, useState } from "react";
-import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
-import { rivers, River } from "@/simulation/data/rivers";
+import { useState } from "react";
+import { River } from "@/simulation/data/rivers";
 import Link from "next/link";
 
 interface DroneViewOverlayProps {
     river: River
+    nextRiver: River
 }
 
-export default function DroneViewOverlay({ river }: DroneViewOverlayProps) {
+export default function DroneViewOverlay({ river, nextRiver }: DroneViewOverlayProps) {
     const [ overlayVisible, setOverlayVisible ] = useState(true)
-    const [nextRiver, setNextRiver] = useState<River>(river)
 
     const isRunning = useApplicationState(s => s.sim.state.running)
     const setRunning = useApplicationState(s => {
@@ -23,12 +22,11 @@ export default function DroneViewOverlay({ river }: DroneViewOverlayProps) {
         }
     })
 
-    useEffect(() => {
-        const otherRivers = Object.values(rivers).filter(r => r.slug !== river.slug)
-        const otherRiver = otherRivers[Math.floor(Math.random() * otherRivers.length)]
-
-        setNextRiver(otherRiver)
-    }, [river.slug])
+    const setOverlayState = useApplicationState(s => {
+        return (newOverlayState: UIOverlayState) => {
+            s.setUIState({active_overlay: newOverlayState})
+        }
+    })
 
     return (
         <div className={classNames(
@@ -40,14 +38,16 @@ export default function DroneViewOverlay({ river }: DroneViewOverlayProps) {
                         <Link href={`/rivers/${nextRiver.slug}`}>New River</Link>
                     </OverlayButton>
                 </div>
-                <div className="ml-auto text-red-500"><OverlayButton>simulation tools</OverlayButton></div>
+                <div onClick={() => setOverlayState(UIOverlayState.SimTools)} className="ml-auto">
+                    <OverlayButton>Simulation Tools</OverlayButton>
+                </div>
             </div>
 
             <div className="flex mt-auto w-full items-left">
-                <div className="text-red-500"><OverlayButton>info</OverlayButton></div>
+                <div className="text-red-500"><OverlayButton>Info</OverlayButton></div>
                 <div className="ml-auto flex">
-                    {/* <div className="text-white mr-2">{isRunning ? 'running' : 'paused'}</div>
-                    <div className="text-white mr-2">{isRunning ? 'running' : 'paused'}</div> */}
+                    <div className="text-white mr-10 py-2.5">metadata 1</div>
+                    <div className="text-white mr-10 py-2.5">metadata 2</div>
                     <div onClick={() => setRunning(!isRunning)} className="ml-auto">
                         <OverlayButton>{
                             isRunning 
@@ -56,7 +56,7 @@ export default function DroneViewOverlay({ river }: DroneViewOverlayProps) {
                             }
                         </OverlayButton>
                     </div>
-                    {/* <div className="text-white ml-2"></div> */}
+                    {/* <div className="text-white ml-2">Test</div> */}
                 </div>
             </div>
         </div>
