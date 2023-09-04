@@ -69,7 +69,7 @@ type Actions = {
 export const useApplicationState = create(
     immer<State & Actions>((set, get) => ({
         ui: {
-            active_overlay: UIOverlayState.SimTools,
+            active_overlay: UIOverlayState.DroneView,
 
             render_depth: true,
             render_flux: false,

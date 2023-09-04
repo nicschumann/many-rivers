@@ -38,8 +38,8 @@ export const rivers : {[slug: string]: River} = {
         },
         ui: {
             normalization_factor: 40.0,
-            color_contrast: 7.0,
-            color_normalization: 12.0
+            color_contrast: 10.0,
+            color_normalization: 7.0
         }
     },
     'hidalgo': {
@@ -124,8 +124,8 @@ export const rivers : {[slug: string]: River} = {
         },
         ui: {
             normalization_factor: 40.0,
-            color_contrast: 8.0,
-            color_normalization: 10.0
+            color_contrast: 9.0,
+            color_normalization: 8.0
         }
     },
     'san-luisito': {
@@ -146,8 +146,8 @@ export const rivers : {[slug: string]: River} = {
         },
         ui: {
             normalization_factor: 30.0,
-            color_contrast: 4.0,
-            color_normalization: 7.0
+            color_contrast: 4.5,
+            color_normalization: 6.0
         }
     }
 }
