@@ -4,7 +4,7 @@ import { View } from './view';
 class CrossSection extends View {
 
     render(resources, simdata, uidata) {
-        if (this.parent == null || !this.parent.loaded) { return; }
+        if (this.parent == null || !this.parent.loaded || !this.active) { return; }
 
         let transform = resources.transform_2d;
 
@@ -24,7 +24,8 @@ class CrossSection extends View {
             a_position: this.positions,
             a_uv: this.uvs,
             u_transform: transform,
-            u_color: this.loading_color
+            u_color: this.loading_color,
+            u_normalization_factor: uidata.normalization_factor
         });
     }
 }

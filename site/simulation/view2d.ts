@@ -12,7 +12,7 @@ class View2D extends View {
         assert_simulation_buffer(this.parent.K)
         assert_simulation_buffer(this.parent.E)
 
-        if (this.parent.loaded) {
+        if (this.parent.loaded && this.active) {
             
             // 2D RENDERING STEPS:
             let transform = resources.transform_2d;
@@ -108,15 +108,15 @@ class View2D extends View {
                 })
             } 
 
-            this.regl.clear({depth: 1.0});
-            this.shaders.render_section_line({
-                u_p1: uidata.p1,
-                u_p2: uidata.p2,
-                u_color: [0.65, 0.2, 0.0],
-                a_position: this.positions,
-                a_uv: this.uvs,
-                u_transform: transform,
-            })
+            // this.regl.clear({depth: 1.0});
+            // this.shaders.render_section_line({
+            //     u_p1: uidata.p1,
+            //     u_p2: uidata.p2,
+            //     u_color: [0.65, 0.2, 0.0],
+            //     a_position: this.positions,
+            //     a_uv: this.uvs,
+            //     u_transform: transform,
+            // })
 
         } else if (!this.parent.loaded) {
             console.log('still loading!');

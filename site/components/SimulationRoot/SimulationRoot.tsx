@@ -11,7 +11,7 @@ import { InputAPI } from "@/simulation/inputs"
 import { TARGET_FRAMETIME } from "@/simulation/constants"
 import { Simulation } from "@/simulation/simulation"
 
-import { useApplicationState } from "@/store"
+import { UIOverlayState, useApplicationState } from "@/store"
 import { River } from "@/simulation/data/rivers"
 
 interface SimulationRootProps {
@@ -26,6 +26,7 @@ export default function SimulationRoot({ river }: SimulationRootProps) {
     const simData = useApplicationState(state => state.sim)
     const setSimState = useApplicationState(state => state.setSimState)
     const setSimParameters = useApplicationState(state => state.setSimParameters)
+    const setUIState = useApplicationState(state => state.setUIState)
 
 
     /**
@@ -55,6 +56,7 @@ export default function SimulationRoot({ river }: SimulationRootProps) {
         const localRenderContext = new RenderContext(river, regl, shaders)
         setRenderContext(localRenderContext)
         setSimParameters(river.parameters)
+        setUIState(river.ui)
 
 
         // Resize Handler..
@@ -75,7 +77,7 @@ export default function SimulationRoot({ river }: SimulationRootProps) {
         return () => { 
             window.removeEventListener('resize', resizeHandler);            
         }
-    }, [river, setSimParameters])
+    }, [river, setSimParameters, setUIState])
 
 
     useEffect(() => {
@@ -104,6 +106,12 @@ export default function SimulationRoot({ river }: SimulationRootProps) {
                 setSimState({loaded: true})
             }
 
+            if (uiData.active_overlay == UIOverlayState.SimTools) {
+                renderContext.views.slice(1).forEach(v => { v.active = true })
+            } else {
+                renderContext.views.slice(1).forEach(v => { v.active = false })
+            }
+
             renderContext.regl.clear({color: [0, 0, 0, 1]})
             renderContext.setup_transform()
             renderContext.render_tiles(simData, uiData)
@@ -115,21 +123,6 @@ export default function SimulationRoot({ river }: SimulationRootProps) {
 
 
         const keydownHandler = (e: KeyboardEvent) => {
-            if (e.key == 'r') {
-                setSimState({loaded: false})
-
-                const new_tile = new Simulation(
-                    'parabola-testcase.png',
-                    'parabola-testcase.png',
-                    true,
-                    renderContext.shaders,
-                    renderContext.regl
-                );
-
-                renderContext.reset(new_tile);
-            }
-
-
             if (e.key == 'Shift') {
                 shift_key_is_down = true;
             }

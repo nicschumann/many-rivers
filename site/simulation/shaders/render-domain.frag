@@ -9,6 +9,8 @@ varying vec3 v_pos;
 
 uniform sampler2D u_H;
 uniform sampler2D u_N;
+uniform float u_color_normalization;
+uniform float u_color_contrast;
 
 vec3 ambient_light_color = vec3(0.55, 0.6, 1.0);
 
@@ -17,9 +19,12 @@ vec3 diffuse_light_color = vec3(0.6, 0.3, 0.2);
 
 
 void main() {
-    // Sample the terrain-rgb tile at the current fragment location.
+    // Sample the terrain-rgb tile ata the current fragment location.
 
-    vec3 terrain_color = vec3(0.65, 0.7, 0.44);
+    vec2 sediment = texture2D(u_H, v_uv).rg;
+    float t = ((sediment.x + sediment.y - u_color_contrast)) / u_color_normalization;
+
+    vec3 terrain_color = vec3(0.55, 0.6, 0.4) * t;
 
     float ambient_strength = 0.3;
     vec3 ambient = ambient_light_color * ambient_strength;

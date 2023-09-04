@@ -11,6 +11,7 @@ export enum UIOverlayState {
 export type UIData = {
     active_overlay: UIOverlayState
 
+    render_depth: boolean
     render_flux: boolean
     render_flux_magnitude: boolean
     render_curvature: boolean
@@ -22,6 +23,11 @@ export type UIData = {
 
     flux_magnitude_scale: number
     saturation_point: number
+
+
+    normalization_factor: number
+    color_contrast: number,
+    color_normalization: number
 }
 
 export type SimulationState = {
@@ -65,6 +71,7 @@ export const useApplicationState = create(
         ui: {
             active_overlay: UIOverlayState.SimTools,
 
+            render_depth: true,
             render_flux: false,
             render_flux_magnitude: false,
             render_curvature: false,
@@ -75,7 +82,11 @@ export const useApplicationState = create(
             p2:  [1.0, 0.5],
 
             flux_magnitude_scale: 10,
-            saturation_point: 0.0
+            saturation_point: 0.0,
+
+            normalization_factor: 20.0,
+            color_contrast: 6.0,
+            color_normalization: 5.0
         },
         sim: {
             state: {

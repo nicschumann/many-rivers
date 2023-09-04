@@ -5,6 +5,7 @@ varying vec2 v_uv;
 uniform vec2 u_p1;
 uniform vec2 u_p2;
 uniform sampler2D u_H;
+uniform float u_normalization_factor;
 
 vec2 p1p2_to_mxb(vec2 p1, vec2 p2) {
     float m = (p2.y - p1.y) / (p2.x - p1.x);
@@ -29,7 +30,7 @@ void main() {
     vec2 target_uv = (1.0 - a) * p_min + a * p_max;
     vec4 H = texture2D(u_H, target_uv);
     
-    float h_sf = 1.0 / 20.0;
+    float h_sf = 1.0 / u_normalization_factor;
     float SH_norm = ((H.x + H.y) * h_sf);
     float WH_norm = H.z  * h_sf;
 

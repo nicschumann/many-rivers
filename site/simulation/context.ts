@@ -1,7 +1,7 @@
 import { mat3, vec2 } from "gl-matrix";
 
 import {View2D} from './view2d'
-import {View3D} from './view3d.js'
+import {View3D} from './view3d'
 import {CrossSection} from './section.js'
 import {Simulation} from './simulation'
 import {Camera} from './camera.js'
@@ -37,13 +37,6 @@ class RenderContext {
         this.regl = regl
         this.shaders = shaders
 
-
-        // this.simulation = new Tile(
-        //     'simple-sine-testcase.png', // terrain map
-        //     'simple-sine-testcase.png', // boundary map
-        //     true // is this a testcase?
-        // );
-
         // erosion speed: 0.02, accretion speed: 0.01
         this.simulation = new Simulation(
             river.terrain_url, // terrain map
@@ -53,29 +46,19 @@ class RenderContext {
             regl
         );
 
-        // this.simulation = new Simulation(
-        //     'usgs-la-burrita-terrain.png', // terrain map
-        //     'usgs-la-burrita-terrain-boundary-simplified-flows.png', // boundary map
-        //     false, // is this a testcase?
-        //     shaders,
-        //     regl
-        // );
-
-
         this.views = [
-            
-            
-
+            // base map
             new View3D(0, 0, 0, true, shaders, regl),
-            
-            // new View3DWireframe(0, 0, 0, true),
 
-            // new View2D(-1.75, 1.25, 0, true, shaders, regl),
-            
-            // new CrossSection(-0.75, 1.25, 0, true, shaders, regl),
+            // top-left minimaps
+            // new View2D(-0.87, -0.8, 0, true, shaders, regl),
+            // new CrossSection(0.2, -0.8, 0, true, shaders, regl),
+
+            // // bottom-right minimaps
+            // new View2D(0.87, 0.8, 0, true, shaders, regl),
+            // new CrossSection(1.87, 0.8, 0, true, shaders, regl),
         ];
 
-        // hook up the cross section renderer
         this.views.forEach(t => t.set_parent(this.simulation) );
 
         this.resources = { 
@@ -83,8 +66,9 @@ class RenderContext {
             dt: TARGET_FRAMETIME,
             t: 0.0,
             camera: new Camera(
-                [this.views[0].x + 0.0, 0.25, this.views[0].y + 0.0],
-                [this.views[0].x + 0.5, 0.0, this.views[0].y + 0.5]
+                [this.views[0].x - 0.2, 0.5, this.views[0].y - 0.2], // position
+
+                [this.views[0].x + 0.5, 0.0, this.views[0].y + 0.5] // target
             ),
             transform_2d: mat3.create()
         };
@@ -101,15 +85,15 @@ class RenderContext {
 
         // console.log(pos)
 
-        if (input.mouse_is_down(0) && !input.key_is_down('Shift') ) {
-            // @ts-ignore
-            let [dx, dy] = vec2.sub([], pos, this.resources.last_mouse_coords)
+        // if (input.mouse_is_down(0) && !input.key_is_down('Shift') ) {
+        //     // @ts-ignore
+        //     let [dx, dy] = vec2.sub([], pos, this.resources.last_mouse_coords)
 
-            this.update_center([
-                -dx / window.innerWidth * 2.0 * (1 / RENDER_SCALE), 
-                -dy / window.innerHeight * 2.0 * (1 / RENDER_SCALE)
-            ]);
-        }
+        //     this.update_center([
+        //         -dx / window.innerWidth * 2.0 * (1 / RENDER_SCALE), 
+        //         -dy / window.innerHeight * 2.0 * (1 / RENDER_SCALE)
+        //     ]);
+        // }
 
         this.resources.last_mouse_coords = pos
 

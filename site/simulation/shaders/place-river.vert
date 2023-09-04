@@ -16,6 +16,7 @@ varying float v_valid;
 uniform mat4 u_transform;
 uniform vec3 u_basepoint;
 uniform vec2 u_resolution;
+uniform float u_y_offset;
 
 uniform sampler2D u_H;
 
@@ -51,7 +52,7 @@ void main() {
         W = 0.5 * W + 0.5 / neighbor_count * neighbors_W;
     }
     
-    vec3 displaced = u_basepoint + vec3(0., (S + W) * scale, 0.);
+    vec3 displaced = u_basepoint + vec3(0., (S + W + u_y_offset) * scale, 0.);
     vec3 position = a_position + displaced;
 
     v_uv = a_uv;

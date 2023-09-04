@@ -37,11 +37,16 @@ export interface CompiledDrawCalls {
     render_crosssection: DrawCommand
     render_domain: DrawCommand
     render_river: DrawCommand
+    render_river_depth: DrawCommand
+    render_river_flux: DrawCommand
+    render_river_curvature: DrawCommand
+    render_river_erosion_accretion: DrawCommand
 }
 
 export function compile_shaders(regl: Regl): CompiledDrawCalls {
 
     let DOMAIN_MESH = new DomainMesh(regl, TERRAIN_SIZE);
+    let DOMAIN_OVERLAY_MESH = new DomainMesh(regl, [256, 256]);
 
     const v_passthrough = require('./shaders/pass-through.vert').default
 
@@ -552,7 +557,8 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
             u_p2: regl.prop('u_p2'),
             u_H: regl.prop('u_H'),
             u_color: regl.prop('u_color'),
-            u_resolution: TILE_SIZE
+            u_normalization_factor: regl.prop('u_normalization_factor'),
+            u_resolution: TILE_SIZE,
         },
         primitive: "triangle strip",
         count: 4 
@@ -574,7 +580,9 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
             u_resolution: DOMAIN_MESH.cells,
     
             u_H: regl.prop('u_H'),
-            u_N: regl.prop('u_N')
+            u_N: regl.prop('u_N'),
+            u_color_contrast: regl.prop('u_color_contrast'),
+            u_color_normalization: regl.prop('u_color_normalization')
         },
         primitive: 'triangles',
         offset: 0,
@@ -600,7 +608,8 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     
             u_H: regl.prop('u_H'),
             u_N: regl.prop('u_N'),
-            u_view_pos: regl.prop('u_view_pos')
+            u_view_pos: regl.prop('u_view_pos'),
+            u_y_offset: regl.prop('u_y_offset')
         },
         primitive: 'triangles',
         offset: 0,
@@ -610,6 +619,145 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
             func: {src: 'src alpha', dst: 'one minus src alpha'}
         },
         count: DOMAIN_MESH.indices.length * 3.0
+    });
+
+    const render_river_depth = regl({
+        framebuffer: null,
+        vert: require('./shaders/place-river.vert').default,
+        frag: require('./shaders/render-river-overlay.frag').default,
+        attributes: {
+            a_position: DOMAIN_OVERLAY_MESH.vertices,
+            a_uv: DOMAIN_OVERLAY_MESH.uvs,
+            a_id: DOMAIN_OVERLAY_MESH.ids
+        },
+        elements: DOMAIN_OVERLAY_MESH.indices,
+        uniforms: {
+            u_transform: regl.prop('u_transform'),
+            u_basepoint: regl.prop('u_basepoint'),
+            u_resolution: DOMAIN_OVERLAY_MESH.cells,
+            u_tex_resolution: TILE_SIZE,
+    
+            u_H: regl.prop('u_H'),
+            u_N: regl.prop('u_N'),
+            u_Q: regl.prop('u_Q'),
+            u_view_pos: regl.prop('u_view_pos'),
+            u_saturation_point: regl.prop('u_saturation_point'),
+            u_y_offset: regl.prop('u_y_offset')
+        },
+        primitive: 'triangles',
+        offset: 0,
+        depth: { func: 'lequal' },
+        blend: {
+            enable: true,
+            func: {src: 'src alpha', dst: 'one minus src alpha'}
+        },
+        count: DOMAIN_OVERLAY_MESH.indices.length * 3.0
+    });
+
+    const render_river_flux = regl({
+        framebuffer: null,
+        vert: require('./shaders/place-river.vert').default,
+        frag: require('./shaders/render-flux.frag').default,
+        attributes: {
+            a_position: DOMAIN_OVERLAY_MESH.vertices,
+            a_uv: DOMAIN_OVERLAY_MESH.uvs,
+            a_id: DOMAIN_OVERLAY_MESH.ids
+        },
+        elements: DOMAIN_OVERLAY_MESH.indices,
+        uniforms: {
+            u_transform: regl.prop('u_transform'),
+            u_basepoint: regl.prop('u_basepoint'),
+            u_resolution: DOMAIN_OVERLAY_MESH.cells,
+            u_tex_resolution: TILE_SIZE,
+    
+            u_H: regl.prop('u_H'),
+            u_N: regl.prop('u_N'),
+            u_Q: regl.prop('u_Q'),
+            u_view_pos: regl.prop('u_view_pos'),
+            u_saturation_point: regl.prop('u_saturation_point'),
+            u_y_offset: regl.prop('u_y_offset')
+        },
+        primitive: 'triangles',
+        offset: 0,
+        depth: { func: 'lequal' },
+        blend: {
+            enable: true,
+            func: {src: 'src alpha', dst: 'one minus src alpha'}
+        },
+        count: DOMAIN_OVERLAY_MESH.indices.length * 3.0
+    });
+
+    const render_river_curvature = regl({
+        framebuffer: null,
+        vert: require('./shaders/place-river.vert').default,
+        frag: require('./shaders/render-curvature.frag').default,
+        attributes: {
+            a_position: DOMAIN_OVERLAY_MESH.vertices,
+            a_uv: DOMAIN_OVERLAY_MESH.uvs,
+            a_id: DOMAIN_OVERLAY_MESH.ids
+        },
+        elements: DOMAIN_OVERLAY_MESH.indices,
+        uniforms: {
+            u_transform: regl.prop('u_transform'),
+            u_basepoint: regl.prop('u_basepoint'),
+            u_resolution: DOMAIN_OVERLAY_MESH.cells,
+            u_tex_resolution: TILE_SIZE,
+
+            u_H: regl.prop('u_H'),
+            u_K: regl.prop('u_K'),
+            u_E: regl.prop('u_E'),
+            u_view_pos: regl.prop('u_view_pos'),
+            u_saturation_point: regl.prop('u_saturation_point'),
+            u_y_offset: regl.prop('u_y_offset')
+        },
+        primitive: 'triangles',
+        offset: 0,
+        depth: { func: 'lequal' },
+        blend: {
+            enable: true,
+            func: {src: 'src alpha', dst: 'one minus src alpha'}
+        },
+        count: DOMAIN_OVERLAY_MESH.indices.length * 3.0
+    });
+
+    const render_river_erosion_accretion = regl({
+        framebuffer: null,
+        vert: require('./shaders/place-river.vert').default,
+        frag: require('./shaders/render-erosion-accretion-values-2.frag').default,
+        attributes: {
+            a_position: DOMAIN_OVERLAY_MESH.vertices,
+            a_uv: DOMAIN_OVERLAY_MESH.uvs,
+            a_id: DOMAIN_OVERLAY_MESH.ids
+        },
+        elements: DOMAIN_OVERLAY_MESH.indices,
+        uniforms: {
+            u_transform: regl.prop('u_transform'),
+            u_basepoint: regl.prop('u_basepoint'),
+            u_resolution: DOMAIN_OVERLAY_MESH.cells,
+            u_tex_resolution: TILE_SIZE,
+
+            u_H: regl.prop('u_H'),
+            u_K: regl.prop('u_K'),
+            u_Q: regl.prop('u_Q'),
+            u_S: regl.prop('u_S'),
+
+            u_k_erosion: regl.prop('u_k_erosion'),
+            u_k_accretion: regl.prop('u_k_accretion'),
+            u_Q_accretion_upper_bound: regl.prop('u_Q_accretion_upper_bound'),
+            u_Q_erosion_lower_bound: regl.prop('u_Q_erosion_lower_bound'),
+
+            u_view_pos: regl.prop('u_view_pos'),
+            u_saturation_point: regl.prop('u_saturation_point'),
+            u_y_offset: regl.prop('u_y_offset')
+        },
+        primitive: 'triangles',
+        offset: 0,
+        depth: { func: 'lequal' },
+        blend: {
+            enable: true,
+            func: {src: 'src alpha', dst: 'one minus src alpha'}
+        },
+        count: DOMAIN_OVERLAY_MESH.indices.length * 3.0
     });
 
     return {
@@ -642,6 +790,10 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
         render_crosssection,
         render_tile_as_color,
         render_river,
-        render_domain
+        render_river_depth,
+        render_river_flux,
+        render_domain,
+        render_river_curvature,
+        render_river_erosion_accretion
     }
 }
