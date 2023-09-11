@@ -1,6 +1,6 @@
 # Many Rivers
 
-This is a single repository intended to unify and organize our computational work on the 2023 *Many Rivers* installation in Gualalajara, Mexico. Inside you'll find directories for each of the key pillars of the project: `simulation`, `rendering`, and `installation`. A goal of this repository is to make data and assets related to this installation as discoverable and reusable as possible. Fingers crossed for future deplyments 🙃.
+This is a single repository intended to unify and organize our computational work on the 2023 *Many Rivers*. Inside you'll find directories for each of the key pillars of the project: `simulation`, `rendering`, and `installation`. A goal of this repository is to make data and assets related to this installation as discoverable and reusable as possible. Fingers crossed for future deplyments 🙃.
 
 ## Simulation
 
