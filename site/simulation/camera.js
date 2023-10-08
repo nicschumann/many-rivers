@@ -1,4 +1,16 @@
 import { vec2, vec3, mat4 } from "gl-matrix";
+import { cartesian_to_spherical, spherical_to_cartesian } from "./transforms";
+
+const POS_DEBUG = (position, target) => {
+  console.log(`pos: ${position.map((x) => x.toFixed(3))}`);
+  console.log(`tar: ${target.map((x) => x.toFixed(3))}`);
+
+  const spherical = cartesian_to_spherical(position, target);
+  console.log(`sphr: ${spherical.map((x) => x.toFixed(3))}`);
+  const cartesian = spherical_to_cartesian(spherical, target);
+
+  console.log(`cart: ${cartesian.map((x) => x.toFixed(3))}\n\n`);
+};
 
 export class Camera {
   world_up = [0, -1, 0];
@@ -51,10 +63,14 @@ export class Camera {
     }
 
     if (input.key_is_down("w")) {
+      // POS_DEBUG(this.position, this.target);
+
       this.input_forces.push(this.front);
     }
 
     if (input.key_is_down("s")) {
+      // POS_DEBUG(this.position, this.target);
+
       let dir = vec3.negate([], this.front);
       this.input_forces.push(dir);
     }
@@ -86,7 +102,7 @@ export class Camera {
     vec3.copy(this.front, front_prime);
     vec3.copy(this.right, right_prime);
 
-    vec3.add(this.target, this.position, this.front);
+    // vec3.add(this.target, this.position, this.front);
 
     // rotation around the right vector.
     this.get_vectors();
@@ -96,7 +112,7 @@ export class Camera {
     // check to make sure front is not too close to the world_up vector.
     let gimbal_risk = vec3.dot(this.world_up, front_prime);
 
-    if (gimbal_risk < 0.95 && gimbal_risk > -0.95) {
+    if (gimbal_risk > 0.95 && gimbal_risk < -0.95) {
       vec3.copy(this.front, front_prime);
       vec3.copy(this.up, up_prime);
       vec3.add(this.target, this.position, front_prime);
@@ -169,7 +185,20 @@ export class Camera {
     vec3.cross(this.up, this.front, this.right);
     vec3.normalize(this.up, this.up);
 
-    vec3.add(this.target, this.position, this.front);
+    // vec3.add(this.target, this.position, this.front);
+  }
+
+  set_random_spherical_position() {
+    // NOTE(Nic): These are calibrated to do a reasonable
+    // random thing, we can customize these to each location, too.
+    const r = Math.random() * 0.2 + 1.3;
+    const theta = Math.random() * 0.5 + 0.75;
+    const phi = Math.random() * 2.0 * Math.PI;
+
+    const pos = spherical_to_cartesian([r, theta, phi], this.target);
+
+    this.position = pos;
+    this.get_vectors();
   }
 
   get_matrix() {
