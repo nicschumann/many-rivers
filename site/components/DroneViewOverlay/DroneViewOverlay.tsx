@@ -3,10 +3,9 @@
 import { UIOverlayState, useApplicationState } from "@/store";
 import OverlayButton from "../OverlayButton/OverlayButton";
 import { classNames } from "@/utils";
-import { useEffect, useState } from "react";
 import { River } from "@/simulation/data/rivers";
 import Link from "next/link";
-import { TARGET_FRAMETIME } from "@/simulation/constants";
+import PointerLockButton from "../PointerLockButton/PointerLockButton";
 
 interface DroneViewOverlayProps {
   river: River;
@@ -53,9 +52,10 @@ export default function DroneViewOverlay({
             <Link href={`/rivers/${nextRiver.slug}`}>New River</Link>
           </OverlayButton>
         </div>
+        <PointerLockButton className="ml-auto" />
         <div
+          className="ml-2"
           onClick={() => setOverlayState(UIOverlayState.SimTools)}
-          className="ml-auto"
         >
           <OverlayButton>
             <svg
@@ -82,23 +82,25 @@ export default function DroneViewOverlay({
       </div>
 
       <div className="flex mt-auto w-full items-left">
-        <div className="text-[#ff0000]">
-          <OverlayButton>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
-              />
-            </svg>
-          </OverlayButton>
+        <div className="text-[#ff0000] flex">
+          <div>
+            <OverlayButton>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+                />
+              </svg>
+            </OverlayButton>
+          </div>
         </div>
         <div className="ml-auto flex text-right">
           <div className="mr-10 py-2.5 w-32">{formatAsVolume(w)} </div>

@@ -4,7 +4,7 @@ import { View2D } from "./view2d";
 import { View3D } from "./view3d";
 import { CrossSection } from "./section.js";
 import { Simulation } from "./simulation";
-import { Camera } from "./camera.js";
+import { Camera } from "./camera";
 
 import { TERRAIN_SIZE, RENDER_SCALE, TARGET_FRAMETIME } from "./constants";
 import { SimulationData, UIData } from "@/store/index.js";
@@ -147,7 +147,7 @@ class RenderContext {
     let s = performance.now();
 
     this.simulation.simulate(this.resources, simdata);
-    this.resources.camera.step(this.resources, simdata);
+    this.resources.camera.step(this.resources);
 
     this.views.forEach((view) => {
       this.regl.clear({ depth: 1.0 });
