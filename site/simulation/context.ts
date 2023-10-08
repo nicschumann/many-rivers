@@ -20,6 +20,7 @@ export type RenderResources = {
   t: number;
   camera: Camera;
   transform_2d: mat3;
+  water_volume: number;
 };
 
 class RenderContext {
@@ -76,6 +77,7 @@ class RenderContext {
         [0.5, 0.0, 0.5] // target
       ),
       transform_2d: mat3.create(),
+      water_volume: 0,
     };
 
     // NOTE(Nic): sets a random view when the context is created
