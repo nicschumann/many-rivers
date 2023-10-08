@@ -128,8 +128,8 @@ class RenderContext {
       (-2 * TERRAIN_SIZE[1]) / viewport[1],
     ];
 
-    // @ts-ignore
     let T_trans = mat3.fromTranslation(
+      // @ts-ignore
       [],
       [-this.tile_center[0], -this.tile_center[1]]
     );
