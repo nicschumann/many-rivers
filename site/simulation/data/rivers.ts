@@ -42,6 +42,27 @@ export const rivers: { [slug: string]: River } = {
       color_normalization: 7.0,
     },
   },
+  "final-bends-0": {
+    name: "Final Bend 0",
+    slug: "final-bends-0",
+    testcase: false,
+
+    terrain_url: "final-bend-00-terrain.png",
+    boundary_url: "final-bend-00-boundary-simplified-flows.png",
+    // NOTE(Nic): tune this.
+    parameters: {
+      erosion_speed: 0.02,
+      accretion_speed: 0.018,
+      accretion_upper_bound: 0.001,
+      erosion_lower_bound: 0.05,
+      min_failure_slope: 80.0,
+    },
+    ui: {
+      normalization_factor: 40.0,
+      color_contrast: 10.0,
+      color_normalization: 7.0,
+    },
+  },
   "rio-bravo": {
     name: "Río Bravo",
     slug: "rio-bravo",
