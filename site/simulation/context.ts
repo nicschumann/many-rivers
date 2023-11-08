@@ -31,7 +31,12 @@ class RenderContext {
   resources: RenderResources;
   tile_center: vec2;
 
-  constructor(river: River, regl: Regl, shaders: CompiledDrawCalls) {
+  constructor(
+    river: River,
+    regl: Regl,
+    shaders: CompiledDrawCalls,
+    simdata: SimulationData
+  ) {
     if (typeof shaders == "undefined") {
       console.error("No Shaders Supplied to RenderContext.");
     }
@@ -86,8 +91,8 @@ class RenderContext {
     this.tile_center = [this.views[0].x + 1.0, this.views[0].y + 0.5];
 
     this.setup_transform();
-    this.simulation.get_resources();
-    this.views.forEach((t) => t.get_resources());
+    this.simulation.get_resources(simdata);
+    this.views.forEach((t) => t.get_resources(simdata));
   }
 
   handle_input(input: InputAPI) {
@@ -110,15 +115,15 @@ class RenderContext {
     this.resources.camera.handle_input(input);
   }
 
-  reset(tile: Simulation | null = null) {
+  reset(tile: Simulation | null = null, simdata: SimulationData) {
     if (tile !== null) {
       this.simulation = tile;
     }
 
     this.setup_transform();
-    this.simulation.get_resources();
+    this.simulation.get_resources(simdata);
     this.views.forEach((t) => t.set_parent(this.simulation));
-    this.views.forEach((t) => t.get_resources());
+    this.views.forEach((t) => t.get_resources(simdata));
     this.resources.t = 0;
   }
 

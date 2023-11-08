@@ -69,7 +69,7 @@ class Simulation {
     this.t = 0.0;
   }
 
-  async get_resources() {
+  async get_resources(simdata: SimulationData) {
     // NOTE(Nic): Factor this so that it just wants Float32Array of the right length?
     // NOTE(Nic): Pull out TILE_SIZE as a parameter to this module?
 
@@ -117,6 +117,7 @@ class Simulation {
 
         u_elevation: this.elevation,
         u_boundary: this.boundary,
+        u_water_depth: simdata.parameters.initial_water,
       });
     }
 

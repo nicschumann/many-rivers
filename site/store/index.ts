@@ -47,6 +47,7 @@ export type SimulationParameters = {
   accretion_upper_bound: number;
   erosion_lower_bound: number;
   min_failure_slope: number;
+  initial_water: number;
 };
 
 export type SimulationData = {
@@ -94,7 +95,7 @@ export const useApplicationState = create(
         eroding: true,
 
         non_erosive_timesteps: 500,
-        water_updates_per_iteration: 20,
+        water_updates_per_iteration: 100,
         smoothing_iterations: 40,
         flux_averaging_steps: 0,
         updates_per_frame: 50,
@@ -106,6 +107,7 @@ export const useApplicationState = create(
         accretion_upper_bound: 0.001,
         erosion_lower_bound: 0.05,
         min_failure_slope: 80.0,
+        initial_water: 2.0,
       },
     },
 

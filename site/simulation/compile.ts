@@ -71,6 +71,7 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     uniforms: {
       u_elevation: regl.prop("u_elevation"),
       u_boundary: regl.prop("u_boundary"),
+      u_water_depth: regl.prop("u_water_depth"),
 
       u_upper_bank: regl.prop("u_upper_bank"),
       u_lower_bank: regl.prop("u_lower_bank"),
