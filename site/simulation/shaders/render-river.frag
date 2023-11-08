@@ -3,7 +3,7 @@
 
 precision highp float;
 
-#define RAYMARCH_STEPS 5000
+#define RAYMARCH_STEPS 20
 
 varying float v_W;
 varying float v_S;
@@ -21,7 +21,7 @@ uniform vec3 u_basepoint;
 vec3 ambient_light_color = vec3(0.0, -0.1, 1.0);
 
 vec3 diffuse_light_position = vec3(0.0, 0.1 , 0.0) + u_basepoint;
-vec3 diffuse_light_color = vec3(0.2, 0.4, 0.5);
+vec3 diffuse_light_color = vec3(0.2, 0.5, 0.7);
 
 const float scale = 0.001;
 
@@ -104,6 +104,6 @@ void main() {
         // vec3(0.3 - length(p_curr - p_start) * 2.) * vec3(0.2, 0.4, 0.5),
         // vec3(spec) * diffuse_light_color + scattering,
         // normal * 0.5 + 0.5,
-        length(p_curr - p_start) / 0.03
+        length(p_curr - p_start) / 0.007
     );
 }

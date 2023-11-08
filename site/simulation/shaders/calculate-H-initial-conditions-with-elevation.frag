@@ -4,6 +4,7 @@ varying vec2 v_uv;
 
 uniform sampler2D u_elevation;
 uniform sampler2D u_boundary;
+uniform float u_water_depth;
 
 uniform vec2 u_resolution;
 
@@ -22,14 +23,13 @@ void main() {
 
     float BH = 1.0; // 1.0m over 2.5km
 
-    float SH = max(sediment_height(v_uv), 6.0);
+    float SH = sediment_height(v_uv);
     // 6.0 is a floor constant taken from the Matamoros DEM histogram.
     
     float WH = 0.0;
     float mask = texture2D(u_boundary, uv).a;
-    // if (mask > 0.0) { WH = 0.3 * (1.0 - uv.x); }
-    if (mask > 0.0) { WH = 4.0; }
 
+    if (mask > 0.0) { WH = u_water_depth; }
 
     gl_FragColor = vec4(
         BH, SH, WH, 0.0
