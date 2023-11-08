@@ -9,7 +9,7 @@ import { RenderContext } from "@/simulation/context";
 import { InputAPI } from "@/simulation/inputs";
 import { TARGET_FRAMETIME } from "@/simulation/constants";
 
-import { UIOverlayState, useApplicationState } from "@/store";
+import { SimulationData, UIOverlayState, useApplicationState } from "@/store";
 import { River } from "@/simulation/data/rivers";
 
 interface SimulationRootProps {

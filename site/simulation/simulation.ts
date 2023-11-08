@@ -302,7 +302,7 @@ class Simulation {
           for (let i = 0; i < fb.length; i += 1) {
             if (i % 4 == 2) {
               // blue channel
-              water_m3 += fb[i];
+              water_m3 += fb[i] > 0.01 ? 1 : 0;
             }
           }
 
