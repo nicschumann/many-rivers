@@ -21,5 +21,9 @@ if __name__ == '__main__':
 
     rgb = read_rgb(filepath)
     dem = rgb2dem(rgb)
+
+    print(dem.min())
+    print(dem.max())
+
     
     boundary = write_boundary(dem, args.z, write=True, name=f'{filename}-boundary')
