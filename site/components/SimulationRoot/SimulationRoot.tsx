@@ -58,10 +58,14 @@ export default function SimulationRoot({
     });
 
     const shaders = compile_shaders(regl);
-    console.log(simData);
-    const localRenderContext = new RenderContext(river, regl, shaders, simData);
 
-    // NOTE(Nic): generate a random initial position for the camera on load
+    // NOTE(Nic): Make RenderContext take sim parameters only.
+    const localRenderContext = new RenderContext(
+      river,
+      regl,
+      shaders,
+      river.parameters
+    );
 
     setRenderContext(localRenderContext);
     setSimParameters(river.parameters);

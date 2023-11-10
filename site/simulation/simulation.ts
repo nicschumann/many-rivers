@@ -2,7 +2,7 @@ import { TILE_SIZE, DEFAULT_INTERPOLATION } from "./constants";
 import { DoubleFramebuffer, SingleFramebuffer } from "./buffer";
 import { CompiledDrawCalls } from "./compile";
 import { Regl, Texture2D } from "regl";
-import { SimulationData } from "@/store";
+import { SimulationData, SimulationParameters } from "@/store";
 import { RenderResources } from "./context";
 
 const load_image = (url: string) => {
@@ -69,7 +69,7 @@ class Simulation {
     this.t = 0.0;
   }
 
-  async get_resources(simdata: SimulationData) {
+  async get_resources(simdata: SimulationParameters) {
     // NOTE(Nic): Factor this so that it just wants Float32Array of the right length?
     // NOTE(Nic): Pull out TILE_SIZE as a parameter to this module?
 
@@ -117,7 +117,7 @@ class Simulation {
 
         u_elevation: this.elevation,
         u_boundary: this.boundary,
-        u_water_depth: simdata.parameters.initial_water,
+        u_water_depth: simdata.initial_water,
       });
     }
 
@@ -307,6 +307,8 @@ class Simulation {
           }
 
           resources.water_volume = water_m3;
+
+          console.log(fb[0], fb[1], fb[2], fb[3]);
         });
       }
     }
