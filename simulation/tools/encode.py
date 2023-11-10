@@ -165,15 +165,15 @@ if __name__ == '__main__':
 
     parser.add_argument('--input', '-i', action='store', type=str, help='Path to the .png file containing the DEM in terrain rgb format.')
     parser.add_argument('--meta', '-m', action='store', type=str, required=True, help='DEM elevations below this level are considered underwater.')
+    parser.add_argument('--debug', '-d', action='store_true', required=False, help='Show debugging information in the output. Turn off for production viable stuff.')
     args = parser.parse_args()
 
     dem_raw = read_tif(args.input)
     dem_meta = json.load(open(args.meta, 'r'))
 
     domain_base_x, domain_base_y = dem_meta['domain_basepoint']
-    river_z_plane = dem_meta['river_z_plane']
-    river_base_x, river_base_y = dem_meta['river_basepoint']
-
+    
+    
     # 1. Crop and write domain as a terrain file.
     dem = crop_dem(dem_raw, domain_base_y, domain_base_x) # y, then x
     dem_rgba = dem2rgb(dem)
@@ -182,12 +182,39 @@ if __name__ == '__main__':
     test = imread(Path(args.input).with_suffix('.terrain.png'))
     test_dem = rgb2dem(test)
     recorded_error = dem - test_dem
-    print(f'max positive deviation: {recorded_error.max()} max negative deviation: {recorded_error.min()}')
+
+    print(f'min: {dem.min()} | max: {dem.max()}')
+    print(f'e+: {recorded_error.max():0.3f} | e-: {recorded_error.min():0.3f}')
     
 
     # 2. Flood fill and identify river
-    _, boundary = dem2boundary(dem, river_z_plane)
-    boundary, _  = flood_fill_boundary(boundary, (river_base_y, river_base_x)) # y, then x
+    
+
+    if "river_basepoint" in dem_meta and "river_z_plane" in dem_meta:
+      river_z_plane = dem_meta['river_z_plane']
+      boundary, boundary_f32 = dem2boundary(dem, river_z_plane)
+
+      river_base_x, river_base_y = dem_meta['river_basepoint']
+      boundary, _ = flood_fill_boundary(boundary_f32, (river_base_y, river_base_x)) # y, then x
+    
+    elif "river_basepoints" in dem_meta \
+        and "river_z_planes" in dem_meta \
+        and len(dem_meta["river_basepoints"]) == len(dem_meta["river_z_planes"]):
+        
+        boundary = np.zeros((dem.shape[0], dem.shape[1], 4), dtype=np.uint8)
+
+        for i, (x, y) in enumerate(dem_meta["river_basepoints"]):
+          river_z_plane = dem_meta["river_z_planes"][i]
+          _, boundary_f32 = dem2boundary(np.copy(dem), river_z_plane)
+          boundary_prime, _ = flood_fill_boundary(boundary_f32, (y, x)) # y, then x   
+          boundary += boundary_prime
+          
+          if args.debug:
+              boundary[y-2:y+3, x-2:x+3, :] = np.array([255, 0, 255, 255])
+
+    else:
+        print(f"Your metadata file must have either 'river_basepoint' and 'river_z_plane  as keys, or 'river_basepoints' and 'river_z_planes' as keys.")
+        exit(1)
 
     x_in, y_in = get_points_for_edge(dem_meta["inflow"])
     x_out, y_out = get_points_for_edge(dem_meta["outflow"])
