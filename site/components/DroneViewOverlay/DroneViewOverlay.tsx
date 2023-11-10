@@ -18,6 +18,10 @@ const formatAsYears = (t: number): string => {
   return `${t.toFixed(0)} steps`;
 };
 
+const formatAsLatLong = (t: [number, number]): string => {
+  return `${t[0].toFixed(5)}, ${t[1].toFixed(5)}`;
+};
+
 const formatAsVolume = (w: number): string => {
   return `${Math.round(w).toLocaleString("es-MX")} / ${(
     512 * 512
@@ -25,6 +29,7 @@ const formatAsVolume = (w: number): string => {
 };
 
 export default function DroneViewOverlay({
+  river,
   nextRiver,
   t,
   w,
@@ -74,6 +79,9 @@ export default function DroneViewOverlay({
           </div>
         </div>
         <div className="ml-auto flex">
+          <div className="mr-10 py-1 w-72">
+            {formatAsLatLong(river.coordinates)}{" "}
+          </div>
           <div className="mr-10 py-1 w-72">{formatAsVolume(w)} </div>
           <div className="mr-10 py-1 w-72">{formatAsYears(t)}</div>
           <div
