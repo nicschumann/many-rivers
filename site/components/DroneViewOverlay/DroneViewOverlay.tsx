@@ -3,9 +3,10 @@
 import { UIOverlayState, useApplicationState } from "@/store";
 import OverlayButton from "../OverlayButton/OverlayButton";
 import { classNames } from "@/utils";
-import { River } from "@/simulation/data/rivers";
+import { River, rivers } from "@/simulation/data/rivers";
 import Link from "next/link";
 import PointerLockButton from "../PointerLockButton/PointerLockButton";
+import RiverLocations from "../RiverLocations/RiverLocations";
 
 interface DroneViewOverlayProps {
   river: River;
@@ -59,6 +60,8 @@ export default function DroneViewOverlay({
             <Link href={`/rivers/${nextRiver.slug}`}>River</Link>
           </OverlayButton>
         </div>
+        {/* Locations overlay... */}
+        <RiverLocations currentSlug={river.slug} />
         <PointerLockButton className="ml-auto" />
         <div
           className="ml-2"

@@ -24,7 +24,7 @@ export default function River({ params }: { params: { name: string } }) {
   }
 
   return (
-    <main className="relative h-screen w-screen">
+    <main className="relative h-screen w-screen bg-black">
       <SimulationRoot river={rivers[river_id]} setT={setT} setW={setW} />
       <SimulationOverlay river={rivers[river_id]} t={t} w={w} />
     </main>
