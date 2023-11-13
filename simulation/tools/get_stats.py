@@ -8,7 +8,7 @@ from preprocess import split_name, read_rgb, rgb2dem, write_boundary
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
-        description='Builds a river boundary mask from a terrain RGB file.'
+        description='Gets min, max, and mean elevations in the DEM.'
     )
 
     parser.add_argument('filepath', action='store', type=str, help='Path to the .png file containing the DEM in terrain rgb format.')

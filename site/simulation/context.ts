@@ -7,7 +7,7 @@ import { Simulation } from "./simulation";
 import { Camera } from "./camera";
 
 import { TERRAIN_SIZE, RENDER_SCALE, TARGET_FRAMETIME } from "./constants";
-import { SimulationData, UIData } from "@/store/index.js";
+import { SimulationData, SimulationParameters, UIData } from "@/store/index.js";
 import { Regl } from "regl";
 import { CompiledDrawCalls } from "./compile.js";
 import { View } from "./view.js";
@@ -35,7 +35,7 @@ class RenderContext {
     river: River,
     regl: Regl,
     shaders: CompiledDrawCalls,
-    simdata: SimulationData
+    simdata: SimulationParameters
   ) {
     if (typeof shaders == "undefined") {
       console.error("No Shaders Supplied to RenderContext.");
@@ -115,7 +115,7 @@ class RenderContext {
     this.resources.camera.handle_input(input);
   }
 
-  reset(tile: Simulation | null = null, simdata: SimulationData) {
+  reset(tile: Simulation | null = null, simdata: SimulationParameters) {
     if (tile !== null) {
       this.simulation = tile;
     }

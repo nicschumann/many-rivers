@@ -2,7 +2,7 @@ import { Regl } from "regl";
 import { CompiledDrawCalls } from "./compile";
 import { Simulation } from "./simulation";
 import { RenderResources } from "./context";
-import { SimulationData, UIData } from "@/store";
+import { SimulationData, SimulationParameters, UIData } from "@/store";
 
 function assert_parent(parent: unknown): asserts parent {
   if (typeof parent == "undefined") {
@@ -83,7 +83,7 @@ class View {
     // this.update_positions();
   }
 
-  get_resources(simdata: SimulationData) {}
+  get_resources(simdata: SimulationParameters) {}
 
   render(resources: RenderResources, simdata: SimulationData, uidata: UIData) {
     this.shaders.render_tile_as_color({

@@ -2,7 +2,7 @@ precision highp float;
 
 varying vec2 v_uv;
 
-uniform sampler2D u_elevation;
+uniform highp sampler2D u_elevation;
 uniform sampler2D u_boundary;
 uniform float u_water_depth;
 
@@ -23,13 +23,15 @@ void main() {
 
     float BH = 1.0; // 1.0m over 2.5km
 
+    vec4 rgba = texture2D(u_elevation, v_uv);
     float SH = sediment_height(v_uv);
-    // 6.0 is a floor constant taken from the Matamoros DEM histogram.
     
     float WH = 0.0;
     float mask = texture2D(u_boundary, uv).a;
 
     if (mask > 0.0) { WH = u_water_depth; }
+
+    // gl_FragColor = rgba;
 
     gl_FragColor = vec4(
         BH, SH, WH, 0.0

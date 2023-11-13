@@ -1,6 +1,7 @@
 export type River = {
   name: string;
   slug: string;
+  coordinates: [number, number];
   testcase: false;
 
   terrain_url: string;
@@ -22,39 +23,18 @@ export type River = {
 };
 
 export const rivers: { [slug: string]: River } = {
-  "el-horcon": {
-    name: "El Horcón",
-    slug: "el-horcon",
-    testcase: false,
-
-    terrain_url: "usgs-el-horcon-terrain.png",
-    boundary_url: "usgs-el-horcon-terrain-boundary-simplified-flows.png",
-
-    parameters: {
-      erosion_speed: 0.02,
-      accretion_speed: 0.018,
-      accretion_upper_bound: 0.001,
-      erosion_lower_bound: 0.05,
-      min_failure_slope: 80.0,
-      initial_water: 1.5,
-    },
-    ui: {
-      normalization_factor: 40.0,
-      color_contrast: 10.0,
-      color_normalization: 5.0,
-    },
-  },
   /**
    * NOTE(Nic): blows up immediately with these params...
    * I think it has to do with extreme noise in this DEM...
    */
-  "final-bends-00": {
+  ilkrsr: {
     name: "Final Bend 0",
-    slug: "final-bends-00",
+    slug: "ilkrsr",
+    coordinates: [26.17488, -98.39611],
     testcase: false,
 
-    terrain_url: "final-bend-00-terrain.png",
-    boundary_url: "final-bend-00-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-00.terrain.png",
+    boundary_url: "final-bend-00.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.002,
@@ -70,13 +50,14 @@ export const rivers: { [slug: string]: River } = {
       color_normalization: 12.0,
     },
   },
-  "final-bends-01": {
+  maf6rw: {
     name: "Final Bend 1",
-    slug: "final-bends-01",
+    slug: "maf6rw",
+    coordinates: [26.07172, -98.2383],
     testcase: false,
 
-    terrain_url: "final-bend-01-terrain.png",
-    boundary_url: "final-bend-01-terrain-boundary-simplified-flows-manual.png",
+    terrain_url: "final-bend-01.terrain.png",
+    boundary_url: "final-bend-01.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.02,
@@ -84,7 +65,7 @@ export const rivers: { [slug: string]: River } = {
       accretion_upper_bound: 0.001,
       erosion_lower_bound: 0.05,
       min_failure_slope: 80.0,
-      initial_water: 1.0,
+      initial_water: 2.0,
     },
     ui: {
       normalization_factor: 40.0,
@@ -93,13 +74,14 @@ export const rivers: { [slug: string]: River } = {
     },
   },
 
-  "final-bends-02": {
+  hckgux: {
     name: "Final Bend 2",
-    slug: "final-bends-02",
+    slug: "hckgux",
+    coordinates: [26.0946613, -98.2702162],
     testcase: false,
 
-    terrain_url: "final-bend-02-terrain.png",
-    boundary_url: "final-bend-02-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-02.terrain.png",
+    boundary_url: "final-bend-02.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.02,
@@ -115,17 +97,15 @@ export const rivers: { [slug: string]: River } = {
       color_normalization: 11.0,
     },
   },
-  /**
-   * NOTE(Nic): blows up immediately with these params...
-   * I think it has to do with extreme noise in this DEM...
-   */
-  "final-bends-03": {
+
+  d4q9kf: {
     name: "Final Bend 3",
-    slug: "final-bends-03",
+    slug: "d4q9kf",
+    coordinates: [26.11572, -98.28185],
     testcase: false,
 
-    terrain_url: "final-bend-03-terrain.png",
-    boundary_url: "final-bend-03-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-03.terrain.png",
+    boundary_url: "final-bend-03.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.02,
@@ -141,13 +121,15 @@ export const rivers: { [slug: string]: River } = {
       color_normalization: 11.0,
     },
   },
-  "final-bends-04": {
+
+  ouvkf8: {
     name: "Final Bend 4",
-    slug: "final-bends-04",
+    slug: "ouvkf8",
+    coordinates: [26.06736, -98.07864],
     testcase: false,
 
-    terrain_url: "final-bend-04-terrain.png",
-    boundary_url: "final-bend-04-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-04.terrain.png",
+    boundary_url: "final-bend-04.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.02,
@@ -167,13 +149,14 @@ export const rivers: { [slug: string]: River } = {
    * NOTE(Nic): This bend looks really nice. No defects or lidar errors.
    * Consider pulling other river segments for around this area.
    */
-  "final-bends-05": {
+  rmalox: {
     name: "Final Bend 5",
-    slug: "final-bends-05",
+    slug: "rmalox",
+    coordinates: [26.05842, -97.89649],
     testcase: false,
 
-    terrain_url: "final-bend-05-terrain.png",
-    boundary_url: "final-bend-05-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-05.terrain.png",
+    boundary_url: "final-bend-05.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.02,
@@ -189,17 +172,18 @@ export const rivers: { [slug: string]: River } = {
       color_normalization: 7.5,
     },
   },
+
   /**
-   * NOTE(Nic): This bend looks really nice. No defects or lidar errors.
-   * Consider pulling other river segments for around this area.
+   * NOTE(Nic): Rio Rico
    */
-  "final-bends-06": {
+  rt5kfy: {
     name: "Final Bend 6",
-    slug: "final-bends-06",
+    slug: "rt5kfy",
+    coordinates: [26.03601, -97.66267],
     testcase: false,
 
-    terrain_url: "final-bend-06-terrain.png",
-    boundary_url: "final-bend-06-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-06.terrain.png",
+    boundary_url: "final-bend-06.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.02,
@@ -211,17 +195,18 @@ export const rivers: { [slug: string]: River } = {
     },
     ui: {
       normalization_factor: 40.0,
-      color_contrast: 10.0,
-      color_normalization: 7.0,
+      color_contrast: 9.0,
+      color_normalization: 6.5,
     },
   },
-  "final-bends-07": {
+  rbu1ks: {
     name: "Final Bend 7",
-    slug: "final-bends-07",
+    slug: "rbu1ks",
+    coordinates: [25.94939, -97.24986],
     testcase: false,
 
-    terrain_url: "final-bend-07-terrain.png",
-    boundary_url: "final-bend-07-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-07.terrain.png",
+    boundary_url: "final-bend-07.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
       erosion_speed: 0.02,
@@ -238,13 +223,14 @@ export const rivers: { [slug: string]: River } = {
     },
   },
 
-  "rio-bravo": {
-    name: "Río Bravo",
-    slug: "rio-bravo",
+  xerpfb: {
+    name: "Final Bend 8",
+    slug: "xerpfb",
+    coordinates: [25.94939, -97.24986],
     testcase: false,
 
-    terrain_url: "usgs-rio-bravo-terrain.png",
-    boundary_url: "usgs-rio-bravo-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-08.terrain.png",
+    boundary_url: "final-bend-08.boundary.png",
 
     parameters: {
       erosion_speed: 0.02,
@@ -256,17 +242,19 @@ export const rivers: { [slug: string]: River } = {
     },
     ui: {
       normalization_factor: 40.0,
-      color_contrast: 8.0,
-      color_normalization: 9.5,
+      color_contrast: 3.0,
+      color_normalization: 4.5,
     },
   },
-  hidalgo: {
-    name: "Hidalgo",
-    slug: "hidalgo",
+
+  sgn9lm: {
+    name: "Final Bend 9",
+    slug: "sgn9lm",
+    coordinates: [26.0614541, -97.8665745],
     testcase: false,
 
-    terrain_url: "usgs-hidalgo-terrain.png",
-    boundary_url: "usgs-hidalgo-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-09.terrain.png",
+    boundary_url: "final-bend-09.boundary.png",
 
     parameters: {
       erosion_speed: 0.02,
@@ -274,21 +262,47 @@ export const rivers: { [slug: string]: River } = {
       accretion_upper_bound: 0.001,
       erosion_lower_bound: 0.05,
       min_failure_slope: 80.0,
-      initial_water: 2.0,
+      initial_water: 1.5,
     },
     ui: {
-      normalization_factor: 60.0,
-      color_contrast: 20.0,
-      color_normalization: 7.0,
+      normalization_factor: 40.0,
+      color_contrast: 10.0,
+      color_normalization: 5.0,
     },
   },
-  "las-rusias": {
-    name: "Las Rusias",
-    slug: "las-rusias",
+
+  fin6uy: {
+    name: "Final Bend 10",
+    slug: "fin6uy",
+    coordinates: [25.9560915, -97.293322],
     testcase: false,
 
-    terrain_url: "usgs-las-rusias-terrain.png",
-    boundary_url: "usgs-las-rusias-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-10.terrain.png",
+    boundary_url: "final-bend-10.boundary.png",
+
+    parameters: {
+      erosion_speed: 0.02,
+      accretion_speed: 0.018,
+      accretion_upper_bound: 0.001,
+      erosion_lower_bound: 0.05,
+      min_failure_slope: 80.0,
+      initial_water: 1,
+    },
+    ui: {
+      normalization_factor: 40.0,
+      color_contrast: -10.0,
+      color_normalization: 8.0,
+    },
+  },
+
+  mzl8ju: {
+    name: "Final Bends 11",
+    slug: "mzl8ju",
+    coordinates: [25.9148447, -97.5293984],
+    testcase: false,
+
+    terrain_url: "final-bend-11.terrain.png",
+    boundary_url: "final-bend-11.boundary.png",
 
     parameters: {
       erosion_speed: 0.02,
@@ -305,37 +319,14 @@ export const rivers: { [slug: string]: River } = {
     },
   },
 
-  /** NOTE(Nic): Los Ebanos explodes; water is miscalibrated. Need to add initial water. */
-  "los-ebanos": {
-    name: "Los Ebanos",
-    slug: "los-ebanos",
+  t7xszw: {
+    name: "Final Bend 12",
+    slug: "t7xszw",
+    coordinates: [26.0606078, -97.9336059],
     testcase: false,
 
-    terrain_url: "usgs-los-ebanos-terrain.png",
-    boundary_url: "usgs-los-ebanos-terrain-boundary-simplified-flows.png",
-
-    parameters: {
-      erosion_speed: 0.02,
-      accretion_speed: 0.018,
-      accretion_upper_bound: 0.001,
-      erosion_lower_bound: 0.05,
-      min_failure_slope: 80.0,
-      initial_water: 2.0,
-    },
-    ui: {
-      normalization_factor: 80.0,
-      color_contrast: 20.0,
-      color_normalization: 12.0,
-    },
-  },
-
-  "nuevo-progreso": {
-    name: "Nuevo Progreso",
-    slug: "nuevo-progreso",
-    testcase: false,
-
-    terrain_url: "usgs-nuevo-progreso-terrain.png",
-    boundary_url: "usgs-nuevo-progreso-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-12.terrain.png",
+    boundary_url: "final-bend-12.boundary.png",
 
     parameters: {
       erosion_speed: 0.02,
@@ -351,13 +342,15 @@ export const rivers: { [slug: string]: River } = {
       color_normalization: 8.0,
     },
   },
-  "san-luisito": {
-    name: "San Luisito",
-    slug: "san-luisito",
+
+  "7knwi4": {
+    name: "Final Bend 13",
+    slug: "7knwi4",
+    coordinates: [26.0662789, -98.1664896],
     testcase: false,
 
-    terrain_url: "usgs-san-luisito-terrain.png",
-    boundary_url: "usgs-san-luisito-terrain-boundary-simplified-flows.png",
+    terrain_url: "final-bend-13.terrain.png",
+    boundary_url: "final-bend-13.boundary.png",
 
     parameters: {
       erosion_speed: 0.02,
@@ -366,6 +359,30 @@ export const rivers: { [slug: string]: River } = {
       erosion_lower_bound: 0.05,
       min_failure_slope: 80.0,
       initial_water: 2.0,
+    },
+    ui: {
+      normalization_factor: 40.0,
+      color_contrast: 8.0,
+      color_normalization: 9.5,
+    },
+  },
+
+  vaka6g: {
+    name: "Final Bends 14",
+    slug: "vaka6g",
+    coordinates: [25.9987972, -97.6245861],
+    testcase: false,
+
+    terrain_url: "final-bend-14.terrain.png",
+    boundary_url: "final-bend-14.boundary.png",
+
+    parameters: {
+      erosion_speed: 0.08,
+      accretion_speed: 0.08,
+      accretion_upper_bound: 0.001,
+      erosion_lower_bound: 0.05,
+      min_failure_slope: 80.0,
+      initial_water: 4.0,
     },
     ui: {
       normalization_factor: 30.0,
