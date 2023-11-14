@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export function generateMetadata({ params }: { params: { name: string } }) {
   return {
-    title: rivers[params.name].name,
+    title: rivers[params.name].coordinates.map((x) => x.toFixed(5)).join(", "),
   };
 }
 
