@@ -249,7 +249,6 @@ export class Camera {
         vec3.add(new_force, new_force, force);
       });
 
-      console.log(inputs);
       // vec3.normalize(new_force, new_force);
       // vec3.scale(new_force, new_force, this.force_scale);
     } else {

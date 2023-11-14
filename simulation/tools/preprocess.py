@@ -1,6 +1,31 @@
 import os
 import numpy as np
+from scipy.signal import convolve2d
 import imageio
+
+def smooth_dem(dem: np.ndarray, min_value : int = -100):
+    print('smoothing')
+
+    
+    
+    valid_mask = dem > min_value
+
+    print(dem.shape)
+
+    print(np.where(np.isnan(dem)))
+
+    kernel = np.ones((5,5), dtype=np.float64)
+    kernel[2,2] = 0
+    valid_neighbors = convolve2d(valid_mask, kernel, mode='same', boundary='fill', fillvalue=min_value)
+    sum_neighbors = convolve2d(np.where(valid_mask, dem, 0), kernel, mode='same', boundary='fill', fillvalue=min_value)
+
+    avg_neighbors = sum_neighbors / valid_neighbors
+    avg_neighbors[~np.isfinite(avg_neighbors)] = dem.mean()
+
+    filled_dem = np.copy(dem)
+    filled_dem[dem <= min_value | np.isnan(dem)] = avg_neighbors[dem <= min_value | np.isnan(dem)]
+
+    return filled_dem
 
 
 RIVER_MAX_HEIGHT = 19.5
@@ -24,7 +49,7 @@ def dem2rgb(dem: np.ndarray) -> np.ndarray:
     s2 = s1 * 10.0
 
     R, s3 = s2 // coeff_r, s2 % coeff_r
-    G, B = s3 // coeff_g, np.round(s2 % coeff_g)
+    G, B = s3 // coeff_g, np.round(s3 % coeff_g)
 
     terrain_rgb = np.zeros((dem.shape[0], dem.shape[1], 3))
     terrain_rgb[:, :, 0] = R
@@ -48,11 +73,13 @@ def rgb2dem(t: np.ndarray) -> np.ndarray:
     return dem
 
 
-def write_rgb(dem: np.ndarray, y: int, x: int, h: int, w: int, write: bool = True, name: str = 'terrain') -> np.ndarray:
+def write_rgb(dem: np.ndarray, y: int, x: int, h: int, w: int, write: bool = True, name: str = 'terrain'):
     s_y, s_x = y, x
     e_y, e_x = s_y + h, s_x + w
     
     sub_dem = dem[s_y:e_y, s_x:e_x]
+
+    # sub_dem = smooth_dem(sub_dem, min_value=4)
 
     rgb = dem2rgb(sub_dem).astype('uint8')
 
@@ -60,7 +87,7 @@ def write_rgb(dem: np.ndarray, y: int, x: int, h: int, w: int, write: bool = Tru
 
     if write: imageio.imwrite(f'{name}.png', rgb)
 
-    return rgb
+    return rgb, sub_dem
 
 
 def write_boundary(dem: np.ndarray, max_height: float = RIVER_MAX_HEIGHT, write : bool = True, name: str = 'boundary') -> np.ndarray:

@@ -1,0 +1,7 @@
+{
+  "domain_basepoint": [2000, 8500],
+  "river_basepoint": [0, 400],
+  "river_z_plane": 7.5,
+  "inflow": "left",
+  "outflow": "bottom"
+}
