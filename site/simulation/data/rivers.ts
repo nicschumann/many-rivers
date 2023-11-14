@@ -202,7 +202,7 @@ export const rivers: { [slug: string]: River } = {
   rbu1ks: {
     name: "Final Bend 7",
     slug: "rbu1ks",
-    coordinates: [25.94939, -97.24986],
+    coordinates: [25.9497615, -97.2496318],
     testcase: false,
 
     terrain_url: "final-bend-07.terrain.png",
@@ -226,7 +226,7 @@ export const rivers: { [slug: string]: River } = {
   xerpfb: {
     name: "Final Bend 8",
     slug: "xerpfb",
-    coordinates: [25.94939, -97.24986],
+    coordinates: [25.943079, -97.5775448],
     testcase: false,
 
     terrain_url: "final-bend-08.terrain.png",
