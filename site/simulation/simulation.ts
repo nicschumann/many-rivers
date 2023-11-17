@@ -1,4 +1,8 @@
-import { TILE_SIZE, DEFAULT_INTERPOLATION } from "./constants";
+import {
+  TILE_SIZE,
+  DEFAULT_INTERPOLATION,
+  curvature_scale_factor,
+} from "./constants";
 import { DoubleFramebuffer, SingleFramebuffer } from "./buffer";
 import { CompiledDrawCalls } from "./compile";
 import { Regl, Texture2D } from "regl";
@@ -39,7 +43,9 @@ class Simulation {
 
   H?: DoubleFramebuffer;
   K?: DoubleFramebuffer;
+  K_prime?: DoubleFramebuffer;
   E?: DoubleFramebuffer;
+  E_prime?: DoubleFramebuffer;
   S?: SingleFramebuffer;
   N?: SingleFramebuffer;
   Q?: DoubleFramebuffer;
@@ -89,17 +95,22 @@ class Simulation {
       min: DEFAULT_INTERPOLATION,
     });
 
-    const curvature_scale_factor = 1.0;
     // these buffers are aligned to the H grid
     this.H = new DoubleFramebuffer(this.regl, TILE_SIZE); // height map
-    this.K = new DoubleFramebuffer(this.regl, [
+    this.K = new DoubleFramebuffer(this.regl, [TILE_SIZE[0], TILE_SIZE[1]]); // curvature buffer
+    this.E = new DoubleFramebuffer(this.regl, [TILE_SIZE[0], TILE_SIZE[1]]); // Edge Map
+
+    // These buffers are downsampled to 8m / p
+
+    this.K_prime = new DoubleFramebuffer(this.regl, [
       TILE_SIZE[0] / curvature_scale_factor,
       TILE_SIZE[1] / curvature_scale_factor,
     ]); // curvature buffer
-    this.E = new DoubleFramebuffer(this.regl, [
+    this.E_prime = new DoubleFramebuffer(this.regl, [
       TILE_SIZE[0] / curvature_scale_factor,
-      TILE_SIZE[1] / curvature_scale_factor,
+      TILE_SIZE[1] / curvature_scale_factor, //
     ]); // Edge Map
+
     this.S = new SingleFramebuffer(this.regl, TILE_SIZE); // slope buffer
     this.N = new SingleFramebuffer(this.regl, TILE_SIZE);
 
@@ -128,7 +139,9 @@ class Simulation {
     if (simdata.state.running && this.loaded) {
       assert_simulation_buffer(this.H);
       assert_simulation_buffer(this.K);
+      assert_simulation_buffer(this.K_prime);
       assert_simulation_buffer(this.E);
+      assert_simulation_buffer(this.E_prime);
       assert_simulation_buffer(this.S);
       assert_simulation_buffer(this.N);
       assert_simulation_buffer(this.Q);
@@ -157,12 +170,25 @@ class Simulation {
           this.Q.swap();
         }
 
-        // Snippet fro reading piexles from a given framebuffer
-        // const data = new Float32Array(TILE_SIZE.reduce((a,b) => a*b) * 4.0);
-        // this.H.front.use(() => {
-        //     regl.read({ data });
-        //     // data now contains all of the framebuffer values.
-        // });
+        this.shaders.calculate_downsampling({
+          target: this.E_prime.back,
+          u_H: this.H.front,
+        });
+        this.E_prime.swap();
+
+        this.shaders.calculate_downsampled_edges({
+          target: this.E_prime.back,
+          u_E: this.E_prime.front,
+          u_H: this.H.front,
+        });
+        this.E_prime.swap();
+
+        this.shaders.calculate_downsampled_curvature({
+          target: this.K_prime.back,
+          u_H: this.H.front,
+          u_E: this.E_prime.front,
+        });
+        this.K_prime.swap();
 
         // this averaging system is appropriate with
         // stream-averaging-2, which iteratively solved
@@ -193,7 +219,7 @@ class Simulation {
           // });
           // this.E.swap();
 
-          // update Kappa
+          // update curvature calulation
           this.shaders.calculate_curvature({
             target: this.K.back,
             u_H: this.H.front,

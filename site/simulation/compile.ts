@@ -3,7 +3,7 @@
 import type { Regl, DrawCommand } from "regl";
 
 import { DomainMesh } from "./mesh";
-import { TILE_SIZE, TERRAIN_SIZE } from "./constants";
+import { TILE_SIZE, TERRAIN_SIZE, curvature_scale_factor } from "./constants";
 
 export interface CompiledDrawCalls {
   calculate_initial_conditions: DrawCommand;
@@ -25,6 +25,10 @@ export interface CompiledDrawCalls {
 
   calculate_N_normals: DrawCommand;
 
+  calculate_downsampling: DrawCommand;
+  calculate_downsampled_edges: DrawCommand;
+  calculate_downsampled_curvature: DrawCommand;
+
   render_terrain_height: DrawCommand;
   render_flux: DrawCommand;
   render_erosion_accretion: DrawCommand;
@@ -39,6 +43,7 @@ export interface CompiledDrawCalls {
   render_river_depth: DrawCommand;
   render_river_flux: DrawCommand;
   render_river_curvature: DrawCommand;
+  render_river_downsampled_curvature: DrawCommand;
   render_river_erosion_accretion: DrawCommand;
 }
 
@@ -47,6 +52,10 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
   let DOMAIN_OVERLAY_MESH = new DomainMesh(regl, [256, 256]);
 
   const v_passthrough = require("./shaders/pass-through.vert").default;
+  const DOWNSAMPLED_TILE_SIZE = [
+    TILE_SIZE[0] / curvature_scale_factor,
+    TILE_SIZE[1] / curvature_scale_factor,
+  ];
 
   // GPU calls: initial conditions calculation
   const calculate_initial_conditions = regl({
@@ -220,6 +229,61 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     count: 4,
   });
 
+  const calculate_downsampling = regl({
+    framebuffer: regl.prop("target"),
+    vert: v_passthrough,
+    frag: require("./shaders/calculate-K-downsampling.frag").default,
+    attributes: {
+      a_position: [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ],
+      a_uv: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+    },
+    uniforms: {
+      u_H: regl.prop("u_H"),
+      u_resolution: DOWNSAMPLED_TILE_SIZE,
+      u_sim_resolution: TILE_SIZE,
+    },
+    primitive: "triangle strip",
+    count: 4,
+  });
+
+  const calculate_downsampled_edges = regl({
+    framebuffer: regl.prop("target"),
+    vert: v_passthrough,
+    frag: require("./shaders/calculate-K-downsampled-edge-field.frag").default,
+    attributes: {
+      a_position: [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ],
+      a_uv: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+    },
+    uniforms: {
+      u_H: regl.prop("u_H"),
+      u_E: regl.prop("u_E"),
+      u_resolution: DOWNSAMPLED_TILE_SIZE,
+      u_sim_resolution: TILE_SIZE,
+    },
+    primitive: "triangle strip",
+    count: 4,
+  });
+
   const calculate_edge_normalization_pass_one = regl({
     framebuffer: regl.prop("target"),
     vert: v_passthrough,
@@ -296,6 +360,33 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
       u_H: regl.prop("u_H"),
       u_E: regl.prop("u_E"),
       u_resolution: TILE_SIZE,
+    },
+    primitive: "triangle strip",
+    count: 4,
+  });
+
+  const calculate_downsampled_curvature = regl({
+    framebuffer: regl.prop("target"),
+    vert: v_passthrough,
+    frag: require("./shaders/calculate-K-downsampled-curvature.frag").default,
+    attributes: {
+      a_position: [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ],
+      a_uv: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+    },
+    uniforms: {
+      u_H: regl.prop("u_H"),
+      u_E: regl.prop("u_E"),
+      u_resolution: DOWNSAMPLED_TILE_SIZE,
     },
     primitive: "triangle strip",
     count: 4,
@@ -876,6 +967,42 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     count: DOMAIN_OVERLAY_MESH.indices.length * 3.0,
   });
 
+  const render_river_downsampled_curvature = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-river.vert").default,
+    frag: require("./shaders/render-downsampled-curvature.frag").default,
+    attributes: {
+      a_position: DOMAIN_OVERLAY_MESH.vertices,
+      a_uv: DOMAIN_OVERLAY_MESH.uvs,
+      a_id: DOMAIN_OVERLAY_MESH.ids,
+    },
+    elements: DOMAIN_OVERLAY_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: DOMAIN_OVERLAY_MESH.cells,
+      u_tex_resolution: [
+        TILE_SIZE[0] / curvature_scale_factor,
+        TILE_SIZE[1] / curvature_scale_factor,
+      ],
+
+      u_H: regl.prop("u_H"),
+      u_K: regl.prop("u_K"),
+      u_E: regl.prop("u_E"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_saturation_point: regl.prop("u_saturation_point"),
+      u_y_offset: regl.prop("u_y_offset"),
+    },
+    primitive: "triangles",
+    offset: 0,
+    depth: { func: "lequal" },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    count: DOMAIN_OVERLAY_MESH.indices.length * 3.0,
+  });
+
   const render_river_erosion_accretion = regl({
     framebuffer: null,
     vert: require("./shaders/place-river.vert").default,
@@ -926,6 +1053,7 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     calculate_edge_normalization_pass_one,
     calculate_edge_normalization_pass_two,
     calculate_curvature,
+
     calculate_edge_averaging,
     calculate_stream_averaging,
     calculate_erosion_accretion,
@@ -933,6 +1061,10 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     advance_water_depth,
     calculate_H_boundary_conditions,
     calculate_Q_boundary_conditions,
+
+    calculate_downsampling,
+    calculate_downsampled_edges,
+    calculate_downsampled_curvature,
 
     calculate_N_normals,
 
@@ -951,5 +1083,6 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     render_domain,
     render_river_curvature,
     render_river_erosion_accretion,
+    render_river_downsampled_curvature,
   };
 }
