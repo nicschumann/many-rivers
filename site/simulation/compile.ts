@@ -2,7 +2,7 @@
 
 import type { Regl, DrawCommand } from "regl";
 
-import { DomainMesh } from "./mesh";
+import { CubeMesh, DomainMesh } from "./mesh";
 import { TILE_SIZE, TERRAIN_SIZE } from "./constants";
 
 export interface CompiledDrawCalls {
@@ -34,8 +34,10 @@ export interface CompiledDrawCalls {
   render_section_line: DrawCommand;
   render_tile_as_color: DrawCommand;
   render_crosssection: DrawCommand;
+
   render_domain: DrawCommand;
   render_river: DrawCommand;
+  render_sim_mesh: DrawCommand;
   render_river_depth: DrawCommand;
   render_river_flux: DrawCommand;
   render_river_curvature: DrawCommand;
@@ -45,6 +47,8 @@ export interface CompiledDrawCalls {
 export function compile_shaders(regl: Regl): CompiledDrawCalls {
   let DOMAIN_MESH = new DomainMesh(regl, TERRAIN_SIZE);
   let DOMAIN_OVERLAY_MESH = new DomainMesh(regl, [256, 256]);
+  const SIM_MESH = new CubeMesh(regl, [256, 256]);
+  console.log(SIM_MESH);
 
   const v_passthrough = require("./shaders/pass-through.vert").default;
 
@@ -777,6 +781,42 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     count: DOMAIN_MESH.indices.length * 3.0,
   });
 
+  const render_sim_mesh = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-cells.vert").default,
+    frag: require("./shaders/render-cells.frag").default,
+    attributes: {
+      a_position: SIM_MESH.vertices,
+      a_uv: SIM_MESH.uvs,
+      a_id: SIM_MESH.ids,
+      a_type: SIM_MESH.types,
+    },
+    elements: SIM_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: SIM_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+    },
+    primitive: "triangles", // try lines, too...
+    offset: 0,
+    depth: { func: "lequal" },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    cull: {
+      enable: true,
+      face: "front",
+    },
+    count: SIM_MESH.indices.length * 3.0,
+  });
+
   const render_river_depth = regl({
     framebuffer: null,
     vert: require("./shaders/place-river.vert").default,
@@ -945,10 +985,12 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     render_section_line,
     render_crosssection,
     render_tile_as_color,
+
+    render_domain,
     render_river,
+    render_sim_mesh,
     render_river_depth,
     render_river_flux,
-    render_domain,
     render_river_curvature,
     render_river_erosion_accretion,
   };

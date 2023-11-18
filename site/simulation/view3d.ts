@@ -50,12 +50,25 @@ class View3D extends View {
 
       // const camera_dist = vec3.distance(resources.camera.position, [0.5, 0, 0.5])
 
+      if (uidata.active_overlay == UIOverlayState.SimTools) {
+        this.shaders.render_sim_mesh({
+          u_basepoint: [this.x, 0.0, this.y],
+          u_transform: PV,
+
+          u_H: this.parent.H.front,
+          u_N: this.parent.N.buffer,
+          u_view_pos: resources.camera.position,
+          u_y_offset: 0.0,
+        });
+      }
+
+      // THIS IS DEBUG STUFF
       const base_height = 1;
       let current_height = base_height;
 
       if (
         uidata.render_depth &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.DebugView
       ) {
         this.shaders.render_river_depth({
           u_basepoint: [this.x, 0.0, this.y],
@@ -74,7 +87,7 @@ class View3D extends View {
 
       if (
         uidata.render_curvature &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.DebugView
       ) {
         this.shaders.render_river_curvature({
           u_basepoint: [this.x, 0.0, this.y],
@@ -93,7 +106,7 @@ class View3D extends View {
 
       if (
         uidata.render_erosion_accretion &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.DebugView
       ) {
         this.shaders.render_river_erosion_accretion({
           u_basepoint: [this.x, 0.0, this.y],
@@ -119,7 +132,7 @@ class View3D extends View {
 
       if (
         uidata.render_flux &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.DebugView
       ) {
         this.shaders.render_river_flux({
           u_basepoint: [this.x, 0.0, this.y],

@@ -5,7 +5,8 @@ export enum UIOverlayState {
   DroneView = 0,
   GroundView = 1,
   SimTools = 2,
-  None = 3,
+  DebugView = 3,
+  None = 4,
 }
 
 export type UIData = {
