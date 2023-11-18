@@ -36,7 +36,7 @@ void main() {
       }
   }
 
-  if (wet > dry) { is_wet = 1.0; }
+  if (wet > (dry)) { is_wet = 1.0; }
 
   gl_FragColor = vec4(is_wet, wet, dry, 0.); 
 }

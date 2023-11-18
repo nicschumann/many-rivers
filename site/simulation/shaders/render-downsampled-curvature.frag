@@ -19,11 +19,7 @@ void main() {
       // error: cell is wet and a boundary cell...
       gl_FragColor = vec4(1., 0., 0, 1.);
 
-    } else if (downsampling.r == 1.0) {
-      // cell is wet:
-      gl_FragColor = vec4(0., 0., 1., 1.);
-
-    } else if (downsampling.a == 1.0) {
+    } else if (downsampling.r == 1.0 || downsampling.a == 1.0) {
       // cell is an edge:
       gl_FragColor = vec4(1., 1., 1., 1.);
 

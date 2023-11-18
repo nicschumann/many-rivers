@@ -102,10 +102,14 @@ class Simulation {
 
     // These buffers are downsampled to 8m / p
 
-    this.K_prime = new DoubleFramebuffer(this.regl, [
-      TILE_SIZE[0] / curvature_scale_factor,
-      TILE_SIZE[1] / curvature_scale_factor,
-    ]); // curvature buffer
+    this.K_prime = new DoubleFramebuffer(
+      this.regl,
+      [
+        TILE_SIZE[0] / curvature_scale_factor,
+        TILE_SIZE[1] / curvature_scale_factor,
+      ],
+      "linear"
+    ); // curvature buffer
     this.E_prime = new DoubleFramebuffer(this.regl, [
       TILE_SIZE[0] / curvature_scale_factor,
       TILE_SIZE[1] / curvature_scale_factor, //
@@ -190,65 +194,87 @@ class Simulation {
         });
         this.K_prime.swap();
 
+        for (let i = 0; i < 6; i++) {
+          // roughly downsampling factor...
+          this.shaders.calculate_downsampled_edge_averaging({
+            target: this.K_prime.back,
+            u_K: this.K_prime.front,
+            u_E: this.E_prime.front,
+            u_H: this.H.front,
+          });
+          this.K_prime.swap();
+        }
+
+        for (let i = 0; i < 3; i++) {
+          // roughly downsampling factor / 2...
+          this.shaders.calculate_downsampled_curvature_averaging({
+            target: this.K_prime.back,
+            u_K: this.K_prime.front,
+            u_E: this.E_prime.front,
+            u_H: this.H.front,
+          });
+          this.K_prime.swap();
+        }
+
         // this averaging system is appropriate with
         // stream-averaging-2, which iteratively solved
         // a laplace equation across the river domain.
-        let render_iterations_per_smoothing = 50;
-        if (
-          i % simdata.state.smoothing_iterations == 0 &&
-          resources.t % render_iterations_per_smoothing == 0
-        ) {
-          // update edges
-          this.shaders.calculate_edges({
-            target: this.E.back,
-            u_H: this.H.front,
-          });
-          this.E.swap();
+        // let render_iterations_per_smoothing = 50;
+        // if (
+        //   i % simdata.state.smoothing_iterations == 0 &&
+        //   resources.t % render_iterations_per_smoothing == 0
+        // ) {
+        //   // update edges
+        //   this.shaders.calculate_edges({
+        //     target: this.E.back,
+        //     u_H: this.H.front,
+        //   });
+        //   this.E.swap();
 
-          // calculate_edge_normalization_pass_one({
-          //     target: this.E.back,
-          //     u_E: this.E.front,
-          //     a_uv: this.uvs
-          // });
-          // this.E.swap();
+        //   // calculate_edge_normalization_pass_one({
+        //   //     target: this.E.back,
+        //   //     u_E: this.E.front,
+        //   //     a_uv: this.uvs
+        //   // });
+        //   // this.E.swap();
 
-          // calculate_edge_normalization_pass_two({
-          //     target: this.E.back,
-          //     u_E: this.E.front,
-          //     a_uv: this.uvs
-          // });
-          // this.E.swap();
+        //   // calculate_edge_normalization_pass_two({
+        //   //     target: this.E.back,
+        //   //     u_E: this.E.front,
+        //   //     a_uv: this.uvs
+        //   // });
+        //   // this.E.swap();
 
-          // update curvature calulation
-          this.shaders.calculate_curvature({
-            target: this.K.back,
-            u_H: this.H.front,
-            u_E: this.E.front,
-          });
-          this.K.swap();
+        //   // update curvature calulation
+        //   this.shaders.calculate_curvature({
+        //     target: this.K.back,
+        //     u_H: this.H.front,
+        //     u_E: this.E.front,
+        //   });
+        //   this.K.swap();
 
-          // averaging passes.
+        //   // averaging passes.
 
-          for (let i = 0; i < simdata.state.smoothing_iterations; i++) {
-            this.shaders.calculate_edge_averaging({
-              target: this.K.back,
-              u_K: this.K.front,
-              u_E: this.E.front,
-              u_H: this.H.front,
-            });
-            this.K.swap();
-          }
+        //   for (let i = 0; i < simdata.state.smoothing_iterations; i++) {
+        //     this.shaders.calculate_edge_averaging({
+        //       target: this.K.back,
+        //       u_K: this.K.front,
+        //       u_E: this.E.front,
+        //       u_H: this.H.front,
+        //     });
+        //     this.K.swap();
+        //   }
 
-          for (let j = 0; j < simdata.state.smoothing_iterations; j++) {
-            this.shaders.calculate_stream_averaging({
-              target: this.K.back,
-              u_K: this.K.front,
-              u_E: this.E.front,
-              u_H: this.H.front,
-            });
-            this.K.swap();
-          }
-        }
+        //   for (let j = 0; j < simdata.state.smoothing_iterations; j++) {
+        //     this.shaders.calculate_stream_averaging({
+        //       target: this.K.back,
+        //       u_K: this.K.front,
+        //       u_E: this.E.front,
+        //       u_H: this.H.front,
+        //     });
+        //     this.K.swap();
+        //   }
+        // }
 
         // calculate erosion and collapse.
         if (
@@ -260,7 +286,7 @@ class Simulation {
             target: this.H.back,
             u_Q: this.Q.front,
             u_H: this.H.front,
-            u_K: this.K.front,
+            u_K: this.K_prime.front,
             u_S: this.S.buffer,
 
             u_k_erosion: simdata.parameters.erosion_speed,
@@ -274,7 +300,7 @@ class Simulation {
             target: this.H.back,
             u_Q: this.Q.front,
             u_H: this.H.front,
-            u_K: this.K.front,
+            u_K: this.K_prime.front,
             u_S: this.S.buffer,
 
             u_k_erosion: simdata.parameters.erosion_speed,
@@ -291,7 +317,7 @@ class Simulation {
           target: this.H.back,
           u_Q: this.Q.front,
           u_H: this.H.front,
-          u_K: this.K.front,
+          u_K: this.K_prime.front,
           u_clamp_water: (resources.t + i) % 50 == 0,
         });
 

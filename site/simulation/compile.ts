@@ -28,6 +28,8 @@ export interface CompiledDrawCalls {
   calculate_downsampling: DrawCommand;
   calculate_downsampled_edges: DrawCommand;
   calculate_downsampled_curvature: DrawCommand;
+  calculate_downsampled_edge_averaging: DrawCommand;
+  calculate_downsampled_curvature_averaging: DrawCommand;
 
   render_terrain_height: DrawCommand;
   render_flux: DrawCommand;
@@ -392,6 +394,64 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     count: 4,
   });
 
+  const calculate_downsampled_edge_averaging = regl({
+    framebuffer: regl.prop("target"),
+    vert: v_passthrough,
+    frag: require("./shaders/calculate-K-downsampled-edge-averaging.frag")
+      .default,
+    attributes: {
+      a_position: [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ],
+      a_uv: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+    },
+    uniforms: {
+      u_H: regl.prop("u_H"),
+      u_E: regl.prop("u_E"),
+      u_K: regl.prop("u_K"),
+      u_resolution: DOWNSAMPLED_TILE_SIZE,
+    },
+    primitive: "triangle strip",
+    count: 4,
+  });
+
+  const calculate_downsampled_curvature_averaging = regl({
+    framebuffer: regl.prop("target"),
+    vert: v_passthrough,
+    frag: require("./shaders/calculate-K-downsampled-curvature-averaging.frag")
+      .default,
+    attributes: {
+      a_position: [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ],
+      a_uv: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+    },
+    uniforms: {
+      u_H: regl.prop("u_H"),
+      u_E: regl.prop("u_E"),
+      u_K: regl.prop("u_K"),
+      u_resolution: DOWNSAMPLED_TILE_SIZE,
+    },
+    primitive: "triangle strip",
+    count: 4,
+  });
+
   const calculate_edge_averaging = regl({
     framebuffer: regl.prop("target"),
     vert: v_passthrough,
@@ -455,7 +515,7 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
   const calculate_erosion_accretion = regl({
     framebuffer: regl.prop("target"),
     vert: v_passthrough,
-    frag: require("./shaders/calculate-H-erosion-accretion-5.frag").default,
+    frag: require("./shaders/calculate-H-erosion-accretion-6.frag").default,
     attributes: {
       a_position: [
         [-1, -1],
@@ -1065,6 +1125,8 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     calculate_downsampling,
     calculate_downsampled_edges,
     calculate_downsampled_curvature,
+    calculate_downsampled_edge_averaging,
+    calculate_downsampled_curvature_averaging,
 
     calculate_N_normals,
 

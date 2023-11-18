@@ -6,4 +6,4 @@ export const TERRAIN_SIZE = [
   TILE_SIZE[1] * RENDER_SCALE,
 ];
 export const DEFAULT_INTERPOLATION = "nearest";
-export const curvature_scale_factor = 6.0;
+export const curvature_scale_factor = 4.0;

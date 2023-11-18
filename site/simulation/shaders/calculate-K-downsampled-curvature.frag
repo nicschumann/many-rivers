@@ -55,5 +55,5 @@ void main() {
 
     }
 
-    gl_FragColor = vec4(dry - wet, edges, 0., 0.); 
+    gl_FragColor = vec4(dry - wet, edges, cell.a, 0.); 
 }
