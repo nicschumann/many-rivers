@@ -17,6 +17,7 @@ varying float v_W;
 uniform mat4 u_transform;
 uniform vec3 u_basepoint;
 uniform vec2 u_resolution;
+uniform vec3 u_view_pos;
 
 uniform sampler2D u_H;
 
@@ -41,7 +42,21 @@ void main() {
       0., sediment_0 * scale + sign(0.5 - a_type) * half_cell_height, 0.
     );
 
+    
+
     vec3 position = a_position + displaced;
+
+    /**
+     * NOTE(Nic): consider deleting a bunch of vertices if the camera is far away...
+     */
+
+    // if (length(u_view_pos - position) > 0.25) {
+    //   if (a_type == 1.0) { 
+    //     gl_Position = vec4(0.0) / 0.0; 
+    //     return;
+    //   }
+    // }
+    
     
     v_uv = a_uv;
     v_id = a_id;
