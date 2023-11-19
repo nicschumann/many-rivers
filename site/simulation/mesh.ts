@@ -180,7 +180,7 @@ export class CubeMesh {
           offset,
           id: [x, y],
           uv: [x * dx + half_dx, y * dy + half_dy],
-          lengths: { dx, dy, dz: -0.005 },
+          lengths: { dx, dy, dz: -0.001 },
           basepoint: {
             x: x * dx,
             y: y * dy,

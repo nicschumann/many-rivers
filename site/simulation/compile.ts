@@ -47,7 +47,7 @@ export interface CompiledDrawCalls {
 export function compile_shaders(regl: Regl): CompiledDrawCalls {
   let DOMAIN_MESH = new DomainMesh(regl, TERRAIN_SIZE);
   let DOMAIN_OVERLAY_MESH = new DomainMesh(regl, [256, 256]);
-  const SIM_MESH = new CubeMesh(regl, [256, 256]);
+  const SIM_MESH = new CubeMesh(regl, [128, 128]);
   console.log(SIM_MESH);
 
   const v_passthrough = require("./shaders/pass-through.vert").default;
@@ -802,8 +802,9 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
       u_N: regl.prop("u_N"),
       u_view_pos: regl.prop("u_view_pos"),
       u_y_offset: regl.prop("u_y_offset"),
+      u_alpha: regl.prop("u_alpha"),
     },
-    primitive: "triangles", // try lines, too...
+    primitive: regl.prop("render_type"), // try lines, too...
     offset: 0,
     depth: { func: "lequal" },
     blend: {
@@ -812,7 +813,7 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     },
     cull: {
       enable: true,
-      face: "front",
+      face: "back",
     },
     count: SIM_MESH.indices.length * 3.0,
   });
