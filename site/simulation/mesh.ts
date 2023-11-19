@@ -78,19 +78,26 @@ type BlockSpec = {
   lengths: { dx: number; dy: number; dz: number };
 };
 
-type BlockData = {
+interface BlockData {
   vertices: [number, number, number][];
-  indices: [number, number, number][];
   uvs: [number, number][]; //
   ids: [number, number][];
   types: number[];
-};
+}
+
+interface TriangleBlockData extends BlockData {
+  indices: [number, number, number][];
+}
+
+interface LineBlockData extends BlockData {
+  indices: [number, number][];
+}
 
 /**
  * Given a X and Y and Z position, together with a width and height,
  * build the data for a single rectangular block.
  */
-const build_rect_block = (spec: BlockSpec): BlockData => {
+const build_triangle_rect_block = (spec: BlockSpec): TriangleBlockData => {
   const { x, y, z } = spec.basepoint;
   const { dx, dy, dz } = spec.lengths;
   const { offset, uv, id } = spec;
@@ -144,10 +151,61 @@ const build_rect_block = (spec: BlockSpec): BlockData => {
   };
 };
 
+const build_line_rect_block = (spec: BlockSpec): LineBlockData => {
+  const { x, y, z } = spec.basepoint;
+  const { dx, dy, dz } = spec.lengths;
+  const { offset, uv, id } = spec;
+
+  const vertices: [number, number, number][] = [
+    // top
+    [x, z, y],
+    [x + dx, z, y],
+    [x, z, y + dy],
+    [x + dx, z, y + dy],
+    // bottom
+    [x, z + dz, y],
+    [x + dx, z + dz, y],
+    [x, z + dz, y + dy],
+    [x + dx, z + dz, y + dy],
+  ];
+
+  const indices: [number, number][] = [
+    // top quad loop
+    [0, 1],
+    [1, 3],
+    [3, 2],
+    [2, 0],
+    // sides connections
+    [0, 4],
+    [1, 5],
+    [3, 7],
+    [2, 6],
+    // bottom quad loop
+    [4, 5],
+    [5, 7],
+    [7, 6],
+    [6, 4],
+  ].map(([i, j]) => [i + offset, j + offset]); // adjust for the basepoint
+
+  const uvs = [uv, uv, uv, uv, uv, uv, uv, uv];
+
+  const ids = [id, id, id, id, id, id, id, id];
+
+  const types = [0, 0, 0, 0, 1, 1, 1, 1];
+
+  return {
+    vertices,
+    indices,
+    uvs,
+    ids,
+    types,
+  };
+};
+
 /**
  * This class represents the simulation exactly as a grid of cubes.
  */
-export class CubeMesh {
+export class CubeGridTriangleMesh {
   regl: Regl;
   cells: [number, number];
 
@@ -176,11 +234,63 @@ export class CubeMesh {
       for (let x = 0; x < cells[0]; x += 1) {
         const offset = verts_per_cube * x + verts_per_cube * cells[0] * y;
 
-        const { vertices, indices, uvs, ids, types } = build_rect_block({
+        const { vertices, indices, uvs, ids, types } =
+          build_triangle_rect_block({
+            offset,
+            id: [x, y],
+            uv: [x * dx + half_dx, y * dy + half_dy],
+            lengths: { dx, dy, dz: 0.0 },
+            basepoint: {
+              x: x * dx,
+              y: y * dy,
+              z: 0,
+            },
+          });
+
+        this.vertices.push(...vertices);
+        this.indices.push(...indices);
+        this.uvs.push(...uvs);
+        this.ids.push(...ids);
+        this.types.push(...types);
+      }
+    }
+  }
+}
+
+export class CubeGridLineMesh {
+  regl: Regl;
+  cells: [number, number];
+
+  // attribute buffers:
+  vertices: [number, number, number][]; // vertex positions
+  indices: [number, number][]; // line indices
+  uvs: [number, number][]; //
+  ids: [number, number][];
+  types: number[];
+
+  constructor(regl: Regl, cells: [number, number]) {
+    this.regl = regl;
+    this.cells = cells;
+
+    const verts_per_cube = 8;
+    const [dx, dy] = [1 / cells[0], 1 / cells[1]];
+    const [half_dx, half_dy] = [dx / 2.0, dy / 2.0];
+
+    this.vertices = [];
+    this.indices = [];
+    this.uvs = [];
+    this.ids = [];
+    this.types = [];
+
+    for (let y = 0; y < cells[1]; y += 1) {
+      for (let x = 0; x < cells[0]; x += 1) {
+        const offset = verts_per_cube * x + verts_per_cube * cells[0] * y;
+
+        const { vertices, indices, uvs, ids, types } = build_line_rect_block({
           offset,
           id: [x, y],
           uv: [x * dx + half_dx, y * dy + half_dy],
-          lengths: { dx, dy, dz: -0.001 },
+          lengths: { dx, dy, dz: 0.0 },
           basepoint: {
             x: x * dx,
             y: y * dy,

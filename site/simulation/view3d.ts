@@ -53,20 +53,7 @@ class View3D extends View {
       // const camera_dist = vec3.distance(resources.camera.position, [0.5, 0, 0.5])
 
       if (uidata.active_overlay == UIOverlayState.SimTools) {
-        this.shaders.render_sim_mesh({
-          u_basepoint: [this.x, 0.0, this.y],
-          u_transform: PV,
-
-          u_H: this.parent.H.front,
-          u_N: this.parent.N.buffer,
-          u_view_pos: resources.camera.position,
-          u_y_offset: 0.0,
-          u_alpha: 0.4,
-
-          render_type: "triangles",
-        });
-
-        this.shaders.render_sim_mesh({
+        this.shaders.render_sim_mesh_base({
           u_basepoint: [this.x, 0.0, this.y],
           u_transform: PV,
 
@@ -75,8 +62,28 @@ class View3D extends View {
           u_view_pos: resources.camera.position,
           u_y_offset: 0.0,
           u_alpha: 1.0,
+        });
 
-          render_type: "lines",
+        this.shaders.render_sim_mesh_volumes({
+          u_basepoint: [this.x, 0.0, this.y],
+          u_transform: PV,
+
+          u_H: this.parent.H.front,
+          u_N: this.parent.N.buffer,
+          u_view_pos: resources.camera.position,
+          u_y_offset: 0.0,
+          u_alpha: 1.0,
+        });
+
+        this.shaders.render_sim_mesh_edges({
+          u_basepoint: [this.x, 0.0, this.y],
+          u_transform: PV,
+
+          u_H: this.parent.H.front,
+          u_N: this.parent.N.buffer,
+          u_view_pos: resources.camera.position,
+          u_y_offset: 0.0,
+          u_alpha: 1.0,
         });
       }
 

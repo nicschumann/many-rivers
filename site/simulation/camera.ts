@@ -67,6 +67,8 @@ export class Camera {
 
       this.rotations = [theta, phi];
       input.reset_mouse_delta();
+    } else {
+      this.rotations = [0, 0];
     }
 
     if (input.key_is_down("w")) {

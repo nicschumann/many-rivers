@@ -2,7 +2,7 @@
 
 import type { Regl, DrawCommand } from "regl";
 
-import { CubeMesh, DomainMesh } from "./mesh";
+import { CubeGridTriangleMesh, CubeGridLineMesh, DomainMesh } from "./mesh";
 import { TILE_SIZE, TERRAIN_SIZE } from "./constants";
 
 export interface CompiledDrawCalls {
@@ -37,7 +37,9 @@ export interface CompiledDrawCalls {
 
   render_domain: DrawCommand;
   render_river: DrawCommand;
-  render_sim_mesh: DrawCommand;
+  render_sim_mesh_volumes: DrawCommand;
+  render_sim_mesh_edges: DrawCommand;
+  render_sim_mesh_base: DrawCommand;
   render_river_depth: DrawCommand;
   render_river_flux: DrawCommand;
   render_river_curvature: DrawCommand;
@@ -47,8 +49,10 @@ export interface CompiledDrawCalls {
 export function compile_shaders(regl: Regl): CompiledDrawCalls {
   let DOMAIN_MESH = new DomainMesh(regl, TERRAIN_SIZE);
   let DOMAIN_OVERLAY_MESH = new DomainMesh(regl, [256, 256]);
-  const SIM_MESH = new CubeMesh(regl, [128, 128]);
-  console.log(SIM_MESH);
+
+  const SIM_TOOLS_MESH_SIZE = [256, 256];
+  const SIM_TRIANGLE_MESH = new CubeGridTriangleMesh(regl, SIM_TOOLS_MESH_SIZE); // or, make this equal to the actual sim size...
+  const SIM_LINE_MESH = new CubeGridLineMesh(regl, SIM_TOOLS_MESH_SIZE); // or, make this equal to the actual sim size...
 
   const v_passthrough = require("./shaders/pass-through.vert").default;
 
@@ -781,21 +785,21 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     count: DOMAIN_MESH.indices.length * 3.0,
   });
 
-  const render_sim_mesh = regl({
+  const render_sim_mesh_volumes = regl({
     framebuffer: null,
-    vert: require("./shaders/place-cells.vert").default,
-    frag: require("./shaders/render-cells.frag").default,
+    vert: require("./shaders/place-delta-cells.vert").default,
+    frag: require("./shaders/render-cell-delta-volumes.frag").default,
     attributes: {
-      a_position: SIM_MESH.vertices,
-      a_uv: SIM_MESH.uvs,
-      a_id: SIM_MESH.ids,
-      a_type: SIM_MESH.types,
+      a_position: SIM_TRIANGLE_MESH.vertices,
+      a_uv: SIM_TRIANGLE_MESH.uvs,
+      a_id: SIM_TRIANGLE_MESH.ids,
+      a_type: SIM_TRIANGLE_MESH.types,
     },
-    elements: SIM_MESH.indices,
+    elements: SIM_TRIANGLE_MESH.indices,
     uniforms: {
       u_transform: regl.prop("u_transform"),
       u_basepoint: regl.prop("u_basepoint"),
-      u_resolution: SIM_MESH.cells,
+      u_resolution: SIM_TRIANGLE_MESH.cells,
       u_tex_resolution: TILE_SIZE,
 
       u_H: regl.prop("u_H"),
@@ -804,7 +808,7 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
       u_y_offset: regl.prop("u_y_offset"),
       u_alpha: regl.prop("u_alpha"),
     },
-    primitive: regl.prop("render_type"), // try lines, too...
+    primitive: "triangles", // try lines, too...
     offset: 0,
     depth: { func: "lequal" },
     blend: {
@@ -815,7 +819,75 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
       enable: true,
       face: "back",
     },
-    count: SIM_MESH.indices.length * 3.0,
+    count: SIM_TRIANGLE_MESH.indices.length * 3.0,
+  });
+
+  const render_sim_mesh_edges = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-delta-cells.vert").default,
+    frag: require("./shaders/render-cell-delta-lines.frag").default,
+    attributes: {
+      a_position: SIM_LINE_MESH.vertices,
+      a_uv: SIM_LINE_MESH.uvs,
+      a_id: SIM_LINE_MESH.ids,
+      a_type: SIM_LINE_MESH.types,
+    },
+    elements: SIM_LINE_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: SIM_LINE_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+      u_alpha: regl.prop("u_alpha"),
+    },
+    primitive: "lines", // try lines, too...
+    offset: 0,
+    depth: { func: "lequal" },
+    cull: { enable: false },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    count: SIM_LINE_MESH.indices.length * 2.0, // line indices
+  });
+
+  const render_sim_mesh_base = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-base-cells.vert").default,
+    frag: require("./shaders/render-cell-base-lines.frag").default,
+    attributes: {
+      a_position: SIM_LINE_MESH.vertices,
+      a_uv: SIM_LINE_MESH.uvs,
+      a_id: SIM_LINE_MESH.ids,
+      a_type: SIM_LINE_MESH.types,
+    },
+    elements: SIM_LINE_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: SIM_LINE_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+      u_alpha: regl.prop("u_alpha"),
+    },
+    primitive: "lines", // try lines, too...
+    offset: 0,
+    depth: { func: "lequal" },
+    cull: { enable: false },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    count: SIM_LINE_MESH.indices.length * 2.0, // line indices
   });
 
   const render_river_depth = regl({
@@ -989,7 +1061,9 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
 
     render_domain,
     render_river,
-    render_sim_mesh,
+    render_sim_mesh_volumes,
+    render_sim_mesh_edges,
+    render_sim_mesh_base,
     render_river_depth,
     render_river_flux,
     render_river_curvature,
