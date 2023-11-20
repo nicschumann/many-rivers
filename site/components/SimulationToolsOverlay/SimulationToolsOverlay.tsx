@@ -7,15 +7,27 @@ import { useState } from "react";
 import { River } from "@/simulation/data/rivers";
 import SimulationToolsDisplayModes from "../SimulationToolsDisplayModes/SimulationToolsDisplayModes";
 import PointerLockButton from "../PointerLockButton/PointerLockButton";
+import FooterRow from "../FooterRow/FooterRow";
 
 interface SimulationToolsOverlayProps {
+  t: number;
+  w: number;
   river: River;
 }
 
 export default function SimulationToolsOverlay({
   river,
+  t,
+  w,
 }: SimulationToolsOverlayProps) {
   const [nextRiver, setNextRiver] = useState<River>(river);
+
+  const isRunning = useApplicationState((s) => s.sim.state.running);
+  const setRunning = useApplicationState((s) => {
+    return (running: boolean) => {
+      s.setSimState({ running });
+    };
+  });
 
   const setOverlayState = useApplicationState((s) => {
     return (newOverlayState: UIOverlayState) => {
@@ -49,7 +61,7 @@ export default function SimulationToolsOverlay({
         </div>
       </div>
 
-      <div className="flex mt-auto w-full items-left">
+      {/* <div className="flex mt-auto w-full items-left">
         <div className="divide-y border w-96 border-white text-[#ff0000] rounded-lg">
           <div className="flex">
             <div className="m-2">Erosion Speed</div>
@@ -84,9 +96,15 @@ export default function SimulationToolsOverlay({
             </div>
           </div>
         </div>
+      </div> */}
 
-        <SimulationToolsDisplayModes />
-      </div>
+      <FooterRow
+        river={river}
+        t={t}
+        w={w}
+        isRunning={isRunning}
+        setRunning={setRunning}
+      />
     </div>
   );
 }

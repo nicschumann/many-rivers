@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
 import { rivers, River } from "@/simulation/data/rivers";
 import Link from "next/link";
-import DroneViewOverlay from "../DroneViewOverlay/DroneViewOverlay";
+import LandscapeOverlay from "../LandscapeOverlay/LandscapeOverlay";
 import SimulationToolsOverlay from "../SimulationToolsOverlay/SimulationToolsOverlay";
 
 interface SimulationOverlayProps {
@@ -40,10 +40,10 @@ export default function SimulationOverlay({
   return (
     <>
       {isLoaded && activeOverlay == UIOverlayState.DroneView && (
-        <DroneViewOverlay river={river} nextRiver={nextRiver} t={t} w={w} />
+        <LandscapeOverlay river={river} nextRiver={nextRiver} t={t} w={w} />
       )}
       {isLoaded && activeOverlay == UIOverlayState.SimTools && (
-        <SimulationToolsOverlay river={river} />
+        <SimulationToolsOverlay river={river} t={t} w={w} />
       )}
       {!isLoaded && <LoadingOverlay />}
     </>
