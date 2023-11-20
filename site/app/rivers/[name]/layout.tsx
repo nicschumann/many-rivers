@@ -10,7 +10,7 @@ export function generateMetadata({ params }: { params: { name: string } }) {
   };
 }
 
-export default function RootLayout({
+export default function RiversLayout({
   children,
 }: {
   children: React.ReactNode;

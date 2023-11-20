@@ -7,6 +7,7 @@ interface FooterRowProps {
   river: River;
   isRunning: boolean;
   setRunning: (isRunning: boolean) => void;
+  openModal: () => void;
 }
 
 const formatAsYears = (t: number): string => {
@@ -29,11 +30,12 @@ export default function FooterRow({
   river,
   isRunning,
   setRunning,
+  openModal,
 }: FooterRowProps) {
   return (
     <div className="flex mt-auto w-full items-left">
-      <div className="text-[#ff0000] flex mr-auto">
-        <div>
+      <div className="flex mr-auto">
+        <div onClick={openModal}>
           <OverlayButton>
             <span>Info</span>
           </OverlayButton>

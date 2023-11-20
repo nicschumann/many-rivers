@@ -21,8 +21,10 @@ export default function SimulationToolsOverlay({
   w,
 }: SimulationToolsOverlayProps) {
   const [nextRiver, setNextRiver] = useState<River>(river);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const isRunning = useApplicationState((s) => s.sim.state.running);
+
   const setRunning = useApplicationState((s) => {
     return (running: boolean) => {
       s.setSimState({ running });
@@ -104,6 +106,7 @@ export default function SimulationToolsOverlay({
         w={w}
         isRunning={isRunning}
         setRunning={setRunning}
+        setModalIsOpen={setModalIsOpen}
       />
     </div>
   );
