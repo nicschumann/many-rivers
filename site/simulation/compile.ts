@@ -35,7 +35,9 @@ export interface CompiledDrawCalls {
   render_tile_as_color: DrawCommand;
   render_crosssection: DrawCommand;
   render_domain: DrawCommand;
+  render_domain_wireframe: DrawCommand;
   render_river: DrawCommand;
+  render_river_wireframe: DrawCommand;
   render_river_depth: DrawCommand;
   render_river_flux: DrawCommand;
   render_river_curvature: DrawCommand;
@@ -746,6 +748,32 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     count: DOMAIN_MESH.indices.length * 3.0,
   });
 
+  const render_domain_wireframe = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-mesh.vert").default,
+    frag: require("./shaders/render-color.frag").default,
+    attributes: {
+      a_position: DOMAIN_OVERLAY_MESH.vertices,
+      a_uv: DOMAIN_OVERLAY_MESH.uvs,
+      a_id: DOMAIN_OVERLAY_MESH.ids,
+    },
+    elements: DOMAIN_OVERLAY_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: DOMAIN_OVERLAY_MESH.cells,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_color_contrast: regl.prop("u_color_contrast"),
+      u_color_normalization: regl.prop("u_color_normalization"),
+      u_color: [1, 0, 0],
+    },
+    primitive: "lines",
+    offset: 0,
+    count: DOMAIN_OVERLAY_MESH.indices.length * 3.0,
+  });
+
   const render_river = regl({
     framebuffer: null,
     vert: require("./shaders/place-river.vert").default,
@@ -775,6 +803,38 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
       func: { src: "src alpha", dst: "one minus src alpha" },
     },
     count: DOMAIN_MESH.indices.length * 3.0,
+  });
+
+  const render_river_wireframe = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-river-wireframe.vert").default,
+    frag: require("./shaders/render-color.frag").default,
+    attributes: {
+      a_position: DOMAIN_OVERLAY_MESH.vertices,
+      a_uv: DOMAIN_OVERLAY_MESH.uvs,
+      a_id: DOMAIN_OVERLAY_MESH.ids,
+    },
+    elements: DOMAIN_OVERLAY_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: DOMAIN_OVERLAY_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+      u_color: [0, 0, 1],
+    },
+    primitive: "lines",
+    offset: 0,
+    depth: { func: "lequal" },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    count: DOMAIN_OVERLAY_MESH.indices.length * 3.0,
   });
 
   const render_river_depth = regl({
@@ -946,9 +1006,11 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     render_crosssection,
     render_tile_as_color,
     render_river,
+    render_river_wireframe,
     render_river_depth,
     render_river_flux,
     render_domain,
+    render_domain_wireframe,
     render_river_curvature,
     render_river_erosion_accretion,
   };
