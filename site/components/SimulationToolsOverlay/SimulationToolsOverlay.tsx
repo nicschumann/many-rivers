@@ -52,7 +52,7 @@ export default function SimulationToolsOverlay({
       <div className="flex w-full items-left">
         <PointerLockButton className="ml-auto" />
         <div
-          onClick={() => setOverlayState(UIOverlayState.DroneView)}
+          onClick={() => setOverlayState(UIOverlayState.LandscapeView)}
           className="ml-2"
         >
           <OverlayButton>

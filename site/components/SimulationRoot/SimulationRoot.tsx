@@ -116,7 +116,7 @@ export default function SimulationRoot({
         setSimState({ loaded: true });
       }
 
-      if (uiData.active_overlay == UIOverlayState.SimTools) {
+      if (uiData.active_overlay == UIOverlayState.SimulationView) {
         renderContext.views.slice(1).forEach((v) => {
           v.active = true;
         });

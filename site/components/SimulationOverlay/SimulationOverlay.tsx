@@ -39,10 +39,10 @@ export default function SimulationOverlay({
 
   return (
     <>
-      {isLoaded && activeOverlay == UIOverlayState.DroneView && (
+      {isLoaded && activeOverlay == UIOverlayState.LandscapeView && (
         <LandscapeOverlay river={river} nextRiver={nextRiver} t={t} w={w} />
       )}
-      {isLoaded && activeOverlay == UIOverlayState.SimTools && (
+      {isLoaded && activeOverlay == UIOverlayState.SimulationView && (
         <SimulationToolsOverlay river={river} t={t} w={w} />
       )}
       {!isLoaded && <LoadingOverlay />}

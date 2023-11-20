@@ -2,9 +2,9 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
 export enum UIOverlayState {
-  DroneView = 0,
-  GroundView = 1,
-  SimTools = 2,
+  LandscapeView = 0,
+  SimulationView = 1,
+  DebugView = 2,
   None = 3,
 }
 
@@ -69,7 +69,7 @@ type Actions = {
 export const useApplicationState = create(
   immer<State & Actions>((set, get) => ({
     ui: {
-      active_overlay: UIOverlayState.DroneView,
+      active_overlay: UIOverlayState.LandscapeView,
 
       render_depth: true,
       render_flux: false,

@@ -52,7 +52,7 @@ export default function DroneViewOverlay({
         <PointerLockButton className="ml-auto" />
         <div
           className="ml-2"
-          onClick={() => setOverlayState(UIOverlayState.SimTools)}
+          onClick={() => setOverlayState(UIOverlayState.SimulationView)}
         >
           <OverlayButton>
             <span>Simulation</span>

@@ -55,7 +55,7 @@ class View3D extends View {
 
       if (
         uidata.render_depth &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.SimulationView
       ) {
         this.shaders.render_river_depth({
           u_basepoint: [this.x, 0.0, this.y],
@@ -74,7 +74,7 @@ class View3D extends View {
 
       if (
         uidata.render_curvature &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.SimulationView
       ) {
         this.shaders.render_river_curvature({
           u_basepoint: [this.x, 0.0, this.y],
@@ -93,7 +93,7 @@ class View3D extends View {
 
       if (
         uidata.render_erosion_accretion &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.SimulationView
       ) {
         this.shaders.render_river_erosion_accretion({
           u_basepoint: [this.x, 0.0, this.y],
@@ -119,7 +119,7 @@ class View3D extends View {
 
       if (
         uidata.render_flux &&
-        uidata.active_overlay == UIOverlayState.SimTools
+        uidata.active_overlay == UIOverlayState.SimulationView
       ) {
         this.shaders.render_river_flux({
           u_basepoint: [this.x, 0.0, this.y],
