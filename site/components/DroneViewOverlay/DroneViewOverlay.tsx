@@ -74,28 +74,26 @@ export default function DroneViewOverlay({
       </div>
 
       <div className="flex mt-auto w-full items-left">
-        <div className="text-[#ff0000] flex">
+        <div className="text-[#ff0000] flex mr-auto">
           <div>
             <OverlayButton>
               <span>Info</span>
             </OverlayButton>
           </div>
         </div>
-        <div className="ml-auto flex">
-          <div className="mr-10 py-1 w-72">
+        <div className="ml-auto flex text-right">
+          <div className="px-10 py-1">
             {formatAsLatLong(river.coordinates)}{" "}
           </div>
-          <div className="mr-10 py-1 w-72">{formatAsVolume(w)} </div>
-          <div className="mr-10 py-1 w-72">{formatAsYears(t)}</div>
-          <div
-            onClick={() => setRunning(!isRunning)}
-            className="ml-auto w-32 text-right"
-          >
-            <OverlayButton>
-              {isRunning ? <span>Pause</span> : <span>Run</span>}
-            </OverlayButton>
-          </div>
+          <div className="px-10 py-1">{formatAsVolume(w)} </div>
+          <div className="px-10 py-1">{formatAsYears(t)}</div>
+
           {/* <div className="text-white ml-2">Test</div> */}
+        </div>
+        <div onClick={() => setRunning(!isRunning)} className="w-32 text-right">
+          <OverlayButton>
+            {isRunning ? <span>Pause</span> : <span>Run</span>}
+          </OverlayButton>
         </div>
       </div>
     </div>

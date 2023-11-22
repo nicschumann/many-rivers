@@ -2,7 +2,7 @@
 
 import type { Regl, DrawCommand } from "regl";
 
-import { DomainMesh } from "./mesh";
+import { CubeGridTriangleMesh, CubeGridLineMesh, DomainMesh } from "./mesh";
 import { TILE_SIZE, TERRAIN_SIZE } from "./constants";
 
 export interface CompiledDrawCalls {
@@ -34,8 +34,14 @@ export interface CompiledDrawCalls {
   render_section_line: DrawCommand;
   render_tile_as_color: DrawCommand;
   render_crosssection: DrawCommand;
+
   render_domain: DrawCommand;
+  render_domain_wireframe: DrawCommand;
   render_river: DrawCommand;
+  render_sim_mesh_volumes: DrawCommand;
+  render_sim_mesh_edges: DrawCommand;
+  render_sim_mesh_base: DrawCommand;
+  render_river_wireframe: DrawCommand;
   render_river_depth: DrawCommand;
   render_river_flux: DrawCommand;
   render_river_curvature: DrawCommand;
@@ -45,6 +51,10 @@ export interface CompiledDrawCalls {
 export function compile_shaders(regl: Regl): CompiledDrawCalls {
   let DOMAIN_MESH = new DomainMesh(regl, TERRAIN_SIZE);
   let DOMAIN_OVERLAY_MESH = new DomainMesh(regl, [256, 256]);
+
+  const SIM_TOOLS_MESH_SIZE = [256, 256];
+  const SIM_TRIANGLE_MESH = new CubeGridTriangleMesh(regl, SIM_TOOLS_MESH_SIZE); // or, make this equal to the actual sim size...
+  const SIM_LINE_MESH = new CubeGridLineMesh(regl, SIM_TOOLS_MESH_SIZE); // or, make this equal to the actual sim size...
 
   const v_passthrough = require("./shaders/pass-through.vert").default;
 
@@ -746,6 +756,169 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     count: DOMAIN_MESH.indices.length * 3.0,
   });
 
+  const render_domain_wireframe = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-mesh.vert").default,
+    frag: require("./shaders/render-color.frag").default,
+    attributes: {
+      a_position: DOMAIN_OVERLAY_MESH.vertices,
+      a_uv: DOMAIN_OVERLAY_MESH.uvs,
+      a_id: DOMAIN_OVERLAY_MESH.ids,
+    },
+    elements: DOMAIN_OVERLAY_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: DOMAIN_OVERLAY_MESH.cells,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_color_contrast: regl.prop("u_color_contrast"),
+      u_color_normalization: regl.prop("u_color_normalization"),
+      u_color: [1, 0, 0],
+    },
+    primitive: "lines",
+    offset: 0,
+    count: DOMAIN_OVERLAY_MESH.indices.length * 3.0,
+  });
+
+  const render_river_wireframe = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-river-wireframe.vert").default,
+    frag: require("./shaders/render-color.frag").default,
+    attributes: {
+      a_position: DOMAIN_OVERLAY_MESH.vertices,
+      a_uv: DOMAIN_OVERLAY_MESH.uvs,
+      a_id: DOMAIN_OVERLAY_MESH.ids,
+    },
+    elements: DOMAIN_OVERLAY_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: DOMAIN_OVERLAY_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+      u_color: [0, 0, 1],
+    },
+    primitive: "lines",
+    offset: 0,
+    depth: { func: "lequal" },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    count: DOMAIN_OVERLAY_MESH.indices.length * 3.0,
+  });
+
+  const render_sim_mesh_volumes = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-delta-cells.vert").default,
+    frag: require("./shaders/render-cell-delta-volumes.frag").default,
+    attributes: {
+      a_position: SIM_TRIANGLE_MESH.vertices,
+      a_uv: SIM_TRIANGLE_MESH.uvs,
+      a_id: SIM_TRIANGLE_MESH.ids,
+      a_type: SIM_TRIANGLE_MESH.types,
+    },
+    elements: SIM_TRIANGLE_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: SIM_TRIANGLE_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+      u_alpha: regl.prop("u_alpha"),
+    },
+    primitive: "triangles", // try lines, too...
+    offset: 0,
+    depth: { func: "lequal" },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    cull: {
+      enable: true,
+      face: "back",
+    },
+    count: SIM_TRIANGLE_MESH.indices.length * 3.0,
+  });
+
+  const render_sim_mesh_edges = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-delta-cells.vert").default,
+    frag: require("./shaders/render-cell-delta-lines.frag").default,
+    attributes: {
+      a_position: SIM_LINE_MESH.vertices,
+      a_uv: SIM_LINE_MESH.uvs,
+      a_id: SIM_LINE_MESH.ids,
+      a_type: SIM_LINE_MESH.types,
+    },
+    elements: SIM_LINE_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: SIM_LINE_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+      u_alpha: regl.prop("u_alpha"),
+    },
+    primitive: "lines", // try lines, too...
+    offset: 0,
+    depth: { func: "lequal" },
+    cull: { enable: false },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    count: SIM_LINE_MESH.indices.length * 2.0, // line indices
+  });
+
+  const render_sim_mesh_base = regl({
+    framebuffer: null,
+    vert: require("./shaders/place-base-cells.vert").default,
+    frag: require("./shaders/render-cell-base-lines.frag").default,
+    attributes: {
+      a_position: SIM_LINE_MESH.vertices,
+      a_uv: SIM_LINE_MESH.uvs,
+      a_id: SIM_LINE_MESH.ids,
+      a_type: SIM_LINE_MESH.types,
+    },
+    elements: SIM_LINE_MESH.indices,
+    uniforms: {
+      u_transform: regl.prop("u_transform"),
+      u_basepoint: regl.prop("u_basepoint"),
+      u_resolution: SIM_LINE_MESH.cells,
+      u_tex_resolution: TILE_SIZE,
+
+      u_H: regl.prop("u_H"),
+      u_N: regl.prop("u_N"),
+      u_view_pos: regl.prop("u_view_pos"),
+      u_y_offset: regl.prop("u_y_offset"),
+      u_alpha: regl.prop("u_alpha"),
+    },
+    primitive: "lines", // try lines, too...
+    offset: 0,
+    depth: { func: "lequal" },
+    cull: { enable: false },
+    blend: {
+      enable: true,
+      func: { src: "src alpha", dst: "one minus src alpha" },
+    },
+    count: SIM_LINE_MESH.indices.length * 2.0, // line indices
+  });
+
   const render_river = regl({
     framebuffer: null,
     vert: require("./shaders/place-river.vert").default,
@@ -945,10 +1118,23 @@ export function compile_shaders(regl: Regl): CompiledDrawCalls {
     render_section_line,
     render_crosssection,
     render_tile_as_color,
+
+    // landscape
+    render_domain,
     render_river,
+
+    // wireframe
+    render_domain_wireframe,
+    render_river_wireframe,
+
+    // debug cubes
+    render_sim_mesh_volumes,
+    render_sim_mesh_edges,
+    render_sim_mesh_base,
+
+    // debug maps
     render_river_depth,
     render_river_flux,
-    render_domain,
     render_river_curvature,
     render_river_erosion_accretion,
   };

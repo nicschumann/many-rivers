@@ -108,12 +108,12 @@ export const rivers: { [slug: string]: River } = {
     boundary_url: "final-bend-03.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
-      erosion_speed: 0.02,
-      accretion_speed: 0.018,
+      erosion_speed: 0.07,
+      accretion_speed: 0.05,
       accretion_upper_bound: 0.001,
       erosion_lower_bound: 0.05,
       min_failure_slope: 80.0,
-      initial_water: 2.0,
+      initial_water: 2.2,
     },
     ui: {
       normalization_factor: 40.0,
@@ -186,12 +186,12 @@ export const rivers: { [slug: string]: River } = {
     boundary_url: "final-bend-06.boundary.png",
     // NOTE(Nic): tune this.
     parameters: {
-      erosion_speed: 0.02,
-      accretion_speed: 0.018,
+      erosion_speed: 0.07,
+      accretion_speed: 0.05,
       accretion_upper_bound: 0.001,
       erosion_lower_bound: 0.05,
       min_failure_slope: 80.0,
-      initial_water: 2.0,
+      initial_water: 2.2,
     },
     ui: {
       normalization_factor: 40.0,
