@@ -138,6 +138,6 @@ void main() {
         H.r,
         max(S, 0.),
         max(W, 0.),
-        dS
+        H.a
     );
 }

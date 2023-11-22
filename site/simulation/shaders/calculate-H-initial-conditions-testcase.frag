@@ -28,6 +28,6 @@ void main() {
     }
 
     gl_FragColor = vec4(
-        BH, SH, WH, 0.0
+        BH, SH, WH, SH
     );
 }

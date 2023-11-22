@@ -62,6 +62,6 @@ void main() {
         H.r,
         max(S, 0.),
         W,
-        E
+        H.a
     );
 }
