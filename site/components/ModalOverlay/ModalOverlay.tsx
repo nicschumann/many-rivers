@@ -8,8 +8,8 @@ export default function ModalOverlay({
   closeModal,
 }: ModalOverlayProps) {
   return (
-    <div className="absolute z-10 top-0 left-0 w-screen h-screen backdrop-blur-sm">
-      <div className="border-white border text-white mx-8 mt-8 p-8 h-full rounded-md">
+    <div className="absolute z-10 top-0 left-0 w-screen h-screen backdrop-blur-sm overflow-scroll">
+      <div className="border-white border text-white m-8 p-8 rounded-md overflow-scroll">
         <div className="text-right">
           <div onClick={closeModal}>
             <svg
@@ -28,7 +28,7 @@ export default function ModalOverlay({
             </svg>
           </div>
         </div>
-        {children}
+        <div className="h-full overflow-hidden">{children}</div>
       </div>
     </div>
   );

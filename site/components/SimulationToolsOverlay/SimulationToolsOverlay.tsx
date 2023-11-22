@@ -5,7 +5,6 @@ import OverlayButton from "../OverlayButton/OverlayButton";
 import { classNames } from "@/utils";
 import { useState } from "react";
 import { River } from "@/simulation/data/rivers";
-import SimulationToolsDisplayModes from "../SimulationToolsDisplayModes/SimulationToolsDisplayModes";
 import PointerLockButton from "../PointerLockButton/PointerLockButton";
 import FooterRow from "../FooterRow/FooterRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";

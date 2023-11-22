@@ -97,7 +97,7 @@ export default function DroneViewOverlay({
             interactions between water and land in specific places and across
             geological temporalities.
           </div>
-          <div className="indent-10">
+          <div className="mt-8 indent-10">
             A pipeline of several computational steps calculates the capacities
             of water to erode land and of land to accumulate sediments. As the
             river&rsquo;s waters push towards the inside of its meanders, the
@@ -110,8 +110,8 @@ export default function DroneViewOverlay({
             of these materials affect such gradients where water determines
             where sediments concentrate while land affects water behaviors.
           </div>
-          <div className="indent-10">
-            Using topographic scans from the US Geological Survey, the simulator
+          <div className="mt-8 indent-10">
+            Using topographic scans from the US Geological Survey the simulator
             explores the ever-changing course of the river as a border
             technology. The border expands and contracts permanently. It is
             dynamically renegotiated where each act of measurement allows for
@@ -121,6 +121,28 @@ export default function DroneViewOverlay({
             generates the conditions that are used to justify the application of
             force over it — the operational regimes that reinforce the river as
             an artificial limit.
+          </div>
+          <div className="mt-8 indent-10">Technical Disclaimer</div>
+          <div className="mt-8 indent-10">
+            The website is fairly resource intensive and might slow down other
+            activities on your browser and machine. It requires a recent
+            computer with a capable WebGL graphics card to run. It is only
+            designed to work on desktop computers.
+          </div>
+          <div className="mt-8 indent-10">Credits</div>
+          <div className="mt-8 indent-10">
+            This project was conceptualized and directed by Federico Pérez
+            Villoro. The creative and technical development of the computational
+            model and website application was undertaken by Nic Schumann. Lukas
+            WinklerPrins consulted on the mathematical simulation and hydrology
+            parameters.
+          </div>
+          <div className="mt-8 indent-10">
+            Major support for the development of All Possible Rivers was
+            provided by the Goethe Institut and Gray Area in San Francisco as
+            part of their 2023 C/Change Creative Research and Development Lab.
+            Research towards this project was also possible thanks to the
+            generous support of Fundación Jumex Arte Contemporáneo.
           </div>
         </ModalOverlay>
       )}
