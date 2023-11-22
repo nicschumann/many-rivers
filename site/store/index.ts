@@ -5,7 +5,7 @@ export enum UIOverlayState {
   DroneView = 0,
   GroundView = 1,
   SimTools = 2,
-  DebugView = 3,
+  DebugTools = 3,
   None = 4,
 }
 
