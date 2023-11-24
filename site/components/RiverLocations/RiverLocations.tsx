@@ -19,7 +19,7 @@ export default function RiverLocations({
   const lineColor = "border-gray-700";
 
   return (
-    <div className={classNames("relative w-full mx-8 h-8")}>
+    <div className={classNames("relative w-full mx-24 h-8")}>
       {riverArray.map((river, i) => {
         const lat = river.coordinates[0];
         const left = even

@@ -12,15 +12,16 @@ export default function ControlRange({ range }: ControlRangeProps) {
     <div className="flex items-left mr-10">
       <span className="mr-2 uppercase">{range.name}</span>
 
-      {range.options.map((r, i) => {
+      {range.options.map((rangeElement, i) => {
         return (
           <span
+            onClick={rangeElement.onClick}
             key={`erosion-${i}`}
             className="w-4 h-4 bg-transparent p-1 block rounded-lg mr-1 cursor-pointer"
           >
             <span
               className={classNames(
-                r.active
+                rangeElement.active
                   ? "bg-white border-white"
                   : "bg-black hover:bg-white hover:bg-opacity-50 border-white",
                 "w-3 h-3 border block rounded-lg"

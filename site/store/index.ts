@@ -24,6 +24,8 @@ export type UIData = {
   render_curvature: boolean;
   render_erosion_accretion: boolean;
   render_slope: boolean;
+  render_dry: boolean;
+  render_wet: boolean;
 
   p1: [number, number];
   p2: [number, number];
@@ -58,6 +60,7 @@ export type SimulationParameters = {
 };
 
 export type SimulationData = {
+  name: string;
   state: SimulationState;
   parameters: SimulationParameters;
 };
@@ -70,6 +73,7 @@ type State = {
 type Actions = {
   setUIState: (stateUpdate: Partial<UIData>) => void;
   setSimState: (stateUpdate: Partial<SimulationState>) => void;
+  setSimName: (stateUpdate: string) => void;
   setSimParameters: (stateUpdate: Partial<SimulationParameters>) => void;
 };
 
@@ -85,6 +89,8 @@ export const useApplicationState = create(
       render_curvature: false,
       render_erosion_accretion: false,
       render_slope: false,
+      render_dry: true,
+      render_wet: true,
 
       p1: [0.0, 0.5],
       p2: [1.0, 0.5],
@@ -97,6 +103,7 @@ export const useApplicationState = create(
       color_normalization: 5.0,
     },
     sim: {
+      name: "",
       state: {
         loaded: false,
         running: true,
@@ -117,6 +124,12 @@ export const useApplicationState = create(
         min_failure_slope: 80.0,
         initial_water: 2.0,
       },
+    },
+
+    setSimName(nameUpdate: string) {
+      set((state) => {
+        state.sim.name = nameUpdate;
+      });
     },
 
     setUIState(stateUpdate: Partial<UIData>) {

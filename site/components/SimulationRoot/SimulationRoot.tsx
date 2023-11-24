@@ -9,7 +9,7 @@ import { RenderContext } from "@/simulation/context";
 import { InputAPI } from "@/simulation/inputs";
 import { TARGET_FRAMETIME } from "@/simulation/constants";
 
-import { SimulationData, UIOverlayState, useApplicationState } from "@/store";
+import { UIOverlayState, useApplicationState } from "@/store";
 import { River } from "@/simulation/data/rivers";
 
 interface SimulationRootProps {
@@ -35,6 +35,7 @@ export default function SimulationRoot({
     (state) => state.setSimParameters
   );
   const setUIState = useApplicationState((state) => state.setUIState);
+  const setSimName = useApplicationState((state) => state.setSimName);
 
   /**
    * Initial canvas setup.
@@ -69,27 +70,21 @@ export default function SimulationRoot({
 
     setRenderContext(localRenderContext);
     setSimParameters(river.parameters);
+    setSimName(river.slug);
     setUIState(river.ui);
 
     // Resize Handler..
 
-    const resizeHandler = () => {
-      if (baseCanvas.current == null) return;
-      // baseCanvas.current.width = window.innerWidth
-      // baseCanvas.current.height = window.innerHeight
+    // const resizeHandler = () => {
+    //   if (baseCanvas.current == null) return;
+    // };
 
-      // regl._gl.canvas.width = window.innerWidth * 2.0;
-      // regl._gl.canvas.height = window.innerHeight * 2.0;
+    // window.addEventListener("resize", resizeHandler);
 
-      // renderContext.setup_transform();
-    };
-
-    window.addEventListener("resize", resizeHandler);
-
-    return () => {
-      window.removeEventListener("resize", resizeHandler);
-    };
-  }, [river, setSimParameters, setUIState]);
+    // return () => {
+    //   window.removeEventListener("resize", resizeHandler);
+    // };
+  }, [river, setSimParameters, setUIState, setSimName]);
 
   useEffect(() => {
     if (renderContext == null) return;
@@ -99,13 +94,8 @@ export default function SimulationRoot({
     let shift_key_is_down = false;
 
     // game loop
-    // TODO(Nic): replace with requestAnimationFrame
-    // TODO(Nic): replace with manual canvas and resize canvas appropriately.
-
     let t_minus_1 = performance.now();
 
-    // setReglInstance(regl)
-    // NOTE(Nic): this should move to the other event loop.
     const input = new InputAPI(window);
     input.init();
 
@@ -149,53 +139,6 @@ export default function SimulationRoot({
       if (e.key == " ") {
         parameters.running = !parameters.running;
         setSimState({ running: !simData.state.running });
-        // document.getElementById('running').checked = parameters.running;
-      }
-
-      if (e.key == "f") {
-        parameters.render_flux = !parameters.render_flux;
-        parameters.render_slope = false;
-        parameters.render_flux_magnitude = false;
-        // document.getElementById('render_flux').checked = parameters.render_flux;
-        parameters.render_curvature = false;
-        parameters.render_erosion_accretion = false;
-      }
-
-      if (e.key == "m") {
-        parameters.render_flux_magnitude = !parameters.render_flux_magnitude;
-        parameters.render_flux = false;
-        parameters.render_slope = false;
-        // document.getElementById('render_flux').checked = parameters.render_flux;
-        parameters.render_curvature = false;
-        parameters.render_erosion_accretion = false;
-      }
-
-      if (e.key == "c") {
-        parameters.render_flux = false;
-        parameters.render_flux_magnitude = false;
-        parameters.render_slope = false;
-        parameters.render_curvature = !parameters.render_curvature;
-        // document.getElementById('render_curvature').checked = parameters.render_curvature;
-        parameters.render_erosion_accretion = false;
-      }
-
-      if (e.key == "e") {
-        parameters.render_flux = false;
-        parameters.render_flux_magnitude = false;
-        parameters.render_slope = false;
-        parameters.render_curvature = false;
-        parameters.render_erosion_accretion =
-          !parameters.render_erosion_accretion;
-        // document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
-      }
-
-      if (e.key == "q") {
-        parameters.render_flux = false;
-        parameters.render_flux_magnitude = false;
-        parameters.render_curvature = false;
-        parameters.render_slope = !parameters.render_slope;
-        parameters.render_erosion_accretion = false;
-        // document.getElementById('render_slope').checked = parameters.render_slope;
       }
 
       if (e.key == "ArrowRight") {
