@@ -8,6 +8,7 @@ import { River } from "@/simulation/data/rivers";
 import PointerLockButton from "../PointerLockButton/PointerLockButton";
 import FooterRow from "../FooterRow/FooterRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";
+import ProjectDescription from "../ProjectDescription/ProjectDescription";
 
 interface SimulationToolsOverlayProps {
   t: number;
@@ -120,41 +121,7 @@ export default function SimulationToolsOverlay({
       />
       {modalIsOpen && (
         <ModalOverlay closeModal={closeModal}>
-          <div className="mt-8 indent-10">Project Description</div>
-          <div className="mt-8 indent-10">
-            The project consists of a computational model that aims to
-            anticipate the future geomorphology of the Rio Grande / Río Bravo
-            and, with it, of the U.S.-Mexico border. Taking into account the
-            physics that participate in the large-scale evolution of the river,
-            the program generates speculative landscapes by simulating complex
-            interactions between water and land in specific places and across
-            geological temporalities.
-          </div>
-          <div className="indent-10">
-            A pipeline of several computational steps calculates the capacities
-            of water to erode land and of land to accumulate sediments. As the
-            river&rsquo;s waters push towards the inside of its meanders, the
-            outer bends smooth out, generating an intensifying feedback loop
-            that results in geometric transformations. The shape of the
-            simulated rivers evolve over time using a dense grid of
-            computational cells with locally-defined rules. The volume of water
-            in each cell changes in response to the gradients of land and water
-            surrounding it — carrying materials into or away from it. The flows
-            of these materials affect such gradients where water determines
-            where sediments concentrate while land affects water behaviors.
-          </div>
-          <div className="indent-10">
-            Using topographic scans from the US Geological Survey, the simulator
-            explores the ever-changing course of the river as a border
-            technology. The border expands and contracts permanently. It is
-            dynamically renegotiated where each act of measurement allows for
-            the recalibration of the authority exercised over it. Given its
-            instability, it would seem as if rivers wouldn&rsquo;t be the best
-            way to demarcate borders. However such movement, paradoxically,
-            generates the conditions that are used to justify the application of
-            force over it — the operational regimes that reinforce the river as
-            an artificial limit.
-          </div>
+          <ProjectDescription />
         </ModalOverlay>
       )}
     </div>
