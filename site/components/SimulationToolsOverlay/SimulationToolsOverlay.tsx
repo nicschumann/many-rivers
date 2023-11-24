@@ -12,6 +12,7 @@ import { River } from "@/simulation/data/rivers";
 import FooterRow from "../FooterRow/FooterRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
+import ControlsRow from "../ControlsRow/ControlsRow";
 
 interface SimulationToolsOverlayProps {
   t: number;
@@ -74,10 +75,8 @@ export default function SimulationToolsOverlay({
               <span className="uppercase">glossary</span>
             </OverlayButton>
           </div>
-          <div
-            onClick={() => setOverlayState(UIOverlayState.LandscapeView)}
-            className="ml-auto"
-          >
+          <ControlsRow className="" />
+          <div onClick={() => setOverlayState(UIOverlayState.LandscapeView)}>
             <OverlayButton>
               <span className="uppercase">landscape</span>
             </OverlayButton>

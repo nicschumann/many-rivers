@@ -18,13 +18,11 @@ export default function ModalOverlay({
 
     window.addEventListener("keydown", keydownListener);
 
-    return () => {
-      window.removeEventListener("keydown", keydownListener);
-    };
+    return () => window.removeEventListener("keydown", keydownListener);
   }, [closeModal]);
 
   return (
-    <div className="absolute z-10 top-0 left-0 w-screen h-screen overflow-scroll">
+    <div className="absolute z-10 top-0 left-0 w-screen h-screen my-auto overflow-scroll">
       <div className="border-white border text-white m-8 pt-8 pb-16 px-20 rounded-md overflow-scroll">
         <div className="text-right">
           <div onClick={closeModal}>
