@@ -24,9 +24,9 @@ export default function ModalOverlay({
 
   return (
     <div className="absolute z-10 top-0 left-0 w-screen h-screen my-auto overflow-scroll">
-      <div className="border-white border text-white m-8 xl:mx-72 lg:mx-32 pt-8 pb-16 px-20 rounded-md overflow-scroll">
+      <div className="border-white border text-white m-8 xl:mx-72 lg:mx-32 pt-8 pb-16 px-20 rounded-md overflow-scroll relative">
         <div className="text-right">
-          <div onClick={closeModal}>
+          <div onClick={closeModal} className="absolute right-4 top-4">
             <OverlayButton>
               <span className="px-[0.2rem]">X</span>
             </OverlayButton>
