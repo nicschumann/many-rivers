@@ -57,7 +57,7 @@ export default function DroneViewOverlay({
           "z-10 absolute top-0 bg-transparent h-full w-full p-6 flex flex-wrap text-white text-sm"
         )}
       >
-        <div className="flex w-full items-left">
+        <div className="flex w-full h-8 items-left">
           <div className="">
             <OverlayButton>
               <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
@@ -65,7 +65,6 @@ export default function DroneViewOverlay({
           </div>
           {/* Locations overlay... */}
           <RiverLocations currentSlug={river.slug} />
-          <PointerLockButton className="ml-auto" />
           <div
             className="ml-2"
             onClick={() => setOverlayState(UIOverlayState.SimulationView)}

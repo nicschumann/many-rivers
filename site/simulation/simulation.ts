@@ -307,8 +307,6 @@ class Simulation {
           }
 
           resources.water_volume = water_m3;
-
-          console.log(fb[0], fb[1], fb[2], fb[3]);
         });
       }
     }

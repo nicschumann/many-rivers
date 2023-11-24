@@ -62,14 +62,13 @@ export default function SimulationToolsOverlay({
         "z-10 absolute top-0 bg-transparent h-full w-full p-6 flex flex-wrap text-white text-sm"
       )}
     >
-      <div className="flex w-full items-left">
-        <PointerLockButton className="ml-auto" />
+      <div className="flex w-full h-8 items-left">
         <div
           onClick={() => setOverlayState(UIOverlayState.LandscapeView)}
-          className="ml-2"
+          className="ml-auto"
         >
           <OverlayButton>
-            <span>LANDSCAPE</span>
+            <span className="uppercase">landscape</span>
           </OverlayButton>
         </div>
       </div>

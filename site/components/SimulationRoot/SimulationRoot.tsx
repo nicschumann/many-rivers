@@ -130,8 +130,6 @@ export default function SimulationRoot({
       renderContext.setup_transform();
       renderContext.render_tiles(simData, uiData);
 
-      console.log(renderContext.resources.water_volume);
-
       let t = performance.now();
       renderContext.resources.dt = (t - t_minus_1) / 1000;
 
