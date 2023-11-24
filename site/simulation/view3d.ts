@@ -15,10 +15,7 @@ class View3D extends View {
     assert_simulation_buffer(this.parent.S);
 
     if (this.parent.loaded) {
-      // 3D RENDERING STEPS
-      // console.log('render');
       this.regl.clear({ depth: 1.0 });
-
       let PV = resources.camera.get_matrix();
 
       this.shaders.calculate_N_normals({
@@ -27,7 +24,7 @@ class View3D extends View {
         u_H: this.parent.H.front,
       });
 
-      if (uidata.active_overlay == UIOverlayState.DroneView) {
+      if (uidata.active_overlay == UIOverlayState.LandscapeView) {
         this.shaders.render_domain({
           u_basepoint: [this.x, 0.0, this.y],
           u_transform: PV,
@@ -50,30 +47,34 @@ class View3D extends View {
         });
       }
 
-      if (uidata.active_overlay == UIOverlayState.DebugTools) {
-        this.shaders.render_domain_wireframe({
-          u_basepoint: [this.x, 0.0, this.y],
-          u_transform: PV,
+      if (uidata.active_overlay == UIOverlayState.SimulationView) {
+        if (uidata.render_dry) {
+          this.shaders.render_domain_wireframe({
+            u_basepoint: [this.x, 0.0, this.y],
+            u_transform: PV,
 
-          u_H: this.parent.H.front,
-          u_N: this.parent.N.buffer,
+            u_H: this.parent.H.front,
+            u_N: this.parent.N.buffer,
 
-          u_color_contrast: uidata.color_contrast,
-          u_color_normalization: uidata.color_normalization,
-        });
+            u_color_contrast: uidata.color_contrast,
+            u_color_normalization: uidata.color_normalization,
+          });
+        }
 
-        this.shaders.render_river_wireframe({
-          u_basepoint: [this.x, 0.0, this.y],
-          u_transform: PV,
+        if (uidata.render_wet) {
+          this.shaders.render_river_wireframe({
+            u_basepoint: [this.x, 0.0, this.y],
+            u_transform: PV,
 
-          u_H: this.parent.H.front,
-          u_N: this.parent.N.buffer,
-          u_view_pos: resources.camera.position,
-          u_y_offset: 0.0,
-        });
+            u_H: this.parent.H.front,
+            u_N: this.parent.N.buffer,
+            u_view_pos: resources.camera.position,
+            u_y_offset: 0.0,
+          });
+        }
       }
 
-      if (uidata.active_overlay == UIOverlayState.SimTools) {
+      if (uidata.active_overlay == UIOverlayState.DebugView) {
         this.shaders.render_sim_mesh_base({
           u_basepoint: [this.x, 0.0, this.y],
           u_transform: PV,
@@ -109,8 +110,8 @@ class View3D extends View {
       }
 
       // THIS IS DEBUG STUFF
-      const base_height = 1;
-      let current_height = base_height;
+      // const base_height = 1;
+      // let current_height = base_height;
 
       // if (
       //   uidata.render_depth &&

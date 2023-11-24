@@ -2,15 +2,22 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
 export enum UIOverlayState {
-  DroneView = 0,
-  GroundView = 1,
-  SimTools = 2,
-  DebugTools = 3,
-  None = 4,
+  LandscapeView = 0,
+  SimulationView = 1,
+  DebugView = 2,
+  None = 3,
+}
+
+export enum UIOverlayVisibility {
+  Complete = 0,
+  Freelook = 1,
+  Hidden = 2,
+  Overlay = 3,
 }
 
 export type UIData = {
   active_overlay: UIOverlayState;
+  overlay_visibility: UIOverlayVisibility;
 
   render_depth: boolean;
   render_flux: boolean;
@@ -18,6 +25,8 @@ export type UIData = {
   render_curvature: boolean;
   render_erosion_accretion: boolean;
   render_slope: boolean;
+  render_dry: boolean;
+  render_wet: boolean;
 
   p1: [number, number];
   p2: [number, number];
@@ -52,6 +61,7 @@ export type SimulationParameters = {
 };
 
 export type SimulationData = {
+  name: string;
   state: SimulationState;
   parameters: SimulationParameters;
 };
@@ -64,13 +74,15 @@ type State = {
 type Actions = {
   setUIState: (stateUpdate: Partial<UIData>) => void;
   setSimState: (stateUpdate: Partial<SimulationState>) => void;
+  setSimName: (stateUpdate: string) => void;
   setSimParameters: (stateUpdate: Partial<SimulationParameters>) => void;
 };
 
 export const useApplicationState = create(
   immer<State & Actions>((set, get) => ({
     ui: {
-      active_overlay: UIOverlayState.DroneView,
+      active_overlay: UIOverlayState.LandscapeView,
+      overlay_visibility: UIOverlayVisibility.Complete,
 
       render_depth: true,
       render_flux: false,
@@ -78,6 +90,8 @@ export const useApplicationState = create(
       render_curvature: false,
       render_erosion_accretion: false,
       render_slope: false,
+      render_dry: true,
+      render_wet: true,
 
       p1: [0.0, 0.5],
       p2: [1.0, 0.5],
@@ -90,6 +104,7 @@ export const useApplicationState = create(
       color_normalization: 5.0,
     },
     sim: {
+      name: "",
       state: {
         loaded: false,
         running: true,
@@ -110,6 +125,12 @@ export const useApplicationState = create(
         min_failure_slope: 80.0,
         initial_water: 2.0,
       },
+    },
+
+    setSimName(nameUpdate: string) {
+      set((state) => {
+        state.sim.name = nameUpdate;
+      });
     },
 
     setUIState(stateUpdate: Partial<UIData>) {
