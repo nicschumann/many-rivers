@@ -7,9 +7,8 @@ import {
 } from "@/store";
 import OverlayButton from "../OverlayButton/OverlayButton";
 import { classNames } from "@/utils";
-import { River, rivers } from "@/simulation/data/rivers";
+import { River } from "@/simulation/data/rivers";
 import Link from "next/link";
-import PointerLockButton from "../PointerLockButton/PointerLockButton";
 import RiverLocations from "../RiverLocations/RiverLocations";
 import FooterRow from "../FooterRow/FooterRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";

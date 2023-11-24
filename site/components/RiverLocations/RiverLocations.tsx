@@ -16,7 +16,6 @@ export default function RiverLocations({
   const range = maxLat - minLat;
 
   const even = true;
-  const lineColor = "border-gray-700";
 
   return (
     <div className={classNames("relative w-full mx-24 h-8")}>

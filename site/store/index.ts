@@ -11,7 +11,8 @@ export enum UIOverlayState {
 export enum UIOverlayVisibility {
   Complete = 0,
   Freelook = 1,
-  Overlay = 2,
+  Hidden = 2,
+  Overlay = 3,
 }
 
 export type UIData = {

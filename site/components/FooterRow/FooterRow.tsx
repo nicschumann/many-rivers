@@ -2,7 +2,7 @@ import { River } from "@/simulation/data/rivers";
 import OverlayButton from "../OverlayButton/OverlayButton";
 import PointerLockButton from "../PointerLockButton/PointerLockButton";
 import { TILE_SIZE } from "@/simulation/constants";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { UIOverlayVisibility, useApplicationState } from "@/store";
 import { classNames } from "@/utils";
 
