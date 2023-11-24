@@ -8,8 +8,15 @@ export enum UIOverlayState {
   None = 3,
 }
 
+export enum UIOverlayVisibility {
+  Complete = 0,
+  Freelook = 1,
+  Overlay = 2,
+}
+
 export type UIData = {
   active_overlay: UIOverlayState;
+  overlay_visibility: UIOverlayVisibility;
 
   render_depth: boolean;
   render_flux: boolean;
@@ -70,6 +77,7 @@ export const useApplicationState = create(
   immer<State & Actions>((set, get) => ({
     ui: {
       active_overlay: UIOverlayState.LandscapeView,
+      overlay_visibility: UIOverlayVisibility.Complete,
 
       render_depth: true,
       render_flux: false,

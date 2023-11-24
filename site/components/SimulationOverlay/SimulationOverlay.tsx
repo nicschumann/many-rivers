@@ -21,9 +21,7 @@ export default function SimulationOverlay({
   t = 0,
   w = 0,
 }: SimulationOverlayProps) {
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [nextRiver, setNextRiver] = useState<River>(river);
-
   const isLoaded = useApplicationState((s) => s.sim.state.loaded);
   const activeOverlay = useApplicationState((s) => s.ui.active_overlay);
 

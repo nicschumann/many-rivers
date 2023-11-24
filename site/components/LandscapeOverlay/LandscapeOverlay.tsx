@@ -1,6 +1,10 @@
 "use client";
 
-import { UIOverlayState, useApplicationState } from "@/store";
+import {
+  UIOverlayState,
+  UIOverlayVisibility,
+  useApplicationState,
+} from "@/store";
 import OverlayButton from "../OverlayButton/OverlayButton";
 import { classNames } from "@/utils";
 import { River, rivers } from "@/simulation/data/rivers";
@@ -34,6 +38,13 @@ export default function DroneViewOverlay({
     };
   });
 
+  const overlayVisibility = useApplicationState((s) => s.ui.overlay_visibility);
+  const setOverlayVisibility = useApplicationState((s) => {
+    return (newState: UIOverlayVisibility) => {
+      s.setUIState({ overlay_visibility: newState });
+    };
+  });
+
   const setOverlayState = useApplicationState((s) => {
     return (newOverlayState: UIOverlayState) => {
       s.setUIState({ active_overlay: newOverlayState });
@@ -44,11 +55,13 @@ export default function DroneViewOverlay({
     setWasRunning(isRunning);
     setRunning(false);
     setModalIsOpen(true);
+    setOverlayVisibility(UIOverlayVisibility.Overlay);
   };
 
   const closeModal = () => {
     setModalIsOpen(false);
     setRunning(wasRunning);
+    setOverlayVisibility(UIOverlayVisibility.Complete);
   };
 
   return (
@@ -58,23 +71,25 @@ export default function DroneViewOverlay({
           "z-10 absolute top-0 bg-transparent h-full w-full p-6 flex flex-wrap text-white text-sm"
         )}
       >
-        <div className="flex w-full h-8 items-left">
-          <div className="">
-            <OverlayButton>
-              <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
-            </OverlayButton>
+        {overlayVisibility === UIOverlayVisibility.Complete && (
+          <div className="flex w-full h-8 items-left">
+            <div className="">
+              <OverlayButton>
+                <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
+              </OverlayButton>
+            </div>
+            {/* Locations overlay... */}
+            <RiverLocations currentSlug={river.slug} />
+            <div
+              className="ml-2"
+              onClick={() => setOverlayState(UIOverlayState.SimulationView)}
+            >
+              <OverlayButton>
+                <span>Mesh</span>
+              </OverlayButton>
+            </div>
           </div>
-          {/* Locations overlay... */}
-          <RiverLocations currentSlug={river.slug} />
-          <div
-            className="ml-2"
-            onClick={() => setOverlayState(UIOverlayState.SimulationView)}
-          >
-            <OverlayButton>
-              <span>Mesh</span>
-            </OverlayButton>
-          </div>
-        </div>
+        )}
 
         <FooterRow
           river={river}
