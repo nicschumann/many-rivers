@@ -192,7 +192,7 @@ export class Camera {
   set_random_spherical_position() {
     // NOTE(Nic): These are calibrated to do a reasonable
     // random thing, we can customize these to each location, too.
-    const r = Math.random() * 0.2 + 1.3;
+    const r = Math.random() * 0.2 + 0.75;
     const theta = Math.random() * 0.5 + 0.75;
     const phi = Math.random() * 2.0 * Math.PI;
 
