@@ -60,7 +60,7 @@ export default function DroneViewOverlay({
         <div className="flex w-full items-left">
           <div className="">
             <OverlayButton>
-              <Link href={`/rivers/${nextRiver.slug}`}>River</Link>
+              <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
             </OverlayButton>
           </div>
           {/* Locations overlay... */}
@@ -71,7 +71,7 @@ export default function DroneViewOverlay({
             onClick={() => setOverlayState(UIOverlayState.SimulationView)}
           >
             <OverlayButton>
-              <span>Simulation</span>
+              <span>Mesh</span>
             </OverlayButton>
           </div>
         </div>
@@ -87,6 +87,7 @@ export default function DroneViewOverlay({
       </div>
       {modalIsOpen && (
         <ModalOverlay closeModal={closeModal}>
+          {/* Description */}
           <div className="mt-8 indent-10">Project Description</div>
           <div className="mt-8 indent-10">
             The project consists of a computational model that aims to
@@ -122,6 +123,8 @@ export default function DroneViewOverlay({
             force over it — the operational regimes that reinforce the river as
             an artificial limit.
           </div>
+
+          {/* Disclaimer */}
           <div className="mt-8 indent-10">Technical Disclaimer</div>
           <div className="mt-8 indent-10">
             The website is fairly resource intensive and might slow down other
@@ -129,6 +132,35 @@ export default function DroneViewOverlay({
             computer with a capable WebGL graphics card to run. It is only
             designed to work on desktop computers.
           </div>
+
+          {/* Instructions */}
+          <div className="mt-8 indent-10">Instructions</div>
+          <div className="mt-8 indent-10">
+            <ul>
+              <li>
+                Each time you enter the website a new river loads with
+                randomized parameters.
+              </li>
+              <li>
+                Use the arrow keys (or WASD) and mouse pad to navigate and zoom
+                in and out.{" "}
+              </li>
+              <li>
+                Select different locations across the river using the map.
+              </li>
+              <li>
+                Interact with the model&rsquo;s hydrological variables by
+                clicking on the tools view.
+              </li>
+              <li>
+                The soundscape is programmatic. You can interact with it moving
+                around the space and by way of the simulator&rsquo;s own
+                interactions.
+              </li>
+            </ul>
+          </div>
+
+          {/* Credits */}
           <div className="mt-8 indent-10">Credits</div>
           <div className="mt-8 indent-10">
             This project was conceptualized and directed by Federico Pérez

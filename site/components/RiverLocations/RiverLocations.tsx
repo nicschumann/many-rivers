@@ -20,10 +20,6 @@ export default function RiverLocations({
 
   return (
     <div className={classNames("relative w-full mx-8 h-8")}>
-      <div
-        className={`absolute w-full h-[50.5%] border-b ${lineColor}`}
-        // style={{left:'0%', top: '50%'}}
-      ></div>
       {riverArray.map((river, i) => {
         const lat = river.coordinates[0];
         const left = even
@@ -44,13 +40,13 @@ export default function RiverLocations({
             }}
             className={"absolute"}
           >
-            <span className="w-4 h-4 bg-black p-1 block rounded-lg">
+            <span className="w-5 h-5 bg-transparent p-1 block rounded-lg">
               <span
                 className={classNames(
                   active
                     ? "bg-white border-white"
                     : "bg-black hover:bg-white border-white",
-                  "w-2 h-2  border  block rounded-lg"
+                  "w-3 h-3  border  block rounded-lg"
                 )}
               >
                 &nbsp;
