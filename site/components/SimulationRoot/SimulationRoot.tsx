@@ -18,6 +18,15 @@ interface SimulationRootProps {
   setW: Dispatch<SetStateAction<number>>;
 }
 
+// Standard Normal variate using Box-Muller transform.
+function gaussianRandom(mean = 0, stdev = 1) {
+  const u = 1 - Math.random(); // Converting [0,1) to (0,1]
+  const v = Math.random();
+  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  // Transform to the desired mean and standard deviation:
+  return z * stdev + mean;
+}
+
 export default function SimulationRoot({
   river,
   setT,
@@ -68,8 +77,31 @@ export default function SimulationRoot({
       river.parameters
     );
 
+    const erosion_speed = Math.abs(
+      gaussianRandom(river.parameters.erosion_speed, 0.05)
+    );
+    const accretion_speed = Math.abs(
+      gaussianRandom(river.parameters.accretion_speed, 0.05)
+    );
+    const initial_water = Math.abs(
+      gaussianRandom(
+        river.parameters.initial_water,
+        river.parameters.initial_water * 2.0
+      )
+    );
+
+    console.log(
+      `Initial Erosion: ${erosion_speed}\nInitial Accretion: ${accretion_speed}\nInitial Water: ${initial_water}`
+    );
+
     setRenderContext(localRenderContext);
-    setSimParameters(river.parameters);
+    setSimParameters({
+      ...river.parameters,
+
+      erosion_speed,
+      accretion_speed,
+      initial_water,
+    });
     setSimName(river.slug);
     setUIState(river.ui);
 
