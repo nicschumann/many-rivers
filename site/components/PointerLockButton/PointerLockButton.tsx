@@ -1,12 +1,6 @@
 import { Dispatch, SetStateAction, useEffect } from "react";
 import OverlayButton from "../OverlayButton/OverlayButton";
-
-import * as input from "@/simulation/inputs";
-import {
-  UIOverlayState,
-  UIOverlayVisibility,
-  useApplicationState,
-} from "@/store";
+import { UIOverlayVisibility, useApplicationState } from "@/store";
 
 interface PointerLockButton {
   className: string;

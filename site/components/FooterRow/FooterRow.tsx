@@ -87,7 +87,12 @@ export default function FooterRow({
 
         {/* <div className="text-white ml-2">Test</div> */}
       </div>
-      <div className="flex text-left uppercase">
+      <div
+        className={classNames(
+          shouldHideMetadata ? "invisible" : "",
+          "flex text-left uppercase"
+        )}
+      >
         <div className="px-10 py-1">{instructionText}</div>
       </div>
       <PointerLockButton

@@ -9,7 +9,6 @@ import OverlayButton from "../OverlayButton/OverlayButton";
 import { classNames } from "@/utils";
 import { useState } from "react";
 import { River } from "@/simulation/data/rivers";
-import PointerLockButton from "../PointerLockButton/PointerLockButton";
 import FooterRow from "../FooterRow/FooterRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
@@ -25,7 +24,7 @@ export default function SimulationToolsOverlay({
   t,
   w,
 }: SimulationToolsOverlayProps) {
-  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [infoModalIsOpen, setInfoModalIsOpen] = useState(false);
 
   const [wasRunning, setWasRunning] = useState(false);
 
@@ -52,23 +51,15 @@ export default function SimulationToolsOverlay({
   const openModal = () => {
     setWasRunning(isRunning);
     setRunning(false);
-    setModalIsOpen(true);
+    setInfoModalIsOpen(true);
     setOverlayVisibility(UIOverlayVisibility.Overlay);
   };
 
   const closeModal = () => {
-    setModalIsOpen(false);
+    setInfoModalIsOpen(false);
     setRunning(wasRunning);
     setOverlayVisibility(UIOverlayVisibility.Complete);
   };
-
-  const renderState = useApplicationState((s) => {
-    return {
-      hydroynamics: s.ui.render_flux,
-      sediment: s.ui.render_erosion_accretion,
-      curvature: s.ui.render_curvature,
-    };
-  });
 
   return (
     <div
@@ -78,6 +69,11 @@ export default function SimulationToolsOverlay({
     >
       {overlayVisibility === UIOverlayVisibility.Complete && (
         <div className="flex w-full h-8 items-left">
+          <div className="">
+            <OverlayButton>
+              <span className="uppercase">glossary</span>
+            </OverlayButton>
+          </div>
           <div
             onClick={() => setOverlayState(UIOverlayState.LandscapeView)}
             className="ml-auto"
@@ -89,43 +85,6 @@ export default function SimulationToolsOverlay({
         </div>
       )}
 
-      {/* <div className="flex mt-auto w-full items-left">
-        <div className="divide-y border w-96 border-white text-[#ff0000] rounded-lg">
-          <div className="flex">
-            <div className="m-2">Erosion Speed</div>
-            <div className="ml-auto flex">
-              <div className="m-2 hover:border-b cursor-pointer">Slow</div>
-              <div className="m-2 hover:border-b border-b">Medium</div>
-              <div className="m-2 hover:border-b">Fast</div>
-            </div>
-          </div>
-          <div className="flex">
-            <div className="m-2">Erosion Threshold</div>
-            <div className="ml-auto flex">
-              <div className="m-2 hover:border-b">Low</div>
-              <div className="m-2 hover:border-b border-b">Normal</div>
-              <div className="m-2 hover:border-b">High</div>
-            </div>
-          </div>
-          <div className="flex">
-            <div className="m-2">Accretion Speed</div>
-            <div className="ml-auto flex">
-              <div className="m-2 hover:border-b">Slow</div>
-              <div className="m-2 hover:border-b border-b">Medium</div>
-              <div className="m-2 hover:border-b">Fast</div>
-            </div>
-          </div>
-          <div className="flex">
-            <div className="m-2">Accretion Threshold</div>
-            <div className="ml-auto flex">
-              <div className="m-2 hover:border-b">Low</div>
-              <div className="m-2 hover:border-b border-b">Normal</div>
-              <div className="m-2 hover:border-b">High</div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
       <FooterRow
         river={river}
         t={t}
@@ -134,7 +93,7 @@ export default function SimulationToolsOverlay({
         setRunning={setRunning}
         openModal={openModal}
       />
-      {modalIsOpen && (
+      {infoModalIsOpen && (
         <ModalOverlay closeModal={closeModal}>
           <ProjectDescription />
         </ModalOverlay>
