@@ -2,7 +2,9 @@ import { River } from "@/simulation/data/rivers";
 import OverlayButton from "../OverlayButton/OverlayButton";
 import PointerLockButton from "../PointerLockButton/PointerLockButton";
 import { TILE_SIZE } from "@/simulation/constants";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { UIOverlayVisibility, useApplicationState } from "@/store";
+import { classNames } from "@/utils";
 
 interface FooterRowProps {
   t: number;
@@ -38,14 +40,19 @@ export default function FooterRow({
   openModal,
 }: FooterRowProps) {
   const [cameraIsActive, setCameraIsActive] = useState(false);
+  const overlayVisibility = useApplicationState((s) => s.ui.overlay_visibility);
 
   const instructionText = cameraIsActive
     ? "Press 'ESC' to leave 360° view"
     : "Navigate using the arrow keys (or WASD)";
 
+  const shouldHideButtons =
+    cameraIsActive || overlayVisibility !== UIOverlayVisibility.Complete;
+  const shouldHideMetadata = overlayVisibility === UIOverlayVisibility.Overlay;
+
   return (
     <div className="flex mt-auto w-full items-left">
-      <div className="flex">
+      <div className={classNames(shouldHideButtons ? "invisible" : "", "flex")}>
         <div onClick={openModal}>
           <OverlayButton>
             <span>Info</span>
@@ -53,9 +60,30 @@ export default function FooterRow({
         </div>
       </div>
       <div className="mr-auto flex text-left uppercase">
-        <div className="px-10 py-1">{formatAsLatLong(river.coordinates)} </div>
-        <div className="pr-10 py-1">{formatAsVolume(w)} </div>
-        <div className="pr-10 py-1">{formatAsSteps(t)}</div>
+        <div
+          className={classNames(
+            shouldHideMetadata ? "invisible" : "",
+            "px-10 py-1"
+          )}
+        >
+          {formatAsLatLong(river.coordinates)}{" "}
+        </div>
+        <div
+          className={classNames(
+            shouldHideMetadata ? "invisible" : "",
+            "pr-10 py-1"
+          )}
+        >
+          {formatAsVolume(w)}{" "}
+        </div>
+        <div
+          className={classNames(
+            shouldHideMetadata ? "invisible" : "",
+            "pr-10 py-1"
+          )}
+        >
+          {formatAsSteps(t)}
+        </div>
 
         {/* <div className="text-white ml-2">Test</div> */}
       </div>
@@ -65,7 +93,7 @@ export default function FooterRow({
       <PointerLockButton
         pointerIsLocked={cameraIsActive}
         setPointerIsLocked={setCameraIsActive}
-        className="ml-auto"
+        className={classNames(shouldHideButtons ? "invisible" : "", "ml-auto")}
       />
       {/* <div onClick={() => setRunning(!isRunning)} className="w-32 text-right">
         <OverlayButton>
