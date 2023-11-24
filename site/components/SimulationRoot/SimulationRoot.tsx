@@ -9,13 +9,22 @@ import { RenderContext } from "@/simulation/context";
 import { InputAPI } from "@/simulation/inputs";
 import { TARGET_FRAMETIME } from "@/simulation/constants";
 
-import { SimulationData, UIOverlayState, useApplicationState } from "@/store";
+import { UIOverlayState, useApplicationState } from "@/store";
 import { River } from "@/simulation/data/rivers";
 
 interface SimulationRootProps {
   river: River;
   setT: Dispatch<SetStateAction<number>>;
   setW: Dispatch<SetStateAction<number>>;
+}
+
+// Standard Normal variate using Box-Muller transform.
+function gaussianRandom(mean = 0, stdev = 1) {
+  const u = 1 - Math.random(); // Converting [0,1) to (0,1]
+  const v = Math.random();
+  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  // Transform to the desired mean and standard deviation:
+  return z * stdev + mean;
 }
 
 export default function SimulationRoot({
@@ -35,6 +44,7 @@ export default function SimulationRoot({
     (state) => state.setSimParameters
   );
   const setUIState = useApplicationState((state) => state.setUIState);
+  const setSimName = useApplicationState((state) => state.setSimName);
 
   /**
    * Initial canvas setup.
@@ -67,29 +77,46 @@ export default function SimulationRoot({
       river.parameters
     );
 
+    const erosion_speed = Math.abs(
+      gaussianRandom(river.parameters.erosion_speed, 0.05)
+    );
+    const accretion_speed = Math.abs(
+      gaussianRandom(river.parameters.accretion_speed, 0.05)
+    );
+    const initial_water = Math.abs(
+      gaussianRandom(
+        river.parameters.initial_water,
+        river.parameters.initial_water * 2.0
+      )
+    );
+
+    console.log(
+      `Initial Erosion: ${erosion_speed}\nInitial Accretion: ${accretion_speed}\nInitial Water: ${initial_water}`
+    );
+
     setRenderContext(localRenderContext);
-    setSimParameters(river.parameters);
+    setSimParameters({
+      ...river.parameters,
+
+      erosion_speed,
+      accretion_speed,
+      initial_water,
+    });
+    setSimName(river.slug);
     setUIState(river.ui);
 
     // Resize Handler..
 
-    const resizeHandler = () => {
-      if (baseCanvas.current == null) return;
-      // baseCanvas.current.width = window.innerWidth
-      // baseCanvas.current.height = window.innerHeight
+    // const resizeHandler = () => {
+    //   if (baseCanvas.current == null) return;
+    // };
 
-      // regl._gl.canvas.width = window.innerWidth * 2.0;
-      // regl._gl.canvas.height = window.innerHeight * 2.0;
+    // window.addEventListener("resize", resizeHandler);
 
-      // renderContext.setup_transform();
-    };
-
-    window.addEventListener("resize", resizeHandler);
-
-    return () => {
-      window.removeEventListener("resize", resizeHandler);
-    };
-  }, [river, setSimParameters, setUIState]);
+    // return () => {
+    //   window.removeEventListener("resize", resizeHandler);
+    // };
+  }, [river, setSimParameters, setUIState, setSimName]);
 
   useEffect(() => {
     if (renderContext == null) return;
@@ -99,13 +126,8 @@ export default function SimulationRoot({
     let shift_key_is_down = false;
 
     // game loop
-    // TODO(Nic): replace with requestAnimationFrame
-    // TODO(Nic): replace with manual canvas and resize canvas appropriately.
-
     let t_minus_1 = performance.now();
 
-    // setReglInstance(regl)
-    // NOTE(Nic): this should move to the other event loop.
     const input = new InputAPI(window);
     input.init();
 
@@ -116,7 +138,7 @@ export default function SimulationRoot({
         setSimState({ loaded: true });
       }
 
-      if (uiData.active_overlay == UIOverlayState.SimTools) {
+      if (uiData.active_overlay == UIOverlayState.SimulationView) {
         renderContext.views.slice(1).forEach((v) => {
           v.active = true;
         });
@@ -129,8 +151,6 @@ export default function SimulationRoot({
       renderContext.regl.clear({ color: [0, 0, 0, 1] });
       renderContext.setup_transform();
       renderContext.render_tiles(simData, uiData);
-
-      console.log(renderContext.resources.water_volume);
 
       let t = performance.now();
       renderContext.resources.dt = (t - t_minus_1) / 1000;
@@ -151,53 +171,6 @@ export default function SimulationRoot({
       if (e.key == " ") {
         parameters.running = !parameters.running;
         setSimState({ running: !simData.state.running });
-        // document.getElementById('running').checked = parameters.running;
-      }
-
-      if (e.key == "f") {
-        parameters.render_flux = !parameters.render_flux;
-        parameters.render_slope = false;
-        parameters.render_flux_magnitude = false;
-        // document.getElementById('render_flux').checked = parameters.render_flux;
-        parameters.render_curvature = false;
-        parameters.render_erosion_accretion = false;
-      }
-
-      if (e.key == "m") {
-        parameters.render_flux_magnitude = !parameters.render_flux_magnitude;
-        parameters.render_flux = false;
-        parameters.render_slope = false;
-        // document.getElementById('render_flux').checked = parameters.render_flux;
-        parameters.render_curvature = false;
-        parameters.render_erosion_accretion = false;
-      }
-
-      if (e.key == "c") {
-        parameters.render_flux = false;
-        parameters.render_flux_magnitude = false;
-        parameters.render_slope = false;
-        parameters.render_curvature = !parameters.render_curvature;
-        // document.getElementById('render_curvature').checked = parameters.render_curvature;
-        parameters.render_erosion_accretion = false;
-      }
-
-      if (e.key == "e") {
-        parameters.render_flux = false;
-        parameters.render_flux_magnitude = false;
-        parameters.render_slope = false;
-        parameters.render_curvature = false;
-        parameters.render_erosion_accretion =
-          !parameters.render_erosion_accretion;
-        // document.getElementById('render_erosion_accretion').checked = parameters.render_erosion_accretion;
-      }
-
-      if (e.key == "q") {
-        parameters.render_flux = false;
-        parameters.render_flux_magnitude = false;
-        parameters.render_curvature = false;
-        parameters.render_slope = !parameters.render_slope;
-        parameters.render_erosion_accretion = false;
-        // document.getElementById('render_slope').checked = parameters.render_slope;
       }
 
       if (e.key == "ArrowRight") {

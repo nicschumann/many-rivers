@@ -1,13 +1,10 @@
 "use client";
 
 import { UIOverlayState, useApplicationState } from "@/store";
-import OverlayButton from "../OverlayButton/OverlayButton";
-import { classNames } from "@/utils";
 import { useEffect, useState } from "react";
 import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
 import { rivers, River } from "@/simulation/data/rivers";
-import Link from "next/link";
-import DroneViewOverlay from "../DroneViewOverlay/DroneViewOverlay";
+import LandscapeOverlay from "../LandscapeOverlay/LandscapeOverlay";
 import SimulationToolsOverlay from "../SimulationToolsOverlay/SimulationToolsOverlay";
 
 interface SimulationOverlayProps {
@@ -21,9 +18,7 @@ export default function SimulationOverlay({
   t = 0,
   w = 0,
 }: SimulationOverlayProps) {
-  const [overlayVisible, setOverlayVisible] = useState(true);
   const [nextRiver, setNextRiver] = useState<River>(river);
-
   const isLoaded = useApplicationState((s) => s.sim.state.loaded);
   const activeOverlay = useApplicationState((s) => s.ui.active_overlay);
 
@@ -39,11 +34,11 @@ export default function SimulationOverlay({
 
   return (
     <>
-      {isLoaded && activeOverlay == UIOverlayState.DroneView && (
-        <DroneViewOverlay river={river} nextRiver={nextRiver} t={t} w={w} />
+      {isLoaded && activeOverlay == UIOverlayState.LandscapeView && (
+        <LandscapeOverlay river={river} nextRiver={nextRiver} t={t} w={w} />
       )}
-      {isLoaded && activeOverlay == UIOverlayState.SimTools && (
-        <SimulationToolsOverlay river={river} />
+      {isLoaded && activeOverlay == UIOverlayState.SimulationView && (
+        <SimulationToolsOverlay river={river} t={t} w={w} />
       )}
       {!isLoaded && <LoadingOverlay />}
     </>
