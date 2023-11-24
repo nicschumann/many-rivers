@@ -13,6 +13,7 @@ import FooterRow from "../FooterRow/FooterRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
 import ControlsRow from "../ControlsRow/ControlsRow";
+import ProjectGlossary from "../ProjectGlossary/ProjectGlossary";
 
 interface SimulationToolsOverlayProps {
   t: number;
@@ -26,6 +27,7 @@ export default function SimulationToolsOverlay({
   w,
 }: SimulationToolsOverlayProps) {
   const [infoModalIsOpen, setInfoModalIsOpen] = useState(false);
+  const [glossaryModalIsOpen, setGlossaryModelIsOpen] = useState(false);
 
   const [wasRunning, setWasRunning] = useState(false);
 
@@ -49,15 +51,28 @@ export default function SimulationToolsOverlay({
     };
   });
 
-  const openModal = () => {
+  const openInfoModal = () => {
     setWasRunning(isRunning);
     setRunning(false);
     setInfoModalIsOpen(true);
     setOverlayVisibility(UIOverlayVisibility.Overlay);
   };
 
-  const closeModal = () => {
+  const closeInfoModal = () => {
     setInfoModalIsOpen(false);
+    setRunning(wasRunning);
+    setOverlayVisibility(UIOverlayVisibility.Complete);
+  };
+
+  const openGlossaryModal = () => {
+    setWasRunning(isRunning);
+    setRunning(false);
+    setGlossaryModelIsOpen(true);
+    setOverlayVisibility(UIOverlayVisibility.Overlay);
+  };
+
+  const closeGlossaryModal = () => {
+    setGlossaryModelIsOpen(false);
     setRunning(wasRunning);
     setOverlayVisibility(UIOverlayVisibility.Complete);
   };
@@ -70,7 +85,7 @@ export default function SimulationToolsOverlay({
     >
       {overlayVisibility === UIOverlayVisibility.Complete && (
         <div className="flex w-full h-8 items-left">
-          <div className="">
+          <div onClick={openGlossaryModal}>
             <OverlayButton>
               <span className="uppercase">glossary</span>
             </OverlayButton>
@@ -90,11 +105,16 @@ export default function SimulationToolsOverlay({
         w={w}
         isRunning={isRunning}
         setRunning={setRunning}
-        openModal={openModal}
+        openModal={openInfoModal}
       />
       {infoModalIsOpen && (
-        <ModalOverlay closeModal={closeModal}>
+        <ModalOverlay closeModal={closeInfoModal}>
           <ProjectDescription />
+        </ModalOverlay>
+      )}
+      {glossaryModalIsOpen && (
+        <ModalOverlay closeModal={closeGlossaryModal}>
+          <ProjectGlossary />
         </ModalOverlay>
       )}
     </div>
