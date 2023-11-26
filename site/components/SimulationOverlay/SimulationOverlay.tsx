@@ -38,7 +38,12 @@ export default function SimulationOverlay({
         <LandscapeOverlay river={river} nextRiver={nextRiver} t={t} w={w} />
       )}
       {isLoaded && activeOverlay == UIOverlayState.SimulationView && (
-        <SimulationToolsOverlay river={river} t={t} w={w} />
+        <SimulationToolsOverlay
+          river={river}
+          nextRiver={nextRiver}
+          t={t}
+          w={w}
+        />
       )}
       {!isLoaded && <LoadingOverlay />}
     </>

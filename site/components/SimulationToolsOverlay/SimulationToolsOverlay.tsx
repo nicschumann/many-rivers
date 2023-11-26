@@ -14,15 +14,18 @@ import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
 import ControlsRow from "../ControlsRow/ControlsRow";
 import ProjectGlossary from "../ProjectGlossary/ProjectGlossary";
+import Link from "next/link";
 
 interface SimulationToolsOverlayProps {
   t: number;
   w: number;
   river: River;
+  nextRiver: River;
 }
 
 export default function SimulationToolsOverlay({
   river,
+  nextRiver,
   t,
   w,
 }: SimulationToolsOverlayProps) {
@@ -85,9 +88,9 @@ export default function SimulationToolsOverlay({
     >
       {overlayVisibility === UIOverlayVisibility.Complete && (
         <div className="flex w-full h-8 items-left">
-          <div onClick={openGlossaryModal}>
+          <div className="">
             <OverlayButton>
-              <span className="uppercase">glossary</span>
+              <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
             </OverlayButton>
           </div>
           <ControlsRow className="" />
