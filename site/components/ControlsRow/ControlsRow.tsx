@@ -144,19 +144,17 @@ export default function ControlsRow({ className }: ControlRowProps) {
         }}
       /> */}
       <ControlToggle
-        name="dry cells"
-        active={currentUI.dry}
-        onClick={() => {
-          console.log(currentUI);
-          setUIState({ render_dry: !currentUI.dry });
-        }}
-      />
-      <ControlToggle
         name="wet cells"
         active={currentUI.wet}
         onClick={() => {
-          console.log(currentUI);
           setUIState({ render_wet: !currentUI.wet });
+        }}
+      />
+      <ControlToggle
+        name="dry cells"
+        active={currentUI.dry}
+        onClick={() => {
+          setUIState({ render_dry: !currentUI.dry });
         }}
       />
     </div>

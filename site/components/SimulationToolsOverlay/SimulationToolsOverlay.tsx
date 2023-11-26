@@ -14,20 +14,23 @@ import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
 import ControlsRow from "../ControlsRow/ControlsRow";
 import ProjectGlossary from "../ProjectGlossary/ProjectGlossary";
+import Link from "next/link";
 
 interface SimulationToolsOverlayProps {
   t: number;
   w: number;
   river: River;
+  nextRiver: River;
 }
 
 export default function SimulationToolsOverlay({
   river,
+  nextRiver,
   t,
   w,
 }: SimulationToolsOverlayProps) {
   const [infoModalIsOpen, setInfoModalIsOpen] = useState(false);
-  const [glossaryModalIsOpen, setGlossaryModelIsOpen] = useState(false);
+  // const [glossaryModalIsOpen, setGlossaryModelIsOpen] = useState(false);
 
   const [wasRunning, setWasRunning] = useState(false);
 
@@ -64,59 +67,61 @@ export default function SimulationToolsOverlay({
     setOverlayVisibility(UIOverlayVisibility.Complete);
   };
 
-  const openGlossaryModal = () => {
-    setWasRunning(isRunning);
-    setRunning(false);
-    setGlossaryModelIsOpen(true);
-    setOverlayVisibility(UIOverlayVisibility.Overlay);
-  };
+  // const openGlossaryModal = () => {
+  //   setWasRunning(isRunning);
+  //   setRunning(false);
+  //   setGlossaryModelIsOpen(true);
+  //   setOverlayVisibility(UIOverlayVisibility.Overlay);
+  // };
 
-  const closeGlossaryModal = () => {
-    setGlossaryModelIsOpen(false);
-    setRunning(wasRunning);
-    setOverlayVisibility(UIOverlayVisibility.Complete);
-  };
+  // const closeGlossaryModal = () => {
+  //   setGlossaryModelIsOpen(false);
+  //   setRunning(wasRunning);
+  //   setOverlayVisibility(UIOverlayVisibility.Complete);
+  // };
 
   return (
-    <div
-      className={classNames(
-        "z-10 absolute top-0 bg-transparent h-full w-full p-6 flex flex-wrap text-white text-sm"
-      )}
-    >
-      {overlayVisibility === UIOverlayVisibility.Complete && (
-        <div className="flex w-full h-8 items-left">
-          <div onClick={openGlossaryModal}>
-            <OverlayButton>
-              <span className="uppercase">glossary</span>
-            </OverlayButton>
+    <>
+      <div
+        className={classNames(
+          "z-10 absolute top-0 bg-transparent h-full w-full p-6 flex flex-wrap text-white text-sm"
+        )}
+      >
+        {overlayVisibility === UIOverlayVisibility.Complete && (
+          <div className="flex w-full h-8 items-left">
+            <div className="">
+              <OverlayButton>
+                <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
+              </OverlayButton>
+            </div>
+            <ControlsRow className="" />
+            <div onClick={() => setOverlayState(UIOverlayState.LandscapeView)}>
+              <OverlayButton>
+                <span className="uppercase">landscape</span>
+              </OverlayButton>
+            </div>
           </div>
-          <ControlsRow className="" />
-          <div onClick={() => setOverlayState(UIOverlayState.LandscapeView)}>
-            <OverlayButton>
-              <span className="uppercase">landscape</span>
-            </OverlayButton>
-          </div>
-        </div>
-      )}
+        )}
 
-      <FooterRow
-        river={river}
-        t={t}
-        w={w}
-        isRunning={isRunning}
-        setRunning={setRunning}
-        openModal={openInfoModal}
-      />
+        <FooterRow
+          river={river}
+          t={t}
+          w={w}
+          isRunning={isRunning}
+          setRunning={setRunning}
+          openModal={openInfoModal}
+        />
+      </div>
       {infoModalIsOpen && (
         <ModalOverlay closeModal={closeInfoModal}>
           <ProjectDescription />
         </ModalOverlay>
       )}
-      {glossaryModalIsOpen && (
+      {/* {glossaryModalIsOpen && (
         <ModalOverlay closeModal={closeGlossaryModal}>
           <ProjectGlossary />
         </ModalOverlay>
-      )}
-    </div>
+      )} */}
+    </>
   );
 }

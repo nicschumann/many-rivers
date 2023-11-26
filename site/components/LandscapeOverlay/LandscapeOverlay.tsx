@@ -15,19 +15,19 @@ import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import { useState } from "react";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
 
-interface DroneViewOverlayProps {
+interface LandscapeOverlayProps {
   river: River;
   nextRiver: River;
   t: number;
   w: number;
 }
 
-export default function DroneViewOverlay({
+export default function LandscapeOverlay({
   river,
   nextRiver,
   t,
   w,
-}: DroneViewOverlayProps) {
+}: LandscapeOverlayProps) {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [wasRunning, setWasRunning] = useState(false);
   const isRunning = useApplicationState((s) => s.sim.state.running);
