@@ -143,14 +143,14 @@ export class Camera {
       this.rotations = [0, 0];
     }
 
-    if (input.key_is_down("w")) {
+    if (input.key_is_down("w") || input.key_is_down("ArrowUp")) {
       // POS_DEBUG(this.position, this.target);
       let dir = this.front;
       this.input_forces.push(dir);
       this.target_forces.push(dir);
     }
 
-    if (input.key_is_down("s")) {
+    if (input.key_is_down("s") || input.key_is_down("ArrowDown")) {
       // POS_DEBUG(this.position, this.target);
 
       let dir = vec3.negate([0, 0, 0], this.front);
@@ -158,13 +158,13 @@ export class Camera {
       this.target_forces.push(dir);
     }
 
-    if (input.key_is_down("a")) {
+    if (input.key_is_down("a") || input.key_is_down("ArrowLeft")) {
       let dir = this.right;
       this.input_forces.push(dir);
       this.target_forces.push(dir);
     }
 
-    if (input.key_is_down("d")) {
+    if (input.key_is_down("d") || input.key_is_down("ArrowRight")) {
       let dir = vec3.negate([0, 0, 0], this.right);
       this.input_forces.push(dir);
       this.target_forces.push(dir);

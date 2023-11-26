@@ -197,32 +197,24 @@ export default function SimulationRoot({
         shift_key_is_down = true;
       }
 
-      if (e.key == " ") {
-        parameters.running = !parameters.running;
-        setSimState({ running: !simData.state.running });
-      }
+      // if (e.key == " ") {
+      //   parameters.running = !parameters.running;
+      //   setSimState({ running: !simData.state.running });
+      // }
 
-      if (e.key == "t") {
-        renderContext.resources.camera.transition_to_top_view();
-      }
+      // if (e.key == "g") {
+      //   console.log(renderContext.resources.camera.position);
+      //   console.log(renderContext.resources.camera.target);
+      // }
 
-      if (e.key == "g") {
-        console.log(renderContext.resources.camera.position);
-        console.log(renderContext.resources.camera.target);
-      }
-
-      if (e.key == "p") {
-        renderContext.resources.camera.transition_to_perspective_view();
-      }
-
-      if (e.key == "ArrowRight") {
-        renderContext.regl.clear({ color: [0, 0, 0, 1] });
-        let running = parameters.running;
-        parameters.running = true;
-        renderContext.setup_transform();
-        renderContext.render_tiles(simData, uiData);
-        parameters.running = running;
-      }
+      // if (e.key == "ArrowRight") {
+      //   renderContext.regl.clear({ color: [0, 0, 0, 1] });
+      //   let running = parameters.running;
+      //   parameters.running = true;
+      //   renderContext.setup_transform();
+      //   renderContext.render_tiles(simData, uiData);
+      //   parameters.running = running;
+      // }
     };
 
     const keyupHandler = (e: KeyboardEvent) => {
