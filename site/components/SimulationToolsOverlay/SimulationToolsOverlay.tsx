@@ -30,7 +30,7 @@ export default function SimulationToolsOverlay({
   w,
 }: SimulationToolsOverlayProps) {
   const [infoModalIsOpen, setInfoModalIsOpen] = useState(false);
-  const [glossaryModalIsOpen, setGlossaryModelIsOpen] = useState(false);
+  // const [glossaryModalIsOpen, setGlossaryModelIsOpen] = useState(false);
 
   const [wasRunning, setWasRunning] = useState(false);
 
@@ -67,18 +67,18 @@ export default function SimulationToolsOverlay({
     setOverlayVisibility(UIOverlayVisibility.Complete);
   };
 
-  const openGlossaryModal = () => {
-    setWasRunning(isRunning);
-    setRunning(false);
-    setGlossaryModelIsOpen(true);
-    setOverlayVisibility(UIOverlayVisibility.Overlay);
-  };
+  // const openGlossaryModal = () => {
+  //   setWasRunning(isRunning);
+  //   setRunning(false);
+  //   setGlossaryModelIsOpen(true);
+  //   setOverlayVisibility(UIOverlayVisibility.Overlay);
+  // };
 
-  const closeGlossaryModal = () => {
-    setGlossaryModelIsOpen(false);
-    setRunning(wasRunning);
-    setOverlayVisibility(UIOverlayVisibility.Complete);
-  };
+  // const closeGlossaryModal = () => {
+  //   setGlossaryModelIsOpen(false);
+  //   setRunning(wasRunning);
+  //   setOverlayVisibility(UIOverlayVisibility.Complete);
+  // };
 
   return (
     <>
@@ -117,11 +117,11 @@ export default function SimulationToolsOverlay({
           <ProjectDescription />
         </ModalOverlay>
       )}
-      {glossaryModalIsOpen && (
+      {/* {glossaryModalIsOpen && (
         <ModalOverlay closeModal={closeGlossaryModal}>
           <ProjectGlossary />
         </ModalOverlay>
-      )}
+      )} */}
     </>
   );
 }

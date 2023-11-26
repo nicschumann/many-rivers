@@ -23,7 +23,7 @@ export default function ControlRange({ range }: ControlRangeProps) {
               className={classNames(
                 rangeElement.active
                   ? "bg-white border-white"
-                  : "bg-black hover:bg-white hover:bg-opacity-50 border-white",
+                  : "bg-transparent hover:bg-white hover:bg-opacity-50 border-white",
                 "w-3 h-3 border block rounded-lg"
               )}
             >

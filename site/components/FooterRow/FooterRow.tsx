@@ -31,14 +31,7 @@ const formatAsVolume = (w: number): string => {
   )} dry`;
 };
 
-export default function FooterRow({
-  t,
-  w,
-  river,
-  isRunning,
-  setRunning,
-  openModal,
-}: FooterRowProps) {
+export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
   const [cameraIsActive, setCameraIsActive] = useState(false);
   const overlayVisibility = useApplicationState((s) => s.ui.overlay_visibility);
 

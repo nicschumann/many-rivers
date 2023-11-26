@@ -9,12 +9,13 @@ export default function ProjectDescription() {
       {/* Description */}
       <div className="indent-10 uppercase">Project Description</div>
       <div className="mt-8">
-        The project consists of a computational model that aims to anticipate
-        the future geomorphology of the Rio Grande / Río Bravo and, with it, of
-        the U.S.-Mexico border. Taking into account the physics that participate
-        in the large-scale evolution of the river, the program generates
-        speculative landscapes by simulating complex interactions between water
-        and land in specific places and across geological temporalities.
+        All Possible Rivers consists of a computational model that aims to
+        anticipate the future geomorphology of the Rio Grande / Río Bravo and,
+        with it, of the U.S.-Mexico border. Taking into account the physics that
+        participate in the large-scale evolution of the river, the program
+        generates speculative landscapes by simulating complex interactions
+        between water and land in specific places and across geological
+        temporalities.
       </div>
       <div className="mt-8">
         A pipeline of several computational steps calculates the capacities of
