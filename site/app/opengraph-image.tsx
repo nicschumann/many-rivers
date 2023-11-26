@@ -1,5 +1,4 @@
 import { ImageResponse } from "next/server";
-import { rivers } from "@/simulation/data/rivers";
 
 // Route segment config
 export const runtime = "edge";
@@ -16,9 +15,6 @@ export const contentType = "image/png";
 // Image generation
 export default async function Image({ params }: { params: { slug: string } }) {
   // Font
-  const interSemiBold = fetch(
-    new URL("./Inter-SemiBold.ttf", import.meta.url)
-  ).then((res) => res.arrayBuffer());
 
   return new ImageResponse(
     (
@@ -43,14 +39,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
       // For convenience, we can re-use the exported opengraph-image
       // size config to also set the ImageResponse's width and height.
       ...size,
-      fonts: [
-        {
-          name: "Inter",
-          data: await interSemiBold,
-          style: "normal",
-          weight: 400,
-        },
-      ],
+      fonts: [],
     }
   );
 }
