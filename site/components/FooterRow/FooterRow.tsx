@@ -26,9 +26,9 @@ const formatAsLatLong = (t: [number, number]): string => {
 const formatAsVolume = (w: number): string => {
   const d = TILE_SIZE.reduce((a, b) => a * b, 1) - w;
 
-  return `${Math.round(w).toLocaleString("es-MX")} wet / ${d.toLocaleString(
+  return `${Math.round(w).toLocaleString(
     "es-MX"
-  )} dry`;
+  )} wet cells / ${d.toLocaleString("es-MX")} dry cells`;
 };
 
 export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {

@@ -2,7 +2,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { description } from "@/components/ProjectDescription/ProjectDescription";
 
-export function generateMetadata({ params }: { params: { name: string } }) {
+export function generateMetadata() {
   return {
     title: "All Possible Rivers",
     description,
