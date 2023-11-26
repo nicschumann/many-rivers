@@ -81,35 +81,37 @@ export default function SimulationToolsOverlay({
   };
 
   return (
-    <div
-      className={classNames(
-        "z-10 absolute top-0 bg-transparent h-full w-full p-6 flex flex-wrap text-white text-sm"
-      )}
-    >
-      {overlayVisibility === UIOverlayVisibility.Complete && (
-        <div className="flex w-full h-8 items-left">
-          <div className="">
-            <OverlayButton>
-              <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
-            </OverlayButton>
+    <>
+      <div
+        className={classNames(
+          "z-10 absolute top-0 bg-transparent h-full w-full p-6 flex flex-wrap text-white text-sm"
+        )}
+      >
+        {overlayVisibility === UIOverlayVisibility.Complete && (
+          <div className="flex w-full h-8 items-left">
+            <div className="">
+              <OverlayButton>
+                <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
+              </OverlayButton>
+            </div>
+            <ControlsRow className="" />
+            <div onClick={() => setOverlayState(UIOverlayState.LandscapeView)}>
+              <OverlayButton>
+                <span className="uppercase">landscape</span>
+              </OverlayButton>
+            </div>
           </div>
-          <ControlsRow className="" />
-          <div onClick={() => setOverlayState(UIOverlayState.LandscapeView)}>
-            <OverlayButton>
-              <span className="uppercase">landscape</span>
-            </OverlayButton>
-          </div>
-        </div>
-      )}
+        )}
 
-      <FooterRow
-        river={river}
-        t={t}
-        w={w}
-        isRunning={isRunning}
-        setRunning={setRunning}
-        openModal={openInfoModal}
-      />
+        <FooterRow
+          river={river}
+          t={t}
+          w={w}
+          isRunning={isRunning}
+          setRunning={setRunning}
+          openModal={openInfoModal}
+        />
+      </div>
       {infoModalIsOpen && (
         <ModalOverlay closeModal={closeInfoModal}>
           <ProjectDescription />
@@ -120,6 +122,6 @@ export default function SimulationToolsOverlay({
           <ProjectGlossary />
         </ModalOverlay>
       )}
-    </div>
+    </>
   );
 }
