@@ -1,4 +1,4 @@
-import { ImageResponse } from "next/server";
+import { ImageResponse } from "@vercel/og";
 import { rivers } from "@/simulation/data/rivers";
 
 // Route segment config
