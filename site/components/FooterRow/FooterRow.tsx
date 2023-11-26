@@ -76,10 +76,7 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
           {formatAsVolume(w)}{" "}
         </div>
         <div
-          className={classNames(
-            shouldHideMetadata ? "invisible" : "",
-            "pr-10 py-1"
-          )}
+          className={classNames(shouldHideMetadata ? "invisible" : "", " py-1")}
         >
           {formatAsSteps(t)}
         </div>
@@ -94,27 +91,8 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
       >
         <div className="px-10 py-1">{instructionText}</div>
       </div>
-      {/* Camera Control Buttons */}
-      <div
-        onClick={() => {
-          if (!camState.requested) {
-            setCamState({
-              type: CameraAnimationType.Perspective,
-              requested: true,
-            });
-          }
-        }}
-        className={classNames(
-          shouldHideButtons ? "invisible" : "",
-          camState.requested ? "opacity-50" : "",
-          "text-left uppercase ml-auto mr-2"
-        )}
-      >
-        <OverlayButton>
-          <span>p</span>
-        </OverlayButton>
-      </div>
 
+      {/* Camera Control Buttons */}
       <div
         onClick={() => {
           if (!camState.requested) {
@@ -127,11 +105,54 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
         className={classNames(
           shouldHideButtons ? "invisible" : "",
           camState.requested ? "opacity-50" : "",
+          "text-left uppercase ml-auto mr-2"
+        )}
+      >
+        <OverlayButton>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-5 h-5 -mx-1"
+          >
+            <polyline points="4 8 4 4 8 4" />
+            <polyline points="16 4 20 4 20 8" />
+            <polyline points="20 16 20 20 16 20" />
+            <polyline points="8 20 4 20 4 16" />
+          </svg>
+        </OverlayButton>
+      </div>
+
+      <div
+        onClick={() => {
+          if (!camState.requested) {
+            setCamState({
+              type: CameraAnimationType.Perspective,
+              requested: true,
+            });
+          }
+        }}
+        className={classNames(
+          shouldHideButtons ? "invisible" : "",
+          camState.requested ? "opacity-50" : "",
           "text-left uppercase mr-2"
         )}
       >
         <OverlayButton>
-          <span>t</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-5 h-5 -mx-1"
+          >
+            <polyline points="12 8 16 8 16 12" />
+            <polyline points="20 19 4 19 4 4" />
+            <line x1="4" y1="19" x2="16" y2="8" />
+          </svg>
         </OverlayButton>
       </div>
 
