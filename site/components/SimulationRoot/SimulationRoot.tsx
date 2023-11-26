@@ -173,6 +173,19 @@ export default function SimulationRoot({
         setSimState({ running: !simData.state.running });
       }
 
+      if (e.key == "t") {
+        renderContext.resources.camera.transition_to_top_view();
+      }
+
+      if (e.key == "g") {
+        console.log(renderContext.resources.camera.position);
+        console.log(renderContext.resources.camera.target);
+      }
+
+      if (e.key == "p") {
+        renderContext.resources.camera.transition_to_perspective_view();
+      }
+
       if (e.key == "ArrowRight") {
         renderContext.regl.clear({ color: [0, 0, 0, 1] });
         let running = parameters.running;
