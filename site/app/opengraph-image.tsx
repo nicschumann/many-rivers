@@ -4,7 +4,7 @@ import { ImageResponse } from "@vercel/og";
 export const runtime = "edge";
 
 // Image metadata
-export const alt = "About Acme";
+export const alt = "All Possible Rivers";
 export const size = {
   width: 1200,
   height: 630,

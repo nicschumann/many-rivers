@@ -9,7 +9,12 @@ import { RenderContext } from "@/simulation/context";
 import { InputAPI } from "@/simulation/inputs";
 import { TARGET_FRAMETIME } from "@/simulation/constants";
 
-import { UIOverlayState, useApplicationState } from "@/store";
+import {
+  AnimationState,
+  CameraAnimationType,
+  UIOverlayState,
+  useApplicationState,
+} from "@/store";
 import { River } from "@/simulation/data/rivers";
 
 interface SimulationRootProps {
@@ -45,6 +50,9 @@ export default function SimulationRoot({
   );
   const setUIState = useApplicationState((state) => state.setUIState);
   const setSimName = useApplicationState((state) => state.setSimName);
+
+  const camState = useApplicationState((state) => state.cam);
+  const setCamState = useApplicationState((state) => state.setCamState);
 
   /**
    * Initial canvas setup.
@@ -148,6 +156,27 @@ export default function SimulationRoot({
         });
       }
 
+      /**
+       * Animation subsystem hooks.
+       */
+      if (camState.requested && !camState.handled) {
+        if (camState.type === CameraAnimationType.Perspective) {
+          renderContext.resources.camera.transition_to_perspective_view();
+        } else if (camState.type === CameraAnimationType.Top) {
+          renderContext.resources.camera.transition_to_top_view();
+        }
+
+        setCamState({ handled: true });
+      } else if (
+        camState.handled &&
+        !renderContext.resources.camera.has_active_animation()
+      ) {
+        setCamState({ requested: false, handled: false });
+      }
+
+      /**
+       * Render loop.
+       */
       renderContext.regl.clear({ color: [0, 0, 0, 1] });
       renderContext.setup_transform();
       renderContext.render_tiles(simData, uiData);
@@ -168,19 +197,24 @@ export default function SimulationRoot({
         shift_key_is_down = true;
       }
 
-      if (e.key == " ") {
-        parameters.running = !parameters.running;
-        setSimState({ running: !simData.state.running });
-      }
+      // if (e.key == " ") {
+      //   parameters.running = !parameters.running;
+      //   setSimState({ running: !simData.state.running });
+      // }
 
-      if (e.key == "ArrowRight") {
-        renderContext.regl.clear({ color: [0, 0, 0, 1] });
-        let running = parameters.running;
-        parameters.running = true;
-        renderContext.setup_transform();
-        renderContext.render_tiles(simData, uiData);
-        parameters.running = running;
-      }
+      // if (e.key == "g") {
+      //   console.log(renderContext.resources.camera.position);
+      //   console.log(renderContext.resources.camera.target);
+      // }
+
+      // if (e.key == "ArrowRight") {
+      //   renderContext.regl.clear({ color: [0, 0, 0, 1] });
+      //   let running = parameters.running;
+      //   parameters.running = true;
+      //   renderContext.setup_transform();
+      //   renderContext.render_tiles(simData, uiData);
+      //   parameters.running = running;
+      // }
     };
 
     const keyupHandler = (e: KeyboardEvent) => {
@@ -198,7 +232,16 @@ export default function SimulationRoot({
       window.removeEventListener("keyup", keyupHandler);
       input.deinit();
     };
-  }, [renderContext, simData, uiData, setSimState, setW, setT]);
+  }, [
+    renderContext,
+    simData,
+    uiData,
+    camState,
+    setCamState,
+    setSimState,
+    setW,
+    setT,
+  ]);
 
   return <canvas ref={baseCanvas} className="h-screen w-screen" />;
 }
