@@ -171,6 +171,10 @@ export class Camera {
     }
   }
 
+  limit_y_position() {
+    this.position[1] = Math.max(this.position[1], 0.1);
+  }
+
   apply_rotation(resources: RenderResources) {
     /**
      * TODO(Nic): In order to get this to feel truly natural,
@@ -256,6 +260,9 @@ export class Camera {
       this.step_position(resources);
       this.step_target(resources);
       this.apply_rotation(resources);
+
+      // limit y
+      // this.limit_y_position();
     }
   }
 
@@ -286,56 +293,6 @@ export class Camera {
 
     this.position = pos;
     this.get_vectors();
-  }
-
-  has_active_animation() {
-    return this.animation !== null;
-  }
-
-  transition_to_perspective_view() {
-    if (this.has_active_animation()) {
-      // can't animate if we're already animating...
-      return;
-    }
-
-    const animation = new CameraAnimation();
-
-    animation.set_end(
-      vec3.fromValues(-0.016, 0.431, 0.007),
-      vec3.fromValues(0.571, -0.13, 0.588)
-    );
-
-    animation.set_start(
-      // @ts-ignore
-      vec3.copy([], this.position),
-      // @ts-ignore
-      vec3.copy([], this.target)
-    );
-
-    this.animation = animation;
-  }
-
-  transition_to_top_view() {
-    if (this.has_active_animation()) {
-      // can't animate if we're already animating...
-      return;
-    }
-
-    const animation = new CameraAnimation();
-
-    animation.set_end(
-      vec3.fromValues(-0.439, 1.48, 0.447),
-      vec3.fromValues(0.098, 0.636, 0.444)
-    );
-
-    animation.set_start(
-      // @ts-ignore
-      vec3.copy([], this.position),
-      // @ts-ignore
-      vec3.copy([], this.target)
-    );
-
-    this.animation = animation;
   }
 
   get_matrix() {
@@ -400,5 +357,58 @@ export class Camera {
     }
 
     return [new_pos, new_vel, new_acc];
+  }
+
+  /**
+   * Animation subsystem related stuff
+   */
+  has_active_animation() {
+    return this.animation !== null;
+  }
+
+  transition_to_perspective_view() {
+    if (this.has_active_animation()) {
+      // can't animate if we're already animating...
+      return;
+    }
+
+    const animation = new CameraAnimation();
+
+    animation.set_end(
+      vec3.fromValues(-0.016, 0.431, 0.007),
+      vec3.fromValues(0.571, -0.13, 0.588)
+    );
+
+    animation.set_start(
+      // @ts-ignore
+      vec3.copy([], this.position),
+      // @ts-ignore
+      vec3.copy([], this.target)
+    );
+
+    this.animation = animation;
+  }
+
+  transition_to_top_view() {
+    if (this.has_active_animation()) {
+      // can't animate if we're already animating...
+      return;
+    }
+
+    const animation = new CameraAnimation();
+
+    animation.set_end(
+      vec3.fromValues(-0.439, 1.48, 0.447),
+      vec3.fromValues(0.098, 0.636, 0.444)
+    );
+
+    animation.set_start(
+      // @ts-ignore
+      vec3.copy([], this.position),
+      // @ts-ignore
+      vec3.copy([], this.target)
+    );
+
+    this.animation = animation;
   }
 }
