@@ -28,12 +28,12 @@ class CameraAnimation {
   constructor() {
     this.start = {
       position: vec3.fromValues(0, 0, 0),
-      target: vec3.fromValues(0.85, 0.25, 0.85),
+      target: vec3.fromValues(0, 0, 0),
     };
 
     this.end = {
-      position: vec3.fromValues(1.5, 0.75, 1.5),
-      target: vec3.fromValues(0.85, 0.25, 0.85),
+      position: vec3.fromValues(0, 0, 0),
+      target: vec3.fromValues(0, 0, 0),
     };
 
     this.duration = 1; // seconds
@@ -288,8 +288,12 @@ export class Camera {
     this.get_vectors();
   }
 
+  has_active_animation() {
+    return this.animation !== null;
+  }
+
   transition_to_perspective_view() {
-    if (this.animation !== null) {
+    if (this.has_active_animation()) {
       // can't animate if we're already animating...
       return;
     }
@@ -312,10 +316,7 @@ export class Camera {
   }
 
   transition_to_top_view() {
-    console.log(this.position);
-    console.log(this.target);
-
-    if (this.animation !== null) {
+    if (this.has_active_animation()) {
       // can't animate if we're already animating...
       return;
     }

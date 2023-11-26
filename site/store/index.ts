@@ -15,6 +15,17 @@ export enum UIOverlayVisibility {
   Overlay = 3,
 }
 
+export enum CameraAnimationType {
+  Perspective = 0,
+  Top = 1,
+}
+
+export type AnimationState = {
+  type: CameraAnimationType;
+  requested: boolean;
+  handled: boolean;
+};
+
 export type UIData = {
   active_overlay: UIOverlayState;
   overlay_visibility: UIOverlayVisibility;
@@ -69,6 +80,7 @@ export type SimulationData = {
 type State = {
   ui: UIData;
   sim: SimulationData;
+  cam: AnimationState;
 };
 
 type Actions = {
@@ -76,6 +88,7 @@ type Actions = {
   setSimState: (stateUpdate: Partial<SimulationState>) => void;
   setSimName: (stateUpdate: string) => void;
   setSimParameters: (stateUpdate: Partial<SimulationParameters>) => void;
+  setCamState: (stateUpdate: Partial<AnimationState>) => void;
 };
 
 export const useApplicationState = create(
@@ -126,6 +139,11 @@ export const useApplicationState = create(
         initial_water: 2.0,
       },
     },
+    cam: {
+      type: CameraAnimationType.Perspective,
+      requested: false,
+      handled: false,
+    },
 
     setSimName(nameUpdate: string) {
       set((state) => {
@@ -163,6 +181,17 @@ export const useApplicationState = create(
         };
 
         state.sim.parameters = newState;
+      });
+    },
+
+    setCamState(stateUpdate: Partial<AnimationState>) {
+      set((state) => {
+        const newState = {
+          ...state.cam,
+          ...stateUpdate,
+        };
+
+        state.cam = newState;
       });
     },
   }))

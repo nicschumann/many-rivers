@@ -3,7 +3,11 @@ import OverlayButton from "../OverlayButton/OverlayButton";
 import PointerLockButton from "../PointerLockButton/PointerLockButton";
 import { TILE_SIZE } from "@/simulation/constants";
 import { useState } from "react";
-import { UIOverlayVisibility, useApplicationState } from "@/store";
+import {
+  CameraAnimationType,
+  UIOverlayVisibility,
+  useApplicationState,
+} from "@/store";
 import { classNames } from "@/utils";
 
 interface FooterRowProps {
@@ -34,6 +38,8 @@ const formatAsVolume = (w: number): string => {
 export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
   const [cameraIsActive, setCameraIsActive] = useState(false);
   const overlayVisibility = useApplicationState((s) => s.ui.overlay_visibility);
+  const camState = useApplicationState((s) => s.cam);
+  const setCamState = useApplicationState((s) => s.setCamState);
 
   const instructionText = cameraIsActive
     ? "Press 'ESC' to leave 360° view"
@@ -88,10 +94,51 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
       >
         <div className="px-10 py-1">{instructionText}</div>
       </div>
+      {/* Camera Control Buttons */}
+      <div
+        onClick={() => {
+          if (!camState.requested) {
+            setCamState({
+              type: CameraAnimationType.Perspective,
+              requested: true,
+            });
+          }
+        }}
+        className={classNames(
+          shouldHideButtons ? "invisible" : "",
+          camState.requested ? "opacity-50" : "",
+          "text-left uppercase ml-auto mr-2"
+        )}
+      >
+        <OverlayButton>
+          <span>p</span>
+        </OverlayButton>
+      </div>
+
+      <div
+        onClick={() => {
+          if (!camState.requested) {
+            setCamState({
+              type: CameraAnimationType.Top,
+              requested: true,
+            });
+          }
+        }}
+        className={classNames(
+          shouldHideButtons ? "invisible" : "",
+          camState.requested ? "opacity-50" : "",
+          "text-left uppercase mr-2"
+        )}
+      >
+        <OverlayButton>
+          <span>t</span>
+        </OverlayButton>
+      </div>
+
       <PointerLockButton
         pointerIsLocked={cameraIsActive}
         setPointerIsLocked={setCameraIsActive}
-        className={classNames(shouldHideButtons ? "invisible" : "", "ml-auto")}
+        className={classNames(shouldHideButtons ? "invisible" : "", "")}
       />
       {/* <div onClick={() => setRunning(!isRunning)} className="w-32 text-right">
         <OverlayButton>
