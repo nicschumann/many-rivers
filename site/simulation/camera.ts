@@ -17,7 +17,79 @@ const POS_DEBUG = (
   console.log(`cart: ${cartesian.map((x) => x.toFixed(3))}\n\n`);
 };
 
+class CameraAnimation {
+  interruptable: boolean = false;
+  start_time: number | null = null;
+  start: { position: vec3; target: vec3 };
+  end: { position: vec3; target: vec3 };
+  duration: number;
+  t: number;
+
+  constructor() {
+    this.start = {
+      position: vec3.fromValues(0, 0, 0),
+      target: vec3.fromValues(0, 0, 0),
+    };
+
+    this.end = {
+      position: vec3.fromValues(0, 0, 0),
+      target: vec3.fromValues(0, 0, 0),
+    };
+
+    this.duration = 1; // seconds
+    this.t = 0;
+  }
+
+  set_start(position: vec3, target: vec3): CameraAnimation {
+    this.start.position = position;
+    this.start.target = target;
+
+    return this;
+  }
+
+  set_end(position: vec3, target: vec3): CameraAnimation {
+    this.end.position = position;
+    this.end.target = target;
+
+    return this;
+  }
+
+  step(resources: RenderResources): { position: vec3; target: vec3 } {
+    if (this.t >= this.duration) {
+      return {
+        position: this.end.position,
+        target: this.end.target,
+      };
+    }
+
+    const { dt } = resources;
+    this.t += dt;
+    this.t = Math.min(this.duration, this.t);
+
+    // normalized animation curve...
+    const alpha = this.t / this.duration;
+
+    const position = vec3.fromValues(
+      this.start.position[0] * (1 - alpha) + this.end.position[0] * alpha,
+      this.start.position[1] * (1 - alpha) + this.end.position[1] * alpha,
+      this.start.position[2] * (1 - alpha) + this.end.position[2] * alpha
+    );
+
+    const target = vec3.fromValues(
+      this.start.target[0] * (1 - alpha) + this.end.target[0] * alpha,
+      this.start.target[1] * (1 - alpha) + this.end.target[1] * alpha,
+      this.start.target[2] * (1 - alpha) + this.end.target[2] * alpha
+    );
+
+    return {
+      position,
+      target,
+    };
+  }
+}
+
 export class Camera {
+  animation: CameraAnimation | null = null;
   world_up: vec3 = [0, -1, 0];
   min_velocity_magnitude = 0.0001;
   sensitivity = 7;
@@ -99,6 +171,10 @@ export class Camera {
     }
   }
 
+  limit_y_position() {
+    this.position[1] = Math.max(this.position[1], 0.1);
+  }
+
   apply_rotation(resources: RenderResources) {
     /**
      * TODO(Nic): In order to get this to feel truly natural,
@@ -171,9 +247,23 @@ export class Camera {
   }
 
   step(resources: RenderResources) {
-    this.step_position(resources);
-    this.step_target(resources);
-    this.apply_rotation(resources);
+    if (this.animation !== null) {
+      const { position, target } = this.animation.step(resources);
+      vec3.copy(this.position, position);
+      vec3.copy(this.target, target);
+
+      if (this.animation.t >= this.animation.duration) {
+        // we're done with the animation...
+        this.animation = null;
+      }
+    } else {
+      this.step_position(resources);
+      this.step_target(resources);
+      this.apply_rotation(resources);
+
+      // limit y
+      // this.limit_y_position();
+    }
   }
 
   get_vectors() {
@@ -267,5 +357,58 @@ export class Camera {
     }
 
     return [new_pos, new_vel, new_acc];
+  }
+
+  /**
+   * Animation subsystem related stuff
+   */
+  has_active_animation() {
+    return this.animation !== null;
+  }
+
+  transition_to_perspective_view() {
+    if (this.has_active_animation()) {
+      // can't animate if we're already animating...
+      return;
+    }
+
+    const animation = new CameraAnimation();
+
+    animation.set_end(
+      vec3.fromValues(-0.016, 0.431, 0.007),
+      vec3.fromValues(0.571, -0.13, 0.588)
+    );
+
+    animation.set_start(
+      // @ts-ignore
+      vec3.copy([], this.position),
+      // @ts-ignore
+      vec3.copy([], this.target)
+    );
+
+    this.animation = animation;
+  }
+
+  transition_to_top_view() {
+    if (this.has_active_animation()) {
+      // can't animate if we're already animating...
+      return;
+    }
+
+    const animation = new CameraAnimation();
+
+    animation.set_end(
+      vec3.fromValues(-0.439, 1.48, 0.447),
+      vec3.fromValues(0.098, 0.636, 0.444)
+    );
+
+    animation.set_start(
+      // @ts-ignore
+      vec3.copy([], this.position),
+      // @ts-ignore
+      vec3.copy([], this.target)
+    );
+
+    this.animation = animation;
   }
 }

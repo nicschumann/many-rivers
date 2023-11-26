@@ -3,6 +3,7 @@
 import SimulationOverlay from "@/components/SimulationOverlay/SimulationOverlay";
 import SimulationRoot from "@/components/SimulationRoot/SimulationRoot";
 import { rivers } from "@/simulation/data/rivers";
+import { AnimationState } from "@/store";
 import { useState } from "react";
 
 export default function River({ params }: { params: { name: string } }) {
