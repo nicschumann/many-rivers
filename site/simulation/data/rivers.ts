@@ -22,6 +22,24 @@ export type River = {
   };
 };
 
+export const riverOrder = [
+  "ilkrsr",
+  "d4q9kf",
+  "maf6rw",
+  "hckgux",
+  "ouvkf8",
+  "7knwi4",
+  "rmalox",
+  "t7xszw",
+  "rt5kfy",
+  "sgn9lm",
+  "vaka6g",
+  "xerpfb",
+  "mzl8ju",
+  "fin6uy",
+  "rbu1ks",
+];
+
 export const rivers: { [slug: string]: River } = {
   /**
    * NOTE(Nic): blows up immediately with these params...
@@ -30,7 +48,8 @@ export const rivers: { [slug: string]: River } = {
   ilkrsr: {
     name: "Final Bend 0",
     slug: "ilkrsr",
-    coordinates: [26.17488, -98.39611],
+    // coordinates: [26.17488, -98.39611], // old
+    coordinates: [26.24425, -98.54978],
     testcase: false,
 
     terrain_url: "final-bend-00.terrain.png",
@@ -53,7 +72,8 @@ export const rivers: { [slug: string]: River } = {
   maf6rw: {
     name: "Final Bend 1",
     slug: "maf6rw",
-    coordinates: [26.07172, -98.2383],
+    // coordinates: [26.07172, -98.2383], // old
+    coordinates: [26.11572, -98.28185],
     testcase: false,
 
     terrain_url: "final-bend-01.terrain.png",
@@ -101,7 +121,8 @@ export const rivers: { [slug: string]: River } = {
   d4q9kf: {
     name: "Final Bend 3",
     slug: "d4q9kf",
-    coordinates: [26.11572, -98.28185],
+    // coordinates: [26.11572, -98.28185], // old
+    coordinates: [26.17488, -98.39611],
     testcase: false,
 
     terrain_url: "final-bend-03.terrain.png",
@@ -125,7 +146,8 @@ export const rivers: { [slug: string]: River } = {
   ouvkf8: {
     name: "Final Bend 4",
     slug: "ouvkf8",
-    coordinates: [26.06736, -98.07864],
+    // coordinates: [26.06736, -98.07864], // old
+    coordinates: [26.07172, -98.2383],
     testcase: false,
 
     terrain_url: "final-bend-04.terrain.png",
@@ -152,7 +174,8 @@ export const rivers: { [slug: string]: River } = {
   rmalox: {
     name: "Final Bend 5",
     slug: "rmalox",
-    coordinates: [26.05842, -97.89649],
+    // coordinates: [26.05842, -97.89649], // old
+    coordinates: [26.06736, -98.07864],
     testcase: false,
 
     terrain_url: "final-bend-05.terrain.png",
@@ -179,7 +202,8 @@ export const rivers: { [slug: string]: River } = {
   rt5kfy: {
     name: "Final Bend 6",
     slug: "rt5kfy",
-    coordinates: [26.03601, -97.66267],
+    // coordinates: [26.03601, -97.66267], // old
+    coordinates: [26.05842, -97.89649],
     testcase: false,
 
     terrain_url: "final-bend-06.terrain.png",

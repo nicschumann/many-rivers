@@ -6,6 +6,7 @@ import LoadingOverlay from "../LoadingOverlay/LoadingOverlay";
 import { rivers, River } from "@/simulation/data/rivers";
 import LandscapeOverlay from "../LandscapeOverlay/LandscapeOverlay";
 import SimulationToolsOverlay from "../SimulationToolsOverlay/SimulationToolsOverlay";
+import SmallScreenWarning from "../SmallScreenWarning/SmallScreenWarning";
 
 interface SimulationOverlayProps {
   river: River;
@@ -46,6 +47,7 @@ export default function SimulationOverlay({
         />
       )}
       {!isLoaded && <LoadingOverlay />}
+      <SmallScreenWarning />
     </>
   );
 }

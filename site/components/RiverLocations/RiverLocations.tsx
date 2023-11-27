@@ -1,4 +1,4 @@
-import { rivers } from "@/simulation/data/rivers";
+import { riverOrder, rivers } from "@/simulation/data/rivers";
 import { classNames } from "@/utils";
 import Link from "next/link";
 
@@ -7,9 +7,7 @@ export default function RiverLocations({
 }: {
   currentSlug: string;
 }) {
-  const riverArray = Object.values(rivers).sort((a, b) => {
-    return b.coordinates[0] - a.coordinates[0];
-  });
+  const riverArray = riverOrder.map((id) => rivers[id]);
 
   const minLat = riverArray[0].coordinates[0];
   const maxLat = riverArray[riverArray.length - 1].coordinates[0];
