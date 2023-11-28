@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { description } from "@/components/ProjectDescription/ProjectDescription";
+import GoogleAnalytics from "@/components/GoogleAnalytics/GoogleAnalytics";
 
 export function generateMetadata() {
   return {
@@ -23,6 +24,9 @@ export default function RootLayout({
       <body>
         {children}
         <Analytics />
+        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS && (
+          <GoogleAnalytics ga_id={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS} />
+        )}
       </body>
     </html>
   );

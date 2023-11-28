@@ -10,7 +10,7 @@ export default function ProjectDescription() {
   return (
     <>
       {/* Description */}
-      <div className="mt-4 indent-10 uppercase">Project Description</div>
+      <div className="mt-4 indent-10 uppercase">All Possible Rivers</div>
       <div className="mt-4">{description}</div>
       <div className="mt-4">
         A pipeline of several computational steps calculates the capacities of

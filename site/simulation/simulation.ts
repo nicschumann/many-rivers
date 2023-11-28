@@ -18,8 +18,12 @@ const load_image = (url: string) => {
   });
 };
 
+function buffer_exists(buffer: unknown): boolean {
+  return typeof buffer !== "undefined";
+}
+
 function assert_simulation_buffer(buffer: unknown): asserts buffer {
-  if (typeof buffer == "undefined") {
+  if (!buffer_exists(buffer)) {
     throw new Error("Uninitialized Buffers; call get_resources.");
   }
 }
@@ -125,7 +129,16 @@ class Simulation {
   }
 
   simulate(resources: RenderResources, simdata: SimulationData) {
-    if (simdata.state.running && this.loaded) {
+    if (
+      simdata.state.running &&
+      this.loaded &&
+      buffer_exists(this.H) &&
+      buffer_exists(this.K) &&
+      buffer_exists(this.E) &&
+      buffer_exists(this.S) &&
+      buffer_exists(this.N) &&
+      buffer_exists(this.Q)
+    ) {
       assert_simulation_buffer(this.H);
       assert_simulation_buffer(this.K);
       assert_simulation_buffer(this.E);
@@ -315,4 +328,4 @@ class Simulation {
   destroy() {}
 }
 
-export { Simulation, assert_simulation_buffer };
+export { Simulation, assert_simulation_buffer, buffer_exists };
