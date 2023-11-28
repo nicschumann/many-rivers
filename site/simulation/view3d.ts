@@ -1,20 +1,28 @@
 import { SimulationData, UIData, UIOverlayState } from "@/store";
 import { RenderResources } from "./context";
-import { View, assert_parent } from "./view";
-import { assert_simulation_buffer } from "./simulation";
-import { vec3 } from "gl-matrix";
+import { View, assert_parent, parent_exists } from "./view";
+import { assert_simulation_buffer, buffer_exists } from "./simulation";
 
 class View3D extends View {
   render(resources: RenderResources, simdata: SimulationData, uidata: UIData) {
-    assert_parent(this.parent);
-    assert_simulation_buffer(this.parent.N);
-    assert_simulation_buffer(this.parent.H);
-    assert_simulation_buffer(this.parent.Q);
-    assert_simulation_buffer(this.parent.K);
-    assert_simulation_buffer(this.parent.E);
-    assert_simulation_buffer(this.parent.S);
+    if (
+      parent_exists(this.parent) &&
+      this.parent?.loaded &&
+      buffer_exists(this.parent.N) &&
+      buffer_exists(this.parent.H) &&
+      buffer_exists(this.parent.Q) &&
+      buffer_exists(this.parent.K) &&
+      buffer_exists(this.parent.E) &&
+      buffer_exists(this.parent.S)
+    ) {
+      assert_parent(this.parent);
+      assert_simulation_buffer(this.parent.N);
+      assert_simulation_buffer(this.parent.H);
+      assert_simulation_buffer(this.parent.Q);
+      assert_simulation_buffer(this.parent.K);
+      assert_simulation_buffer(this.parent.E);
+      assert_simulation_buffer(this.parent.S);
 
-    if (this.parent.loaded) {
       this.regl.clear({ depth: 1.0 });
       let PV = resources.camera.get_matrix();
 
@@ -195,7 +203,7 @@ class View3D extends View {
 
       //   current_height += base_height;
       // }
-    } else if (!this.parent.loaded) {
+    } else if (parent_exists(this.parent) && !this.parent?.loaded) {
       // If we're still waiting for textures...
       // super.render(resources, parameters);
     }

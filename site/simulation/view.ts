@@ -5,9 +5,13 @@ import { RenderResources } from "./context";
 import { SimulationData, SimulationParameters, UIData } from "@/store";
 
 function assert_parent(parent: unknown): asserts parent {
-  if (typeof parent == "undefined") {
+  if (!parent_exists(parent)) {
     throw new Error("Parent simulation not set on View; call set_parent.");
   }
+}
+
+function parent_exists(parent: unknown): boolean {
+  return typeof parent !== "undefined";
 }
 
 class View {
@@ -95,4 +99,4 @@ class View {
   }
 }
 
-export { View, assert_parent };
+export { View, assert_parent, parent_exists };

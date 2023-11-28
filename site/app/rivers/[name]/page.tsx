@@ -2,9 +2,10 @@
 
 import SimulationOverlay from "@/components/SimulationOverlay/SimulationOverlay";
 import SimulationRoot from "@/components/SimulationRoot/SimulationRoot";
+import SmallScreenWarning from "@/components/SmallScreenWarning/SmallScreenWarning";
 import { rivers } from "@/simulation/data/rivers";
-import { AnimationState } from "@/store";
 import { useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
 export default function River({ params }: { params: { name: string } }) {
   const [t, setT] = useState(0); // timestep
@@ -26,8 +27,11 @@ export default function River({ params }: { params: { name: string } }) {
 
   return (
     <main className="relative h-screen w-screen bg-black">
-      <SimulationRoot river={rivers[river_id]} setT={setT} setW={setW} />
-      <SimulationOverlay river={rivers[river_id]} t={t} w={w} />
+      <ErrorBoundary fallback={<></>}>
+        <SimulationRoot river={rivers[river_id]} setT={setT} setW={setW} />
+        <SimulationOverlay river={rivers[river_id]} t={t} w={w} />
+      </ErrorBoundary>
+      <SmallScreenWarning />
     </main>
   );
 }
