@@ -3,7 +3,7 @@ const nextConfig = {
     webpack: (config, options) => {
         config.module.rules.push({
             test: /\.(frag|vert)$/i,
-            use: 'raw-loader'
+            use: { loader: require.resolve('./shader-loader.js') }
         })
 
         return config

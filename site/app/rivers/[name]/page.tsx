@@ -4,14 +4,18 @@ import SimulationOverlay from "@/components/SimulationOverlay/SimulationOverlay"
 import SimulationRoot from "@/components/SimulationRoot/SimulationRoot";
 import SmallScreenWarning from "@/components/SmallScreenWarning/SmallScreenWarning";
 import { rivers } from "@/simulation/data/rivers";
-import { useState } from "react";
+import { use, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-export default function River({ params }: { params: { name: string } }) {
+export default function River({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}) {
   const [t, setT] = useState(0); // timestep
   const [w, setW] = useState(0); // cubic meters of water
 
-  const river_id = params.name;
+  const { name: river_id } = use(params);
 
   if (typeof rivers[river_id] == "undefined") {
     /**
