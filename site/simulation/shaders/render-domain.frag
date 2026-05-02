@@ -42,10 +42,8 @@ void main() {
 
     vec3 color = (ambient + diffuse) * terrain_color;
 
-    gl_FragColor = vec4(
-        color,
-        1.
-    );
+    float luminance = dot(color, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(vec3(luminance), 1.0);
 
     // gl_FragColor = vec4(v_uv, 0., 1.);
 }

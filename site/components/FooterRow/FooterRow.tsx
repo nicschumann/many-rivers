@@ -19,8 +19,8 @@ interface FooterRowProps {
   openModal: () => void;
 }
 
-const formatAsSteps = (t: number): string => {
-  return `${t.toFixed(0)} steps`;
+const formatAsCycles = (t: number): string => {
+  return `${t.toFixed(0)} ciclos`;
 };
 
 const formatAsLatLong = (t: [number, number]): string => {
@@ -30,9 +30,9 @@ const formatAsLatLong = (t: [number, number]): string => {
 const formatAsVolume = (w: number): string => {
   const d = TILE_SIZE.reduce((a, b) => a * b, 1) - w;
 
-  return `${Math.round(w).toLocaleString(
+  return `${Math.round(w).toLocaleString("es-MX")} H / ${d.toLocaleString(
     "es-MX"
-  )} wet cells / ${d.toLocaleString("es-MX")} dry cells`;
+  )} S`;
 };
 
 export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
@@ -41,20 +41,17 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
   const camState = useApplicationState((s) => s.cam);
   const setCamState = useApplicationState((s) => s.setCamState);
 
-  const instructionText = cameraIsActive
-    ? "Press 'ESC' to leave 360° view"
-    : "Navigate using the arrow keys (or WASD)";
-
   const shouldHideButtons =
     cameraIsActive || overlayVisibility !== UIOverlayVisibility.Complete;
-  const shouldHideMetadata = overlayVisibility === UIOverlayVisibility.Overlay;
+  const shouldHideMetadata =
+    overlayVisibility !== UIOverlayVisibility.Complete;
 
   return (
     <div className="flex mt-auto w-full items-left">
       <div className={classNames(shouldHideButtons ? "invisible" : "", "flex")}>
         <div onClick={openModal}>
           <OverlayButton>
-            <span>Info</span>
+            <span>Información</span>
           </OverlayButton>
         </div>
       </div>
@@ -78,10 +75,8 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
         <div
           className={classNames(shouldHideMetadata ? "invisible" : "", " py-1")}
         >
-          {formatAsSteps(t)}
+          {formatAsCycles(t)}
         </div>
-
-        {/* <div className="text-white ml-2">Test</div> */}
       </div>
       <div
         className={classNames(
@@ -89,7 +84,7 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
           "flex text-left uppercase"
         )}
       >
-        <div className="px-10 py-1">{instructionText}</div>
+        <div className="px-10 py-1">Navega con las flechas (o WASD)</div>
       </div>
 
       {/* Camera Control Buttons */}
@@ -161,11 +156,6 @@ export default function FooterRow({ t, w, river, openModal }: FooterRowProps) {
         setPointerIsLocked={setCameraIsActive}
         className={classNames(shouldHideButtons ? "invisible" : "", "")}
       />
-      {/* <div onClick={() => setRunning(!isRunning)} className="w-32 text-right">
-        <OverlayButton>
-          {isRunning ? <span>Pause</span> : <span>Run</span>}
-        </OverlayButton>
-      </div> */}
     </div>
   );
 }

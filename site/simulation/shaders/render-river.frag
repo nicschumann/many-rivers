@@ -98,12 +98,6 @@ void main() {
     // transparency
     float alpha = 1.0;
 
-    gl_FragColor = vec4(
-        volumetric_color,
-
-        // vec3(0.3 - length(p_curr - p_start) * 2.) * vec3(0.2, 0.4, 0.5),
-        // vec3(spec) * diffuse_light_color + scattering,
-        // normal * 0.5 + 0.5,
-        length(p_curr - p_start) / 0.007
-    );
+    float luminance = dot(volumetric_color, vec3(0.299, 0.587, 0.114));
+    gl_FragColor = vec4(vec3(luminance), length(p_curr - p_start) / 0.007);
 }

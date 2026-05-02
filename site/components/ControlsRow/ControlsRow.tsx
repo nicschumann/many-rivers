@@ -61,7 +61,7 @@ export default function ControlsRow({ className }: ControlRowProps) {
     <div className={classNames(className, "flex mx-auto uppercase pt-1")}>
       <ControlRange
         range={{
-          name: "Erosion",
+          name: "Erosión",
           options: [
             {
               active: isMinValue("erosion"),
@@ -93,7 +93,7 @@ export default function ControlsRow({ className }: ControlRowProps) {
 
       <ControlRange
         range={{
-          name: "Accretion",
+          name: "Acreción",
           options: [
             {
               active: isMinValue("accretion"),
@@ -144,14 +144,14 @@ export default function ControlsRow({ className }: ControlRowProps) {
         }}
       /> */}
       <ControlToggle
-        name="wet cells"
+        name="húmedo"
         active={currentUI.wet}
         onClick={() => {
           setUIState({ render_wet: !currentUI.wet });
         }}
       />
       <ControlToggle
-        name="dry cells"
+        name="seco"
         active={currentUI.dry}
         onClick={() => {
           setUIState({ render_dry: !currentUI.dry });

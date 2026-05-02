@@ -10,6 +10,7 @@ import { classNames } from "@/utils";
 import { useState } from "react";
 import { River } from "@/simulation/data/rivers";
 import FooterRow from "../FooterRow/FooterRow";
+import HeaderRow from "../HeaderRow/HeaderRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
 import ControlsRow from "../ControlsRow/ControlsRow";
@@ -91,17 +92,19 @@ export default function SimulationToolsOverlay({
           <div className="flex w-full h-8 items-left">
             <div className="">
               <OverlayButton>
-                <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
+                <Link href={`/rivers/${nextRiver.slug}`}>Nuevo&nbsp;Río</Link>
               </OverlayButton>
             </div>
             <ControlsRow className="" />
             <div onClick={() => setOverlayState(UIOverlayState.LandscapeView)}>
               <OverlayButton>
-                <span className="uppercase">landscape</span>
+                <span className="uppercase">paisaje</span>
               </OverlayButton>
             </div>
           </div>
         )}
+
+        <HeaderRow river={river} t={t} w={w} />
 
         <FooterRow
           river={river}

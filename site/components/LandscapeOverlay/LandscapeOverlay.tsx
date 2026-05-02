@@ -11,6 +11,7 @@ import { River } from "@/simulation/data/rivers";
 import Link from "next/link";
 import RiverLocations from "../RiverLocations/RiverLocations";
 import FooterRow from "../FooterRow/FooterRow";
+import HeaderRow from "../HeaderRow/HeaderRow";
 import ModalOverlay from "../ModalOverlay/ModalOverlay";
 import { useState } from "react";
 import ProjectDescription from "../ProjectDescription/ProjectDescription";
@@ -74,7 +75,7 @@ export default function LandscapeOverlay({
           <div className="flex w-full h-8 items-left">
             <div className="">
               <OverlayButton>
-                <Link href={`/rivers/${nextRiver.slug}`}>New&nbsp;River</Link>
+                <Link href={`/rivers/${nextRiver.slug}`}>Nuevo&nbsp;Río</Link>
               </OverlayButton>
             </div>
             {/* Locations overlay... */}
@@ -84,11 +85,13 @@ export default function LandscapeOverlay({
               onClick={() => setOverlayState(UIOverlayState.SimulationView)}
             >
               <OverlayButton>
-                <span>Mesh</span>
+                <span>Malla</span>
               </OverlayButton>
             </div>
           </div>
         )}
+
+        <HeaderRow river={river} t={t} w={w} />
 
         <FooterRow
           river={river}
